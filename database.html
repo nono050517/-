@@ -5,44 +5,41 @@
     <title>エリシア生産データ一覧</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
-        table { width: 100%; border-collapse: collapse; line-height: 1.4; }
-        th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; vertical-align: top; }
+        body { font-family: "MS Gothic", "Courier New", monospace; margin: 0; padding: 5px; color: #000; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; } /* レイアウトを固定 */
+        th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; white-space: nowrap; overflow: hidden; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         
-        .row-header { background: #e0e0e0; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .row-header { background: #e0e0e0; font-weight: bold; cursor: pointer; }
         .row-sub { color: #555; }
         .row-output { font-weight: bold; background: #f4f8ff; }
         
         .hidden { display: none; }
         
-        /* 1ブロック（全角1文字＋半角1文字分）で幅を完全固定 */
-        .tree-unit { 
-            font-family: "Consolas", "Monaco", monospace; 
-            white-space: pre; 
-            color: #bbb; 
+        /* 1文字の幅を完全に固定（等幅フォント必須） */
+        .tree-grid { 
             display: inline-block;
+            font-family: "MS Gothic", "Courier New", monospace; 
             letter-spacing: 0;
+            line-height: 1;
             vertical-align: middle;
-            font-size: 11px;
+            color: #bbb;
         }
         
-        /* ボタンを浮かさないようにツリー内に配置 */
         .toggle-btn { 
             cursor: pointer; 
             font-weight: bold; 
             color: #666;
             user-select: none;
             display: inline-block;
-            width: 1.5em; /* 記号1つ分と合わせる */
+            width: 1.5em;
             text-align: center;
         }
 
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
-        .loc-inline { color: #b35900; font-weight: bold; }
+        .loc-inline { color: #b35900; font-weight: bold; font-size: 10px; }
         
         .cb { vertical-align: middle; margin: 0 4px 0 2px; cursor: pointer; }
-        .group-sep { border-top: 2px solid #666 !important; }
         .recipe-name-text { color: #333; font-weight: bold; cursor: pointer; vertical-align: middle; }
     </style>
 </head>
@@ -51,7 +48,7 @@
     <table>
         <thead>
             <tr>
-                <th>生産レシピ（クリックで開閉：▼開 / ▲閉）</th>
+                <th style="width: 100%;">生産レシピ（開閉：▼開 / ▲閉）</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
@@ -83,14 +80,9 @@
             const itemsData = iRes.data || [];
             const jobsData = jRes.data || [];
 
-            const getFullJobName = (shortName) => {
-                const match = jobsData.find(j => j.short_name === shortName);
-                return match ? match.full_name : shortName;
-            };
-
             const getLocText = (itemName) => {
                 const match = itemsData.find(item => item.name === itemName && item.method === "購入");
-                return match ? `購入：${match.location} - ${match.target}` : '';
+                return match ? `購入：${match.location}-${match.target}` : '';
             };
 
             const renderMaterials = (recipe, parentId, parentTrace = []) => {
@@ -105,15 +97,12 @@
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
                     
-                    // インデントの組み立て（1ユニット＝"│  " or "   "）
+                    // 1ブロック = 全角スペース2つ分 (　　) で統一
                     let prefix = "";
                     parentTrace.forEach((isParentLast, d) => {
-                        if (d === 1) {
-                             // 完成品とボタンの幅を考慮（全角スペース的な幅を確保）
-                             prefix += isParentLast ? "　　" : "│　 "; 
-                        } else {
-                             prefix += isParentLast ? "　 " : "│  ";
-                        }
+                        if (d === 0) prefix += isParentLast ? "　" : "│";
+                        else if (d === 1) prefix += isParentLast ? "　　" : "│　";
+                        else prefix += isParentLast ? "　" : "│";
                     });
                     
                     const mark = isLast ? "┗" : "┣";
@@ -121,7 +110,8 @@
                     rows += `
                     <tr class="row-sub" data-parent="${parentId}">
                         <td>
-                            <span class="tree-unit">${prefix}${mark}</span>
+                            <span class="tree-grid">${prefix}${mark}</span>
+                            <span style="display:inline-block; width:1.5em;"></span>
                             <input type="checkbox" class="cb"><span>${m.name}</span>
                             <span class="qty-inline">(×${m.qty || 0})</span>
                             <span class="loc-inline">${getLocText(m.name)}</span>
@@ -143,12 +133,10 @@
 
             let html = '';
             Object.values(grouped).forEach((group, gIdx) => {
-                const fullJob = getFullJobName(group.job);
                 const skillId = `group-${gIdx}`;
-
                 html += `
-                <tr class="row-header ${gIdx > 0 ? 'group-sep' : ''}" onclick="toggleGroup('${skillId}')">
-                    <td><span class="toggle-btn" id="btn-${skillId}">▲</span> ${fullJob}：${group.skill} (Lv${group.lv})</td>
+                <tr class="row-header" onclick="toggleGroup('${skillId}')">
+                    <td><span class="toggle-btn" id="btn-${skillId}">▲</span> ${group.job}：${group.skill}(Lv${group.lv})</td>
                 </tr>`;
 
                 group.list.forEach((r, rIdx) => {
@@ -156,25 +144,23 @@
                     const isLastRecipe = (rIdx === group.list.length - 1);
                     const recipeMark = isLastRecipe ? "┗" : "┣";
 
-                    // 1. レシピ名
                     html += `
                     <tr class="row-sub" data-parent="${skillId}">
                         <td>
-                            <span class="tree-unit">　${recipeMark}</span><span class="toggle-btn" id="btn-${recipeId}" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">▲</span><span class="recipe-name-text" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">【${r.recipe_name}】</span>
+                            <span class="tree-grid">　${recipeMark}</span><span class="toggle-btn" id="btn-${recipeId}" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">▲</span><span class="recipe-name-text" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">【${r.recipe_name}】</span>
                         </td>
                     </tr>`;
                     
-                    // 2. 完成品
-                    const outputLine = isLastRecipe ? "　 " : "│  ";
+                    const outputVertical = isLastRecipe ? "　" : "│";
                     html += `
                     <tr class="row-output row-sub" data-parent="${skillId}">
                         <td data-parent="${recipeId}">
-                            <span class="tree-unit">　${outputLine}　┗</span>
+                            <span class="tree-grid">　${outputVertical}　┗</span>
+                            <span style="display:inline-block; width:1.5em;"></span>
                             <input type="checkbox" class="cb"><span>${r.output_item_name}</span>
                         </td>
                     </tr>`;
                     
-                    // 3. 素材
                     html += renderMaterials(r, recipeId, [isLastRecipe, true]);
                 });
             });
