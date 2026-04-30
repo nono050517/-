@@ -7,13 +7,17 @@
     <style>
         body { font-family: sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
         table { width: 100%; border-collapse: collapse; line-height: 1.2; }
-        th, td { border: 1px solid #444; padding: 1px 4px; text-align: left; }
+        th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; }
-        tr:nth-child(even) { background: #f0f0f0; }
-        .qty { color: #d00; text-align: right; width: 20px; }
+        
+        /* 完成品行の背景を少し変えて区切りをわかりやすく */
+        .row-output { background: #e8f0ff !important; font-weight: bold; }
+        .row-material { background: #fff; }
+        
+        .qty { color: #d00; text-align: right; width: 30px; }
         .lv { text-align: center; width: 25px; }
-        /* 入手場所：複数ある場合を想定して少し広めに */
-        .loc { width: 150px; font-size: 10px; color: #0055aa; white-space: pre-wrap; }
+        .type-label { font-size: 9px; color: #666; width: 40px; text-align: center; }
+        .loc { font-size: 10px; color: #0055aa; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -25,16 +29,13 @@
                 <th>スキル</th>
                 <th class="lv">Lv</th>
                 <th>レシピ名</th>
-                <th>完成品</th>
-                <th>素材1</th><th class="qty">数</th>
-                <th>素材2</th><th class="qty">数</th>
-                <th>素材3</th><th class="qty">数</th>
-                <th>素材4</th><th class="qty">数</th>
-                <th class="loc">入手場所（場所 - 誰）</th>
+                <th>アイテム名（完成品/素材）</th>
+                <th class="qty">数量</th>
+                <th class="loc">入手場所 (場所 - 誰)</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
-            <tr><td colspan="13">データ読み込み中...</td></tr>
+            <tr><td colspan="7">データ読み込み中...</td></tr>
         </tbody>
     </table>
 
@@ -46,59 +47,55 @@
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             
-            // 1. レシピデータを取得
-            const { data: recipes, error: rError } = await client
-                .from('recipes')
-                .select('*')
-                .order('skill_type', { ascending: true })
-                .order('skill_lv', { ascending: true });
+            // 1. レシピと商人データを同時に取得
+            const [rRes, mRes] = await Promise.all([
+                client.from('recipes').select('*').order('skill_type').order('skill_lv'),
+                client.from('merchants').select('*') // テーブル名は適宜合わせてください
+            ]);
 
-            // 2. 商人データを取得（場所と誰を紐づける用）
-            const { data: merchants, error: mError } = await client
-                .from('merchants') // テーブル名が異なる場合はここを修正してください
-                .select('*');
-            
-            if (rError) {
-                tbody.innerHTML = '<tr><td colspan="13">エラーが発生しました</td></tr>';
+            if (rRes.error) {
+                tbody.innerHTML = '<tr><td colspan="7">エラーが発生しました</td></tr>';
                 return;
             }
 
+            const recipes = rRes.data;
+            const merchants = mRes.data || [];
+
+            // 入手場所を検索する関数
+            const getLoc = (itemName) => {
+                const sellers = merchants.filter(m => m.item_name === itemName || m.販売物品 === itemName);
+                return sellers.map(s => `${s.location || s.場所 || ''} - ${s.merchant_name || s.商人名 || s.誰 || ''}`).join('\n');
+            };
+
             let html = '';
             recipes.forEach(r => {
-                // 「場所 - 誰」の紐づけ処理
-                let locList = [];
-                
-                // データベース内の location フィールドがあればまず入れる
-                if (r.location) locList.push(r.location);
-
-                // 商人データ(merchants)がある場合、完成品名で検索して「場所 - 商人」を作る
-                if (merchants) {
-                    const sellers = merchants.filter(m => m.item_name === r.output_item_name);
-                    sellers.forEach(s => {
-                        locList.push(`${s.location} - ${s.merchant_name}`);
-                    });
-                }
-
-                // 重複を削除して改行でつなぐ
-                const uniqueLocs = [...new Set(locList)].join('\n');
-
+                // --- 1. 完成品の行 ---
                 html += `
-                <tr>
+                <tr class="row-output">
                     <td>${r.job_category || ''}</td>
                     <td>${r.skill_type || ''}</td>
                     <td class="lv">${r.skill_lv || ''}</td>
                     <td>${r.recipe_name || ''}</td>
-                    <td>${r.output_item_name || ''}</td>
-                    <td>${r.material_1 || ''}</td>
-                    <td class="qty">${r.amount_1 ?? ''}</td>
-                    <td>${r.material_2 || ''}</td>
-                    <td class="qty">${r.amount_2 ?? ''}</td>
-                    <td>${r.material_3 || ''}</td>
-                    <td class="qty">${r.amount_3 ?? ''}</td>
-                    <td>${r.material_4 || ''}</td>
-                    <td class="qty">${r.amount_4 ?? ''}</td>
-                    <td class="loc">${uniqueLocs}</td>
+                    <td>【完成】${r.output_item_name || ''}</td>
+                    <td class="qty">-</td>
+                    <td class="loc">${getLoc(r.output_item_name)}</td>
                 </tr>`;
+
+                // --- 2. 素材1〜4の行をループで回す ---
+                for (let i = 1; i <= 4; i++) {
+                    const mName = r[`material_${i}`];
+                    const mQty = r[`amount_${i}`];
+
+                    if (mName && mName !== 'NULL' && mName !== '') {
+                        html += `
+                        <tr class="row-material">
+                            <td colspan="4"></td>
+                            <td>└ 素材${i}: ${mName}</td>
+                            <td class="qty">${mQty || ''}</td>
+                            <td class="loc">${getLoc(mName)}</td>
+                        </tr>`;
+                    }
+                }
             });
             tbody.innerHTML = html;
         }
