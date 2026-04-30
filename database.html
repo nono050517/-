@@ -25,10 +25,10 @@
                 <th class="lv">Lv</th>
                 <th>レシピ名</th>
                 <th>完成品</th>
-                <th>素材1</th><th class="qty">個</th>
-                <th>素材2</th><th class="qty">個</th>
-                <th>素材3</th><th class="qty">個</th>
-                <th>素材4</th><th class="qty">個</th>
+                <th>素材1</th><th class="qty">数量</th>
+                <th>素材2</th><th class="qty">数量</th>
+                <th>素材3</th><th class="qty">数量</th>
+                <th>素材4</th><th class="qty">数量</th>
                 <th>入手場所</th>
             </tr>
         </thead>
@@ -69,13 +69,13 @@
                     <td>${r.recipe_name || ''}</td>
                     <td>${r.output_item_name || ''}</td>
                     <td>${r.material_1 || ''}</td>
-                    <td class="qty">${r.amount_1_qty ?? ''}</td>
+                    <td>${r.amount_1 || ''}</td>
                     <td>${r.material_2 || ''}</td>
-                    <td class="qty">${r.amount_2_qty ?? ''}</td>
+                    <td>${r.amount_2 || ''}</td>
                     <td>${r.material_3 || ''}</td>
-                    <td class="qty">${r.amount_3_qty ?? ''}</td>
+                    <td>${r.amount_3 || ''}</td>
                     <td>${r.material_4 || ''}</td>
-                    <td class="qty">${r.amount_4_qty ?? ''}</td>
+                    <td>${r.amount_4 || ''}</td>
                     <td>${r.location || ''}</td>
                 </tr>`;
             });
