@@ -1,49 +1,71 @@
-async function fetchData() {
-    const searchInput = document.getElementById('searchInput');
-    const search = searchInput ? searchInput.value : '';
-    const display = document.getElementById('display-area');
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>エリシア攻略データベース</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; background: #f4f1ea; padding: 20px; }
+        .card { background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #8b4513; }
+        .search-box { margin-bottom: 20px; padding: 10px; width: 100%; box-sizing: border-box; }
+        strong { color: #2c3e50; font-size: 1.2em; }
+        .price-tag { display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold; color: #d35400; }
+    </style>
+</head>
+<body>
 
-    if (!display) return; // 表示エリアがない場合は中断
-    display.innerHTML = '<div>読み込み中...</div>';
+    <h2>📦 エリシア攻略データベース</h2>
+    <input type="text" id="searchInput" class="search-box" placeholder="アイテム名で検索..." oninput="fetchData()">
+    <div id="display-area">読み込み中...</div>
 
-    try {
-        // Supabaseからデータを取得
-        let query = supabaseClient.from('items').select('*');
+    <script>
+        // ここに以前設定したSupabaseの接続情報を入れてください
+        const SUPABASE_URL = 'あなたのURL';
+        const SUPABASE_KEY = 'あなたのキー';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        if (search) {
-            query = query.ilike('name', `%${search}%`);
+        async function fetchData() {
+            const searchInput = document.getElementById('searchInput');
+            const search = searchInput ? searchInput.value : '';
+            const display = document.getElementById('display-area');
+            if (!display) return;
+
+            try {
+                let query = supabaseClient.from('items').select('*');
+                if (search) {
+                    query = query.ilike('name', `%${search}%`);
+                }
+                const { data, error } = await query;
+                if (error) throw error;
+
+                display.innerHTML = '';
+                if (data.length === 0) {
+                    display.innerHTML = '該当するデータが見つかりませんでした。';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div style="font-size: 0.8em; color: #8b4513;">${item.category || ''}</div>
+                        <strong>${item.name || '名称未設定'}</strong>
+                        <div style="color: #666;">📍 ${item.location || '不明'}</div>
+                        <p style="background: #fdf5e6; padding: 5px; border-radius: 4px;">${item.description || '説明なし'}</p>
+                        <div class="price-tag">
+                            <span>🛒 買値: ${item.buy_price || '-'}</span>
+                            <span>🪙 売値: ${item.sell_price || '-'}</span>
+                        </div>
+                    `;
+                    display.appendChild(card);
+                });
+            } catch (err) {
+                display.innerHTML = `<div style="color:red;">エラー: ${err.message}</div>`;
+            }
         }
 
-        const { data, error } = await query;
-
-        if (error) throw error;
-
-        // データの表示処理
-        display.innerHTML = '';
-        if (data.length === 0) {
-            display.innerHTML = '<div>該当するデータが見つかりませんでした。</div>';
-            return;
-        }
-
-        data.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            // HTMLの中身を構築
-            card.innerHTML = `
-                <div style="font-size: 0.8em; color: #8b4513;">${item.category || ''}</div>
-                <strong style="font-size: 1.2em;">${item.name || '名称未設定'}</strong>
-                <div style="color: #666; font-size: 0.9em;">📍 ${item.location || '不明'}</div>
-                <p style="background: #fdf5e6; padding: 5px; border-radius: 4px;">${item.description || '説明なし'}</p>
-                <div style="display: flex; justify-content: space-between; font-weight: bold;">
-                    <span>🛒 買値: ${item.buy_price || '-'}</span>
-                    <span>🪙 売値: ${item.sell_price || '-'}</span>
-                </div>
-            `;
-            display.appendChild(card);
-        });
-
-    } catch (err) {
-        console.error('エラーの詳細:', err);
-        display.innerHTML = `<div style="color:red;">エラーが発生しました: ${err.message}</div>`;
-    }
-}
+        // 最初にデータを読み込む
+        fetchData();
+    </script>
+</body>
+</html>
