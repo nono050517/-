@@ -14,9 +14,10 @@
         .row-output { background: #e8f0ff !important; font-weight: bold; }
         .row-sub { color: #555; }
         
-        .lv { text-align: center; width: 40px; }
-        .job-col { width: 80px; }
-        .skill-col { width: 100px; }
+        /* 列幅の調整 */
+        .job-col { width: 60px; }
+        .skill-col { width: 140px; } /* スキル+Lvを表示するため少し広げました */
+        .lv-col { width: 30px; }
 
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
@@ -40,8 +41,8 @@
         <thead>
             <tr>
                 <th class="job-col">職業</th>
-                <th class="skill-col">スキル</th>
-                <th class="lv">Lv</th>
+                <th class="skill-col">スキル (Lv)</th>
+                <th class="lv-col">Lv</th>
                 <th>レシピ構成（チェックリスト）</th>
             </tr>
         </thead>
@@ -81,7 +82,6 @@
 
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
-                    
                     let prefix = '   '; 
                     parentTrace.forEach(isParentLast => {
                         prefix += isParentLast ? '   ' : '│  ';
@@ -91,7 +91,6 @@
                     const mLoc = getLocText(m.name);
                     const subR = recipes.find(r => r.output_item_name === m.name);
                     
-                    // スキル名の横に (LvX) を追加
                     let craftInfo = '';
                     if (subR) {
                         craftInfo = `<span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}<span class="lv-label">(Lv${subR.skill_lv})</span>：${subR.recipe_name}</span>`;
@@ -118,7 +117,16 @@
 
             let html = '';
             recipes.forEach(r => {
-                html += `<tr class="row-recipe"><td>${r.required_jobs || ''}</td><td>${r.skill_type || ''}</td><td class="lv">${r.skill_lv || ''}</td><td>${r.recipe_name || ''}</td></tr>`;
+                // 親レシピの「スキル」と「Lv」を統合
+                const skillWithLv = `${r.skill_type || ''}<span class="lv-label">(Lv${r.skill_lv || ''})</span>`;
+                
+                html += `
+                <tr class="row-recipe">
+                    <td>${r.required_jobs || ''}</td>
+                    <td>${skillWithLv}</td>
+                    <td style="text-align:center;">${r.skill_lv || ''}</td>
+                    <td>${r.recipe_name || ''}</td>
+                </tr>`;
                 
                 html += `
                 <tr class="row-output">
