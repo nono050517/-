@@ -5,38 +5,38 @@
     <title>エリシア攻略：全レシピ階層表示</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; background: #fff; color: #202122; line-height: 1.5; }
+        body { font-family: sans-serif; margin: 0; background: #fff; color: #202122; line-height: 1.4; }
         .main-content { padding: 30px 50px; max-width: 1200px; margin: auto; }
-        h1 { font-family: serif; border-bottom: 1px solid #a2a9b1; font-weight: normal; margin-bottom: 25px; }
+        h1 { font-family: serif; border-bottom: 1px solid #a2a9b1; font-weight: normal; }
         
-        .tree-container { border: 1px solid #a2a9b1; background: #f8f9fa; padding: 20px; border-radius: 4px; }
+        .tree-container { border: 1px solid #a2a9b1; background: #f8f9fa; padding: 20px; }
         .tree-node { list-style: none; padding-left: 0; }
         .tree-node ul { 
             list-style: none; 
             padding-left: 35px; 
             border-left: 1px solid #c8ccd1; 
-            margin: 6px 0;
+            margin: 5px 0;
         }
-        .tree-node li { padding: 6px 12px; border-bottom: 1px solid #eef0f2; }
-        .tree-node li:hover { background-color: #eaf3ff; }
+        .tree-node li { padding: 5px 10px; border-bottom: 1px solid #eef0f2; }
 
-        .item-name { font-weight: bold; font-size: 1.05em; }
-        .qty-num { color: #d33; font-weight: bold; margin: 0 10px; font-size: 1.1em; background: #fff5f5; padding: 1px 5px; border-radius: 3px; border: 1px solid #ffdada; }
-        .info-text { color: #54595d; font-size: 0.85em; font-weight: normal; }
+        .item-name { font-weight: bold; }
+        /* 数量をレシピ通りの赤文字で表示 */
+        .qty-num { color: #d33; font-weight: bold; margin: 0 8px; font-size: 1.1em; }
+        .info-text { color: #54595d; font-size: 0.85em; }
         .shop-tag { 
             color: #0066cc; font-size: 0.82em; background: #fff; 
-            padding: 2px 8px; border: 1px solid #a2a9b1; border-radius: 3px; margin-left: 10px;
+            padding: 1px 6px; border: 1px solid #a2a9b1; border-radius: 2px; margin-left: 10px;
         }
-        .root-item { margin-top: 30px; border-top: 3px double #a2a9b1; padding-top: 15px; }
+        .root-item { margin-top: 30px; border-top: 2px solid #a2a9b1; padding-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="main-content">
-        <h1>エリシア生産データベース（全一覧）</h1>
+        <h1>エリシア生産データベース</h1>
         <div id="display-area" class="tree-container">
             <ul id="tree-root" class="tree-node">
-                <li>データベースを読み込み中...</li>
+                <li>読み込み中...</li>
             </ul>
         </div>
     </div>
@@ -46,36 +46,60 @@
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
-        async function buildTree(itemName, totalNeeded = 1) {
+        async function buildTree(itemName) {
+            // そのアイテムを作るレシピを取得
             const { data: recipes } = await client.from('recipes').select('*').eq('output_item_name', itemName);
             
             let html = `<li>`;
             if (recipes && recipes.length > 0) {
                 const r = recipes[0];
                 html += `<span class="item-name">■ ${itemName}</span>`;
-                html += `<span class="qty-num">${totalNeeded} 個</span>`;
                 html += `<span class="info-text">(${r.recipe_name || ''} / Lv.${r.skill_lv || ''})</span>`;
-                if(r.location) html += `<span class="shop-tag">場所: ${r.location}</span>`;
+                if(r.location) html += `<span class="shop-tag">${r.location}</span>`;
 
                 html += `<ul>`;
+                // 素材1〜3をループ
                 for (let i = 1; i <= 3; i++) {
                     const mName = r[`material_${i}`];
-                    // 修正：文字列を確実に数値へ変換。NaNや空なら1として扱う
-                    let rawVal = r[`material_${i}_qty`];
-                    let mQty = Number(rawVal);
-                    if (isNaN(mQty) || mQty <= 0) mQty = 1;
+                    const mQty = r[`material_${i}_qty`];
 
                     if (mName && mName !== 'NULL' && mName !== '') {
-                        // 子の必要数 = この素材の必要数 × 上位アイテムの必要数
-                        html += await buildTree(mName, mQty * totalNeeded);
+                        // 次の階層へ（計算はせず、その素材単体の必要数を渡す）
+                        html += await buildSubTree(mName, mQty);
                     }
                 }
                 html += `</ul>`;
             } else {
-                // 素材
                 html += `<span class="item-name">・ ${itemName}</span>`;
-                html += `<span class="qty-num">${totalNeeded} 個</span>`;
+                html += `<span class="shop-tag">ショップ・採取</span>`;
+            }
+            html += `</li>`;
+            return html;
+        }
+
+        // 子階層専用の関数（数量表示を伴う）
+        async function buildSubTree(itemName, qty) {
+            const { data: recipes } = await client.from('recipes').select('*').eq('output_item_name', itemName);
+            
+            let html = `<li>`;
+            html += `<span class="item-name">・ ${itemName}</span>`;
+            html += `<span class="qty-num">${qty}個</span>`; // レシピに書かれた個数をそのまま表示
+
+            if (recipes && recipes.length > 0) {
+                const r = recipes[0];
+                html += `<span class="info-text">(${r.recipe_name || ''} / Lv.${r.skill_lv || ''})</span>`;
                 
+                html += `<ul>`;
+                for (let i = 1; i <= 3; i++) {
+                    const mName = r[`material_${i}`];
+                    const mQty = r[`material_${i}_qty`];
+                    if (mName && mName !== 'NULL' && mName !== '') {
+                        html += await buildSubTree(mName, mQty);
+                    }
+                }
+                html += `</ul>`;
+            } else {
+                // 素材の入手場所を表示
                 const { data: itemInfo } = await client.from('recipes').select('location').eq('output_item_name', itemName).limit(1);
                 const loc = (itemInfo && itemInfo[0] && itemInfo[0].location) ? itemInfo[0].location : "ショップ・採取";
                 html += `<span class="shop-tag">${loc}</span>`;
@@ -86,19 +110,13 @@
 
         async function loadAllTrees() {
             const root = document.getElementById('tree-root');
-            const { data: allItems, error } = await client.from('recipes').select('output_item_name');
-            
-            if (error || !allItems) {
-                root.innerHTML = '<li>データの取得に失敗しました。</li>';
-                return;
-            }
+            const { data: allItems } = await client.from('recipes').select('output_item_name');
+            if (!allItems) return;
 
             const uniqueItems = [...new Set(allItems.map(item => item.output_item_name))];
-            
             root.innerHTML = '';
             for (const itemName of uniqueItems) {
-                // 各アイテムを「完成品(1個)」としてツリー構築開始
-                const treeHtml = await buildTree(itemName, 1);
+                const treeHtml = await buildTree(itemName);
                 const wrapper = document.createElement('div');
                 wrapper.className = 'root-item';
                 wrapper.innerHTML = treeHtml;
