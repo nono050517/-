@@ -11,9 +11,10 @@
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; }
         .row-output { background: #e8f0ff !important; font-weight: bold; }
         .row-material { background: #fff; }
-        .qty { color: #d00; text-align: right; width: 30px; }
         .lv { text-align: center; width: 25px; }
         .loc { font-size: 11px; color: #b35900; font-weight: bold; white-space: pre-wrap; }
+        /* 数量のデザイン */
+        .qty-inline { color: #d00; font-weight: bold; margin-left: 4px; }
     </style>
 </head>
 <body>
@@ -26,12 +27,11 @@
                 <th class="lv">Lv</th>
                 <th>レシピ名</th>
                 <th>アイテム名（完成品/素材）</th>
-                <th class="qty">数量</th>
                 <th class="loc">入手場所 (location - target)</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
-            <tr><td colspan="7">データ読み込み中...</td></tr>
+            <tr><td colspan="6">データ読み込み中...</td></tr>
         </tbody>
     </table>
 
@@ -49,7 +49,7 @@
             ]);
 
             if (rRes.error) {
-                tbody.innerHTML = '<tr><td colspan="7">エラー: ' + rRes.error.message + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6">エラー: ' + rRes.error.message + '</td></tr>';
                 return;
             }
 
@@ -69,7 +69,7 @@
 
             let html = '';
             recipes.forEach(r => {
-                // 1. 完成品の行 (職業を required_jobs に修正)
+                // 1. 完成品の行
                 html += `
                 <tr class="row-output">
                     <td>${r.required_jobs || ''}</td>
@@ -77,10 +77,10 @@
                     <td class="lv">${r.skill_lv || ''}</td>
                     <td>${r.recipe_name || ''}</td>
                     <td>【完成】${r.output_item_name || ''}</td>
-                    <td class="qty">-</td>
                     <td class="loc">${getLoc(r.output_item_name)}</td>
                 </tr>`;
 
+                // 2. 素材の行（数量をアイテム名の横に表示）
                 for (let i = 1; i <= 4; i++) {
                     const mName = r[`material_${i}`];
                     const mQty = r[`amount_${i}`];
@@ -89,8 +89,7 @@
                         html += `
                         <tr class="row-material">
                             <td colspan="4"></td>
-                            <td>└ 素材${i}: ${mName}</td>
-                            <td class="qty">${mQty || ''}</td>
+                            <td>└ 素材${i}: ${mName} <span class="qty-inline">(×${mQty || 0})</span></td>
                             <td class="loc">${getLoc(mName)}</td>
                         </tr>`;
                     }
