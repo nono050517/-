@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>エリシア生産データ一覧（職業アコーディオン版）</title>
+    <title>エリシア生産データ一覧（重複排除版）</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
@@ -10,18 +10,15 @@
         th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; vertical-align: top; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         
-        /* 階層別背景色 */
-        .row-job { background: #b0b0b0; font-weight: bold; font-size: 13px; cursor: pointer; }
+        .row-job { background: #b0b0b0; font-weight: bold; font-size: 13px; cursor: pointer; height: 24px; }
         .row-skill { background: #e0e0e0; font-weight: bold; font-size: 12px; cursor: pointer; }
         .row-recipe { color: #333; font-weight: bold; cursor: pointer; }
         .row-output { font-weight: bold; background: #f4f8ff; }
         .row-sub { color: #555; }
         
         .hidden { display: none; }
-        
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
-        
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         
         .tree-line { 
@@ -34,6 +31,7 @@
         }
         
         .toggle-icon { display: inline-block; width: 15px; text-align: center; margin-right: 5px; }
+        .job-label { vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -41,7 +39,7 @@
     <table>
         <thead>
             <tr>
-                <th>生産レシピ（職業 ＞ スキル ＞ レシピ）</th>
+                <th>生産レシピ（重複データ除外済み）</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
@@ -54,19 +52,23 @@
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
-        // 開閉制御（子要素すべてにクラスを付け外し）
         function toggleLayer(id, btnId) {
             const elements = document.querySelectorAll(`[data-parent*="${id}"]`);
             const btn = document.getElementById(btnId);
+            if (elements.length === 0) return;
             const isHiding = !elements[0].classList.contains('hidden');
 
             elements.forEach(el => {
                 if (isHiding) {
                     el.classList.add('hidden');
                 } else {
-                    // 親が閉じている場合は表示しないロジックが必要だが、
-                    // シンプルにするため直下の子だけ制御する運用にする
-                    el.classList.remove('hidden');
+                    // 親の階層が閉じているかチェックする簡易実装
+                    const parents = el.getAttribute('data-parent').split(' ');
+                    const isAnyParentHidden = parents.some(p => {
+                        const pBtn = document.getElementById(`btn-${p}`);
+                        return pBtn && pBtn.textContent === '▶';
+                    });
+                    if (!isAnyParentHidden) el.classList.remove('hidden');
                 }
             });
             if (btn) btn.textContent = isHiding ? '▶' : '▼';
@@ -118,7 +120,6 @@
                 return rows;
             };
 
-            // データの構造化（Job > Skill > Recipes）
             const jobGroup = {};
             recipes.forEach(r => {
                 if (!jobGroup[r.required_jobs]) jobGroup[r.required_jobs] = {};
@@ -132,9 +133,8 @@
                 const jobName = getFullJobName(jobCode);
                 const jobId = `job-${jIdx}`;
                 
-                // 1. 職業行
                 html += `<tr class="row-job" onclick="toggleLayer('${jobId}', 'btn-${jobId}')">
-                    <td><span class="toggle-icon" id="btn-${jobId}">▼</span>${jobName}</td>
+                    <td><span class="toggle-icon" id="btn-${jobId}">▼</span><span class="job-label">${jobName}</span></td>
                 </tr>`;
 
                 Object.keys(jobGroup[jobCode]).forEach((skillKey, sIdx) => {
@@ -142,22 +142,27 @@
                     const recipesInSkill = jobGroup[jobCode][skillKey];
                     const [sType, sLv] = skillKey.split('_');
 
-                    // 2. スキル行
                     html += `<tr class="row-skill" data-parent="${jobId}" onclick="toggleLayer('${skillId}', 'btn-${skillId}')">
                         <td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${skillId}">▼</span>${sType} (Lv${sLv})</td>
                     </tr>`;
 
-                    recipesInSkill.forEach((r, rIdx) => {
+                    // --- 重複排除の処理 ---
+                    const seenRecipes = new Set();
+                    const filteredRecipes = recipesInSkill.filter(r => {
+                        if (seenRecipes.has(r.recipe_name)) return false;
+                        seenRecipes.add(r.recipe_name);
+                        return true;
+                    });
+
+                    filteredRecipes.forEach((r, rIdx) => {
                         const recipeId = `${skillId}-rec-${rIdx}`;
-                        const isLastRec = (rIdx === recipesInSkill.length - 1);
+                        const isLastRec = (rIdx === filteredRecipes.length - 1);
                         const rMark = isLastRec ? '┗' : '┣';
 
-                        // 3. レシピ名
                         html += `<tr class="row-recipe row-sub" data-parent="${jobId} ${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')">
                             <td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▼</span>【${r.recipe_name}】</td>
                         </tr>`;
 
-                        // 4. 完成品 & 素材
                         const outPre = isLastRec ? '      ' : '   │  ';
                         html += `<tr class="row-output row-sub" data-parent="${jobId} ${skillId} ${recipeId}">
                             <td><span class="tree-line">${outPre}┗ </span><input type="checkbox" class="cb"><span>${r.output_item_name}</span></td>
@@ -168,7 +173,7 @@
             });
             tbody.innerHTML = html;
         }
-        loadAllRecipes();
+            loadAllRecipes();
     </script>
 </body>
 </html>
