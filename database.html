@@ -5,37 +5,35 @@
     <title>エリシア生産データ一覧</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: "Meiryo", "Hiragino Kaku Gothic ProN", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
+        body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
         table { width: 100%; border-collapse: collapse; line-height: 1.4; table-layout: fixed; }
-        th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; }
-        th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; }
+        th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; vertical-align: top; }
+        th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         
-        .row-recipe { background: #f0f0f0; font-weight: bold; font-size: 12px; }
+        /* 親レシピ行 */
+        .row-recipe-header { background: #f0f0f0; font-weight: bold; font-size: 12px; }
         .skill-title { font-weight: bold; }
         
+        /* レシピ名行（スキル名の直下） */
+        .row-recipe-name { background: #fafafa; font-weight: bold; color: #333; }
+        
+        /* 完成品行 */
         .row-output { background: #e8f0ff !important; font-weight: bold; }
         .row-sub { color: #555; }
         
-        /* 列幅の調整：正式名称が入るよう少し広げました */
         .job-col { width: 100px; }
         .skill-col { width: 160px; }
         
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
-        
-        /* 生産情報の書体（青字・太字で統一） */
         .craft-inline { color: #0066cc; font-weight: bold; margin-left: 10px; }
         .craft-lv { color: #0066cc; font-weight: bold; }
         
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
+        .tree-line { font-family: "Consolas", "Monaco", monospace; white-space: pre; color: #bbb; display: inline-block; letter-spacing: 0.1em; }
         
-        .tree-line { 
-            font-family: "Consolas", "Monaco", "Courier New", monospace; 
-            white-space: pre; 
-            color: #bbb; 
-            display: inline-block;
-            letter-spacing: 0.1em;
-        }
+        /* レシピごとの区切りを少し分かりやすく */
+        .recipe-group-separator { border-top: 2px solid #888 !important; }
     </style>
 </head>
 <body>
@@ -60,10 +58,8 @@
 
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
-            
-            // recipes, items, job_masters の3つのテーブルからデータを取得
             const [rRes, iRes, jRes] = await Promise.all([
-                client.from('recipes').select('*').order('skill_type').order('skill_lv'),
+                client.from('recipes').select('*').order('required_jobs').order('skill_type').order('skill_lv'),
                 client.from('items').select('*'),
                 client.from('job_masters').select('*')
             ]);
@@ -72,7 +68,6 @@
             const itemsData = iRes.data || [];
             const jobsData = jRes.data || [];
 
-            // 略称を正式名称に変換する関数
             const getFullJobName = (shortName) => {
                 if (!shortName) return '';
                 const match = jobsData.find(j => j.short_name === shortName);
@@ -96,17 +91,12 @@
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
                     let prefix = '   '; 
-                    parentTrace.forEach(isParentLast => {
-                        prefix += isParentLast ? '   ' : '│  ';
-                    });
+                    parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
                     const mark = isLast ? '┗' : '┣';
-                    
-                    const mLoc = getLocText(m.name);
                     const subR = recipes.find(r => r.output_item_name === m.name);
                     
                     let craftInfo = '';
                     if (subR) {
-                        // 【変更】職業を正式名称に変換
                         const fullJob = getFullJobName(subR.required_jobs);
                         craftInfo = `<span class="craft-inline">生産：${fullJob}：${subR.skill_type}<span class="craft-lv">(Lv${subR.skill_lv})</span>：${subR.recipe_name}</span>`;
                     }
@@ -118,42 +108,55 @@
                             <span class="tree-line">${prefix}${mark}</span>
                             <input type="checkbox" class="cb"><span>${m.name}</span>
                             <span class="qty-inline">(×${m.qty || 0})</span>
-                            <span class="loc-inline">${mLoc}</span>
+                            <span class="loc-inline">${getLocText(m.name)}</span>
                             ${craftInfo}
                         </td>
                     </tr>`;
 
-                    if (subR) {
-                        rows += renderMaterials(subR, depth + 1, [...parentTrace, isLast]);
-                    }
+                    if (subR) rows += renderMaterials(subR, depth + 1, [...parentTrace, isLast]);
                 });
                 return rows;
             };
 
-            let html = '';
+            // グルーピング処理
+            const grouped = {};
             recipes.forEach(r => {
-                const skillWithLv = `<span class="skill-title">${r.skill_type || ''} (Lv${r.skill_lv || ''})</span>`;
-                // 【変更】親レシピの職業を正式名称に変換
-                const fullJob = getFullJobName(r.required_jobs);
+                const key = `${r.required_jobs}_${r.skill_type}_${r.skill_lv}`;
+                if (!grouped[key]) grouped[key] = { job: r.required_jobs, skill: r.skill_type, lv: r.skill_lv, list: [] };
+                grouped[key].list.push(r);
+            });
+
+            let html = '';
+            Object.values(grouped).forEach((group, gIdx) => {
+                const fullJob = getFullJobName(group.job);
+                const skillWithLv = `<span class="skill-title">${group.skill} (Lv${group.lv})</span>`;
                 
+                // 親ヘッダー（職業・スキル）
                 html += `
-                <tr class="row-recipe">
+                <tr class="row-recipe-header ${gIdx > 0 ? 'recipe-group-separator' : ''}">
                     <td>${fullJob}</td>
                     <td>${skillWithLv}</td>
-                    <td>${r.recipe_name || ''}</td>
+                    <td>（レシピ一覧）</td>
                 </tr>`;
-                
-                html += `
-                <tr class="row-output">
-                    <td colspan="2"></td>
-                    <td>
-                        <span class="tree-line">┗</span>
-                        <input type="checkbox" class="cb"><span>${r.output_item_name || ''}</span>
-                        <span class="loc-inline">${getLocText(r.output_item_name)}</span>
-                    </td>
-                </tr>`;
-                
-                html += renderMaterials(r, 0, []);
+
+                group.list.forEach(r => {
+                    // 各レシピ名
+                    html += `<tr class="row-recipe-name"><td colspan="2"></td><td>【${r.recipe_name}】</td></tr>`;
+                    
+                    // 完成品
+                    html += `
+                    <tr class="row-output">
+                        <td colspan="2"></td>
+                        <td>
+                            <span class="tree-line">┗</span>
+                            <input type="checkbox" class="cb"><span>${r.output_item_name}</span>
+                            <span class="loc-inline">${getLocText(r.output_item_name)}</span>
+                        </td>
+                    </tr>`;
+                    
+                    // 素材ツリー
+                    html += renderMaterials(r, 0, []);
+                });
             });
             tbody.innerHTML = html;
         }
