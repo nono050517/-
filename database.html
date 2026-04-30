@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>エリシア生産データ一覧（職業マスタ順）</title>
+    <title>エリシア生産データ一覧（必要スキル情報復活版）</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
@@ -19,6 +19,10 @@
         .hidden { display: none; }
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
+        /* 復活させた青文字スタイル */
+        .craft-inline { color: #0066cc; font-weight: bold; margin-left: 10px; }
+        .craft-lv { color: #0066cc; font-weight: bold; }
+        
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         
         .tree-line { 
@@ -38,7 +42,7 @@
     <table>
         <thead>
             <tr>
-                <th>生産レシピ（職業マスタ順）</th>
+                <th>生産レシピ（必要スキル情報あり）</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
@@ -74,16 +78,20 @@
 
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
-            // job_masters も order 指定なしで取得（テーブルのデフォルト順を期待）
             const [rRes, iRes, jRes] = await Promise.all([
                 client.from('recipes').select('*').order('skill_type').order('skill_lv'),
                 client.from('items').select('*'),
-                client.from('job_masters').select('*') 
+                client.from('job_masters').select('*')
             ]);
 
             const recipes = rRes.data || [];
             const itemsData = iRes.data || [];
             const jobsData = jRes.data || [];
+
+            const getFullJobName = (shortName) => {
+                const match = jobsData.find(j => j.short_name === shortName);
+                return match ? match.full_name : shortName;
+            };
 
             const getLocText = (itemName) => {
                 const match = itemsData.find(item => item.name === itemName && item.method === "購入");
@@ -104,28 +112,39 @@
                     let prefix = '';
                     parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
                     const mark = isLast ? '┗' : '┣';
-                    rows += `<tr class="row-sub" data-parent="${pId}">
-                        <td><span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb"><span>${m.name}</span><span class="qty-inline">(×${m.qty || 0})</span><span class="loc-inline">${getLocText(m.name)}</span></td>
-                    </tr>`;
+
+                    // 素材が生産可能かチェックし、情報を構築
                     const subR = recipes.find(r => r.output_item_name === m.name);
+                    let craftInfo = '';
+                    if (subR) {
+                        const fullJob = getFullJobName(subR.required_jobs);
+                        craftInfo = `<span class="craft-inline">生産：${fullJob}：${subR.skill_type}<span class="craft-lv">(Lv${subR.skill_lv})</span></span>`;
+                    }
+
+                    rows += `<tr class="row-sub" data-parent="${pId}">
+                        <td>
+                            <span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb"><span>${m.name}</span>
+                            <span class="qty-inline">(×${m.qty || 0})</span>
+                            <span class="loc-inline">${getLocText(m.name)}</span>
+                            ${craftInfo}
+                        </td>
+                    </tr>`;
+
                     if (subR) rows += renderMaterials(subR, pId, [...parentTrace, isLast]);
                 });
                 return rows;
             };
 
             let html = '';
-
-            // 1. まず職業マスタの順番でループを回す
             jobsData.forEach((job, jIdx) => {
                 const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
-                if (jobRecipes.length === 0) return; // レシピがない職業は飛ばす
+                if (jobRecipes.length === 0) return;
 
                 const jobId = `job-${jIdx}`;
                 html += `<tr class="row-job" onclick="toggleLayer('${jobId}', 'btn-${jobId}')">
                     <td><span class="toggle-icon" id="btn-${jobId}">▼</span>${job.full_name}</td>
                 </tr>`;
 
-                // 2. 職業内のスキルでグループ化
                 const skillGroup = {};
                 jobRecipes.forEach(r => {
                     const sKey = `${r.skill_type}_${r.skill_lv}`;
@@ -139,7 +158,6 @@
                     const filteredRecipes = [];
                     const seen = new Set();
 
-                    // スキル内の重複レシピ排除
                     skillGroup[skillKey].forEach(r => {
                         if (!seen.has(r.recipe_name)) {
                             seen.add(r.recipe_name);
@@ -168,7 +186,6 @@
                     });
                 });
             });
-
             tbody.innerHTML = html;
         }
         loadAllRecipes();
