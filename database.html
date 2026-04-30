@@ -5,7 +5,7 @@
     <title>エリシア生産データ一覧</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: "Meiryo", "Hiragino Kaku Gothic ProN", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
+        body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
         table { width: 100%; border-collapse: collapse; line-height: 1.4; table-layout: fixed; }
         th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; }
@@ -25,7 +25,7 @@
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         
         .tree-line { 
-            font-family: "Consolas", "Monaco", "Courier New", monospace; 
+            font-family: "Consolas", "Monaco", monospace; 
             white-space: pre; 
             color: #bbb; 
             display: inline-block;
@@ -45,7 +45,7 @@
             </tr>
         </thead>
         <tbody id="recipe-body">
-            <tr><td colspan="4">データ読み込み中...</td></tr>
+            <tr><td colspan="4">読み込み中...</td></tr>
         </tbody>
     </table>
 
@@ -61,12 +61,7 @@
                 client.from('items').select('*')
             ]);
 
-            if (rRes.error) {
-                tbody.innerHTML = '<tr><td colspan="4">エラー: ' + rRes.error.message + '</td></tr>';
-                return;
-            }
-
-            const recipes = rRes.data;
+            const recipes = rRes.data || [];
             const itemsData = iRes.data || [];
 
             const getLocText = (itemName) => {
@@ -86,7 +81,8 @@
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
                     
-                    let prefix = '';
+                    // インデントの計算（depth=0の時から1つ右に下げる）
+                    let prefix = '   '; // 完成品の直下を一段下げるための固定インデント
                     parentTrace.forEach(isParentLast => {
                         prefix += isParentLast ? '   ' : '│  ';
                     });
@@ -94,12 +90,7 @@
                     
                     const mLoc = getLocText(m.name);
                     const subR = recipes.find(r => r.output_item_name === m.name);
-
-                    // 素材行の構築（生産レシピがある場合は横に並べる）
-                    let craftInfo = '';
-                    if (subR) {
-                        craftInfo = `<span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}：${subR.recipe_name}</span>`;
-                    }
+                    let craftInfo = subR ? `<span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}：${subR.recipe_name}</span>` : '';
 
                     rows += `
                     <tr class="row-material ${depth > 0 ? 'row-sub' : ''}">
@@ -113,10 +104,8 @@
                         </td>
                     </tr>`;
 
-                    // 下層がある場合は再帰
                     if (subR) {
-                        const newTrace = [...parentTrace, isLast];
-                        rows += renderMaterials(subR, depth + 1, newTrace);
+                        rows += renderMaterials(subR, depth + 1, [...parentTrace, isLast]);
                     }
                 });
                 return rows;
