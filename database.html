@@ -5,29 +5,33 @@
     <title>エリシア生産データ一覧</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
+        body { font-family: "Meiryo", "Hiragino Kaku Gothic ProN", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
         table { width: 100%; border-collapse: collapse; line-height: 1.4; table-layout: fixed; }
         th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; }
         
+        /* ① 親レシピ行の書体統一 */
         .row-recipe { background: #f0f0f0; font-weight: bold; font-size: 12px; }
+        .skill-title { font-weight: bold; } /* Lvラベルと書体を統一 */
+        
         .row-output { background: #e8f0ff !important; font-weight: bold; }
         .row-sub { color: #555; }
         
-        /* 列幅の調整 */
         .job-col { width: 60px; }
-        .skill-col { width: 140px; } /* スキル+Lvを表示するため少し広げました */
+        .skill-col { width: 140px; }
         .lv-col { width: 30px; }
 
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
+        
+        /* ② 下層の生産情報の書体統一 */
         .craft-inline { color: #0066cc; font-weight: bold; margin-left: 10px; }
-        .lv-label { font-size: 0.9em; color: #666; margin-left: 4px; }
+        .craft-lv { color: #0066cc; font-weight: bold; } /* スキル名と同じ色・太さに */
         
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         
         .tree-line { 
-            font-family: "Consolas", "Monaco", monospace; 
+            font-family: "Consolas", "Monaco", "Courier New", monospace; 
             white-space: pre; 
             color: #bbb; 
             display: inline-block;
@@ -93,7 +97,8 @@
                     
                     let craftInfo = '';
                     if (subR) {
-                        craftInfo = `<span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}<span class="lv-label">(Lv${subR.skill_lv})</span>：${subR.recipe_name}</span>`;
+                        // 下層の書体統一
+                        craftInfo = `<span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}<span class="craft-lv">(Lv${subR.skill_lv})</span>：${subR.recipe_name}</span>`;
                     }
 
                     rows += `
@@ -117,8 +122,8 @@
 
             let html = '';
             recipes.forEach(r => {
-                // 親レシピの「スキル」と「Lv」を統合
-                const skillWithLv = `${r.skill_type || ''}<span class="lv-label">(Lv${r.skill_lv || ''})</span>`;
+                // 親レシピの書体統一
+                const skillWithLv = `<span class="skill-title">${r.skill_type || ''} (Lv${r.skill_lv || ''})</span>`;
                 
                 html += `
                 <tr class="row-recipe">
