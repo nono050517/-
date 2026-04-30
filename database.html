@@ -9,15 +9,12 @@
         table { width: 100%; border-collapse: collapse; line-height: 1.2; }
         th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; }
-        
-        /* 完成品行の背景を少し変えて区切りをわかりやすく */
         .row-output { background: #e8f0ff !important; font-weight: bold; }
         .row-material { background: #fff; }
-        
         .qty { color: #d00; text-align: right; width: 30px; }
         .lv { text-align: center; width: 25px; }
-        .type-label { font-size: 9px; color: #666; width: 40px; text-align: center; }
-        .loc { font-size: 10px; color: #0055aa; white-space: pre-wrap; }
+        /* 入手場所を目立たせる */
+        .loc { font-size: 11px; color: #b35900; font-weight: bold; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -47,29 +44,42 @@
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             
-            // 1. レシピと商人データを同時に取得
+            // レシピと商人データを取得
             const [rRes, mRes] = await Promise.all([
                 client.from('recipes').select('*').order('skill_type').order('skill_lv'),
-                client.from('merchants').select('*') // テーブル名は適宜合わせてください
+                client.from('merchants').select('*') 
             ]);
 
             if (rRes.error) {
-                tbody.innerHTML = '<tr><td colspan="7">エラーが発生しました</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7">エラー: ' + rRes.error.message + '</td></tr>';
                 return;
             }
 
             const recipes = rRes.data;
             const merchants = mRes.data || [];
 
-            // 入手場所を検索する関数
+            // 入手場所を検索する関数（CSVのカラム名「場所」「商人名」「販売物品」に対応）
             const getLoc = (itemName) => {
-                const sellers = merchants.filter(m => m.item_name === itemName || m.販売物品 === itemName);
-                return sellers.map(s => `${s.location || s.場所 || ''} - ${s.merchant_name || s.商人名 || s.誰 || ''}`).join('\n');
+                if (!itemName) return '';
+                // 商人データの「販売物品」列がアイテム名と一致するものを探す
+                const sellers = merchants.filter(m => 
+                    (m.item_name === itemName) || 
+                    (m.販売物品 === itemName) ||
+                    (m.name === itemName)
+                );
+                
+                if (sellers.length === 0) return '-';
+                
+                return sellers.map(s => {
+                    const p = s.location || s.場所 || '不明';
+                    const n = s.merchant_name || s.商人名 || s.誰 || '不明';
+                    return `${p} - ${n}`;
+                }).join('\n');
             };
 
             let html = '';
             recipes.forEach(r => {
-                // --- 1. 完成品の行 ---
+                // 完成品の行
                 html += `
                 <tr class="row-output">
                     <td>${r.job_category || ''}</td>
@@ -81,7 +91,7 @@
                     <td class="loc">${getLoc(r.output_item_name)}</td>
                 </tr>`;
 
-                // --- 2. 素材1〜4の行をループで回す ---
+                // 素材1〜4の行
                 for (let i = 1; i <= 4; i++) {
                     const mName = r[`material_${i}`];
                     const mQty = r[`amount_${i}`];
