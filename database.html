@@ -7,7 +7,7 @@
     <style>
         body { font-family: sans-serif; background: #f4f1ea; padding: 20px; }
         .card { background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #8b4513; }
-        .search-box { margin-bottom: 20px; padding: 10px; width: 100%; box-sizing: border-box; }
+        .search-box { margin-bottom: 20px; padding: 10px; width: 100%; box-sizing: border-box; font-size: 16px; }
         strong { color: #2c3e50; font-size: 1.2em; }
         .price-tag { display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold; color: #d35400; }
     </style>
@@ -15,15 +15,19 @@
 <body>
 
     <h2>📦 エリシア攻略データベース</h2>
-    <input type="text" id="searchInput" class="search-box" placeholder="アイテム名で検索..." oninput="fetchData()">
+    <input type="text" id="searchInput" class="search-box" placeholder="アイテム名で検索...">
     <div id="display-area">読み込み中...</div>
 
     <script>
-        // ここに以前設定したSupabaseの接続情報を入れてください
-        const SUPABASE_URL = 'あなたのURL';
-        const SUPABASE_KEY = 'あなたのキー';
+        // --- 設定エリア ---
+        const SUPABASE_URL = 'あなたのURL'; // ここを書き換え
+        const SUPABASE_KEY = 'あなたのキー'; // ここを書き換え
+        // ----------------
+
+        // 1. まずクライアントを初期化（準備）
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // 2. データを取得する関数を定義
         async function fetchData() {
             const searchInput = document.getElementById('searchInput');
             const search = searchInput ? searchInput.value : '';
@@ -60,11 +64,15 @@
                     display.appendChild(card);
                 });
             } catch (err) {
-                display.innerHTML = `<div style="color:red;">エラー: ${err.message}</div>`;
+                console.error(err);
+                display.innerHTML = `<div style="color:red;">エラーが発生しました。設定を確認してください。</div>`;
             }
         }
 
-        // 最初にデータを読み込む
+        // 3. 入力ボックスにイベントを設定
+        document.getElementById('searchInput').addEventListener('input', fetchData);
+
+        // 4. 最初に一度実行する
         fetchData();
     </script>
 </body>
