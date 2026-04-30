@@ -6,21 +6,29 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
-        table { width: 100%; border-collapse: collapse; line-height: 1.2; }
+        table { width: 100%; border-collapse: collapse; line-height: 1.4; }
         th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; }
-        .row-recipe { background: #f0f0f0; font-weight: bold; }
+        
+        .row-recipe { background: #f0f0f0; font-weight: bold; font-size: 12px; }
         .row-output { background: #e8f0ff !important; font-weight: bold; }
-        .row-material { background: #fff; }
-        .row-sub { font-size: 10px; color: #555; }
+        .row-sub { color: #555; }
         
         .lv { text-align: center; width: 25px; }
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
         .craft-inline { color: #0066cc; font-weight: bold; }
         
-        /* ツリーの見た目調整 */
-        .tree-line { font-family: monospace; white-space: pre; color: #ccc; }
+        /* チェックボックスとテキストの配置 */
+        .cb { vertical-align: middle; margin-right: 4px; cursor: pointer; }
+        
+        /* ツリー記号のフォントと配置 */
+        .tree-line { 
+            font-family: "Courier New", Courier, monospace; 
+            white-space: pre; 
+            color: #ccc; 
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -31,7 +39,7 @@
                 <th>職業</th>
                 <th>スキル</th>
                 <th class="lv">Lv</th>
-                <th>レシピ構成（無限掘り下げ）</th>
+                <th>レシピ構成（チェックリスト形式）</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
@@ -64,8 +72,8 @@
                 return match ? `購入：${match.location} - ${match.target}` : '';
             };
 
-            // 【重要】素材を再帰的に掘り下げる関数
-            const renderMaterials = (recipe, depth = 0, isParentLast = true) => {
+            // 素材を再帰的に掘り下げる関数
+            const renderMaterials = (recipe, depth = 0, parentTrace = []) => {
                 let rows = '';
                 const materials = [];
                 for (let i = 1; i <= 4; i++) {
@@ -76,26 +84,45 @@
 
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
-                    const prefix = depth === 0 ? '' : (isParentLast ? '　 ' : '│  ').repeat(depth);
+                    
+                    // インデント記号の生成
+                    let prefix = '';
+                    parentTrace.forEach(isParentLast => {
+                        prefix += isParentLast ? '　 ' : '│  ';
+                    });
                     const mark = isLast ? '┗' : '┣';
+                    
                     const mLoc = getLocText(m.name);
                     const subR = recipes.find(r => r.output_item_name === m.name);
 
                     rows += `
                     <tr class="row-material ${depth > 0 ? 'row-sub' : ''}">
                         <td colspan="3"></td>
-                        <td><span class="tree-line">${prefix}${mark}</span>素材${m.num}：${m.name} <span class="qty-inline">(×${m.qty || 0})</span> <span class="loc-inline">${mLoc}</span></td>
+                        <td>
+                            <span class="tree-line">${prefix}${mark}</span>
+                            <input type="checkbox" class="cb"><label>素材${m.num}：${m.name}</label>
+                            <span class="qty-inline">(×${m.qty || 0})</span>
+                            <span class="loc-inline">${mLoc}</span>
+                        </td>
                     </tr>`;
 
                     if (subR) {
-                        const subPrefix = prefix + (isLast ? '　 ' : '│  ');
+                        const newTrace = [...parentTrace, isLast];
+                        let subPrefix = '';
+                        newTrace.forEach(isL => {
+                            subPrefix += isL ? '　 ' : '│  ';
+                        });
+
                         rows += `
                         <tr class="row-sub">
                             <td colspan="3"></td>
-                            <td><span class="tree-line">${subPrefix}┗</span><span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}：${subR.recipe_name}</span></td>
+                            <td>
+                                <span class="tree-line">${subPrefix}┗</span>
+                                <span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}：${subR.recipe_name}</span>
+                            </td>
                         </tr>`;
-                        // さらに深く掘り下げる（アロマオイルの下のハーブなど）
-                        rows += renderMaterials(subR, depth + 1, isLast);
+                        // 深掘り（次の階層へ）
+                        rows += renderMaterials(subR, depth + 1, newTrace);
                     }
                 });
                 return rows;
@@ -103,9 +130,22 @@
 
             let html = '';
             recipes.forEach(r => {
+                // レシピ親行
                 html += `<tr class="row-recipe"><td>${r.required_jobs || ''}</td><td>${r.skill_type || ''}</td><td class="lv">${r.skill_lv || ''}</td><td>${r.recipe_name || ''}</td></tr>`;
-                html += `<tr class="row-output"><td colspan="3"></td><td><span class="tree-line">┗</span>【完成】${r.output_item_name || ''} <span class="loc-inline">${getLocText(r.output_item_name)}</span></td></tr>`;
-                html += renderMaterials(r);
+                
+                // 完成品行
+                html += `
+                <tr class="row-output">
+                    <td colspan="3"></td>
+                    <td>
+                        <span class="tree-line">┗</span>
+                        <input type="checkbox" class="cb"><label>【完成】${r.output_item_name || ''}</label>
+                        <span class="loc-inline">${getLocText(r.output_item_name)}</span>
+                    </td>
+                </tr>`;
+                
+                // 素材の展開
+                html += renderMaterials(r, 0, []);
             });
             tbody.innerHTML = html;
         }
