@@ -10,16 +10,12 @@
         th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; vertical-align: top; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         
-        /* 親レシピ行 */
+        /* 親レシピ行（職業・スキル） */
         .row-recipe-header { background: #f0f0f0; font-weight: bold; font-size: 12px; }
-        .skill-title { font-weight: bold; }
         
-        /* レシピ名行（スキル名の直下） */
-        .row-recipe-name { background: #fafafa; font-weight: bold; color: #333; }
-        
-        /* 完成品行 */
-        .row-output { background: #e8f0ff !important; font-weight: bold; }
+        /* レシピ名・完成品・素材共通 */
         .row-sub { color: #555; }
+        .row-output { font-weight: bold; }
         
         .job-col { width: 100px; }
         .skill-col { width: 160px; }
@@ -32,8 +28,8 @@
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         .tree-line { font-family: "Consolas", "Monaco", monospace; white-space: pre; color: #bbb; display: inline-block; letter-spacing: 0.1em; }
         
-        /* レシピごとの区切りを少し分かりやすく */
         .recipe-group-separator { border-top: 2px solid #888 !important; }
+        .recipe-name-text { color: #333; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -69,7 +65,6 @@
             const jobsData = jRes.data || [];
 
             const getFullJobName = (shortName) => {
-                if (!shortName) return '';
                 const match = jobsData.find(j => j.short_name === shortName);
                 return match ? match.full_name : shortName;
             };
@@ -90,7 +85,8 @@
 
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
-                    let prefix = '   '; 
+                    // レシピ名の階層があるため、インデントを1つ深く開始
+                    let prefix = '      '; 
                     parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
                     const mark = isLast ? '┗' : '┣';
                     const subR = recipes.find(r => r.output_item_name === m.name);
@@ -102,7 +98,7 @@
                     }
 
                     rows += `
-                    <tr class="row-material ${depth > 0 ? 'row-sub' : ''}">
+                    <tr class="row-material row-sub">
                         <td colspan="2"></td>
                         <td>
                             <span class="tree-line">${prefix}${mark}</span>
@@ -118,7 +114,6 @@
                 return rows;
             };
 
-            // グルーピング処理
             const grouped = {};
             recipes.forEach(r => {
                 const key = `${r.required_jobs}_${r.skill_type}_${r.skill_lv}`;
@@ -129,33 +124,42 @@
             let html = '';
             Object.values(grouped).forEach((group, gIdx) => {
                 const fullJob = getFullJobName(group.job);
-                const skillWithLv = `<span class="skill-title">${group.skill} (Lv${group.lv})</span>`;
+                const skillWithLv = `${group.skill} (Lv${group.lv})`;
                 
-                // 親ヘッダー（職業・スキル）
                 html += `
                 <tr class="row-recipe-header ${gIdx > 0 ? 'recipe-group-separator' : ''}">
                     <td>${fullJob}</td>
                     <td>${skillWithLv}</td>
-                    <td>（レシピ一覧）</td>
+                    <td></td>
                 </tr>`;
 
-                group.list.forEach(r => {
-                    // 各レシピ名
-                    html += `<tr class="row-recipe-name"><td colspan="2"></td><td>【${r.recipe_name}】</td></tr>`;
-                    
-                    // 完成品
+                group.list.forEach((r, rIdx) => {
+                    const isLastRecipe = (rIdx === group.list.length - 1);
+                    const recipeMark = isLastRecipe ? '┗' : '┣';
+
+                    // 1. レシピ名行
                     html += `
-                    <tr class="row-output">
+                    <tr class="row-sub">
                         <td colspan="2"></td>
                         <td>
-                            <span class="tree-line">┗</span>
+                            <span class="tree-line">   ${recipeMark}</span><span class="recipe-name-text">【${r.recipe_name}】</span>
+                        </td>
+                    </tr>`;
+                    
+                    // 2. 完成品行（レシピ名の下にぶら下がる）
+                    const outputPrefix = isLastRecipe ? '      ' : '   │  ';
+                    html += `
+                    <tr class="row-output row-sub">
+                        <td colspan="2"></td>
+                        <td>
+                            <span class="tree-line">${outputPrefix}┗</span>
                             <input type="checkbox" class="cb"><span>${r.output_item_name}</span>
                             <span class="loc-inline">${getLocText(r.output_item_name)}</span>
                         </td>
                     </tr>`;
                     
-                    // 素材ツリー
-                    html += renderMaterials(r, 0, []);
+                    // 3. 素材ツリー
+                    html += renderMaterials(r, 0, [isLastRecipe, true]);
                 });
             });
             tbody.innerHTML = html;
