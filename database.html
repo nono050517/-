@@ -9,71 +9,62 @@
         .card { background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #8b4513; }
         .search-box { margin-bottom: 20px; padding: 10px; width: 100%; box-sizing: border-box; font-size: 16px; }
         strong { color: #2c3e50; font-size: 1.2em; }
-        .price-tag { display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold; color: #d35400; }
     </style>
 </head>
 <body>
 
     <h2>📦 エリシア攻略データベース</h2>
+    <!-- ここから oninput を削除しました -->
     <input type="text" id="searchInput" class="search-box" placeholder="アイテム名で検索...">
-    <div id="display-area">読み込み中...</div>
+    <div id="display-area">準備中...</div>
 
     <script>
-        // --- 設定エリア ---
-        const SUPABASE_URL = 'あなたのURL'; // ここを書き換え
-        const SUPABASE_KEY = 'あなたのキー'; // ここを書き換え
-        // ----------------
+        // 設定エリア（ここを自分の情報に！）
+        const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
+        const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
 
-        // 1. まずクライアントを初期化（準備）
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // 2. データを取得する関数を定義
-        async function fetchData() {
-            const searchInput = document.getElementById('searchInput');
-            const search = searchInput ? searchInput.value : '';
+        // 全てを読み込んでから実行する「安全装置」
+        window.onload = function() {
+            const client = supabase.createClient(S_URL, S_KEY);
+            const input = document.getElementById('searchInput');
             const display = document.getElementById('display-area');
-            if (!display) return;
 
-            try {
-                let query = supabaseClient.from('items').select('*');
-                if (search) {
-                    query = query.ilike('name', `%${search}%`);
+            async function getData() {
+                display.innerHTML = '読み込み中...';
+                try {
+                    let query = client.from('items').select('*');
+                    if (input.value) {
+                        query = query.ilike('name', `%${input.value}%`);
+                    }
+                    const { data, error } = await query;
+                    if (error) throw error;
+
+                    display.innerHTML = '';
+                    if (!data || data.length === 0) {
+                        display.innerHTML = '見つかりませんでした。';
+                        return;
+                    }
+
+                    data.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.innerHTML = `
+                            <strong>${item.name || '無名'}</strong><br>
+                            📍 ${item.location || '不明'}<br>
+                            🛒 買: ${item.buy_price || '-'} / 🪙 売: ${item.sell_price || '-'}
+                        `;
+                        display.appendChild(card);
+                    });
+                } catch (err) {
+                    display.innerHTML = 'エラー: ' + err.message;
                 }
-                const { data, error } = await query;
-                if (error) throw error;
-
-                display.innerHTML = '';
-                if (data.length === 0) {
-                    display.innerHTML = '該当するデータが見つかりませんでした。';
-                    return;
-                }
-
-                data.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-                        <div style="font-size: 0.8em; color: #8b4513;">${item.category || ''}</div>
-                        <strong>${item.name || '名称未設定'}</strong>
-                        <div style="color: #666;">📍 ${item.location || '不明'}</div>
-                        <p style="background: #fdf5e6; padding: 5px; border-radius: 4px;">${item.description || '説明なし'}</p>
-                        <div class="price-tag">
-                            <span>🛒 買値: ${item.buy_price || '-'}</span>
-                            <span>🪙 売値: ${item.sell_price || '-'}</span>
-                        </div>
-                    `;
-                    display.appendChild(card);
-                });
-            } catch (err) {
-                console.error(err);
-                display.innerHTML = `<div style="color:red;">エラーが発生しました。設定を確認してください。</div>`;
             }
-        }
 
-        // 3. 入力ボックスにイベントを設定
-        document.getElementById('searchInput').addEventListener('input', fetchData);
-
-        // 4. 最初に一度実行する
-        fetchData();
+            // 入力されたら検索を実行する
+            input.addEventListener('input', getData);
+            // 最初にデータを表示する
+            getData();
+        };
     </script>
 </body>
 </html>
