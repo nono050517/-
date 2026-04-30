@@ -16,36 +16,32 @@
         
         .hidden { display: none; }
         
-        /* ボタンと空白の幅を「半角3文字分」で完全に固定 */
-        .btn-wrapper {
-            display: inline-block;
-            width: 21px; /* 厳密に固定 */
-            text-align: center;
-            vertical-align: middle;
-        }
-        .toggle-btn { 
-            cursor: pointer; 
-            font-weight: bold; 
-            color: #666;
-            user-select: none;
-            font-size: 12px;
-        }
-
-        .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
-        .loc-inline { color: #b35900; font-weight: bold; }
-        
-        .cb { vertical-align: middle; margin: 0 4px 0 2px; cursor: pointer; }
-        
-        /* 1ブロック = 「│  」 (記号1+半角2) または 「   」 (半角3) */
-        .tree-line { 
+        /* 1ブロック（全角1文字＋半角1文字分）で幅を完全固定 */
+        .tree-unit { 
             font-family: "Consolas", "Monaco", monospace; 
             white-space: pre; 
             color: #bbb; 
             display: inline-block;
             letter-spacing: 0;
             vertical-align: middle;
+            font-size: 11px;
         }
         
+        /* ボタンを浮かさないようにツリー内に配置 */
+        .toggle-btn { 
+            cursor: pointer; 
+            font-weight: bold; 
+            color: #666;
+            user-select: none;
+            display: inline-block;
+            width: 1.5em; /* 記号1つ分と合わせる */
+            text-align: center;
+        }
+
+        .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
+        .loc-inline { color: #b35900; font-weight: bold; }
+        
+        .cb { vertical-align: middle; margin: 0 4px 0 2px; cursor: pointer; }
         .group-sep { border-top: 2px solid #666 !important; }
         .recipe-name-text { color: #333; font-weight: bold; cursor: pointer; vertical-align: middle; }
     </style>
@@ -109,26 +105,23 @@
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
                     
-                    // 縦棒の連続性を確保する計算
-                    let prefix = '';
-                    parentTrace.forEach((isParentLast, depth) => {
-                        if (depth === 0) {
-                            prefix += isParentLast ? '   ' : '│  ';
-                        } else if (depth === 1) {
-                            // 完成品＋ボタン幅の調整（半角6文字分）
-                            prefix += isParentLast ? '      ' : '│     ';
+                    // インデントの組み立て（1ユニット＝"│  " or "   "）
+                    let prefix = "";
+                    parentTrace.forEach((isParentLast, d) => {
+                        if (d === 1) {
+                             // 完成品とボタンの幅を考慮（全角スペース的な幅を確保）
+                             prefix += isParentLast ? "　　" : "│　 "; 
                         } else {
-                            prefix += isParentLast ? '   ' : '│  ';
+                             prefix += isParentLast ? "　 " : "│  ";
                         }
                     });
                     
-                    const mark = isLast ? '┗' : '┣';
+                    const mark = isLast ? "┗" : "┣";
                     
                     rows += `
                     <tr class="row-sub" data-parent="${parentId}">
                         <td>
-                            <span class="tree-line">${prefix}${mark}</span>
-                            <span class="btn-wrapper"></span>
+                            <span class="tree-unit">${prefix}${mark}</span>
                             <input type="checkbox" class="cb"><span>${m.name}</span>
                             <span class="qty-inline">(×${m.qty || 0})</span>
                             <span class="loc-inline">${getLocText(m.name)}</span>
@@ -155,34 +148,33 @@
 
                 html += `
                 <tr class="row-header ${gIdx > 0 ? 'group-sep' : ''}" onclick="toggleGroup('${skillId}')">
-                    <td><span class="btn-wrapper"><span class="toggle-btn" id="btn-${skillId}">▲</span></span> ${fullJob}：${group.skill} (Lv${group.lv})</td>
+                    <td><span class="toggle-btn" id="btn-${skillId}">▲</span> ${fullJob}：${group.skill} (Lv${group.lv})</td>
                 </tr>`;
 
                 group.list.forEach((r, rIdx) => {
                     const recipeId = `recipe-${gIdx}-${rIdx}`;
                     const isLastRecipe = (rIdx === group.list.length - 1);
-                    const recipeMark = isLastRecipe ? '┗' : '┣';
+                    const recipeMark = isLastRecipe ? "┗" : "┣";
 
-                    // 1. レシピ名（インデント：半角3つ）
+                    // 1. レシピ名
                     html += `
                     <tr class="row-sub" data-parent="${skillId}">
                         <td>
-                            <span class="tree-line">   ${recipeMark}</span><span class="btn-wrapper"><span class="toggle-btn" id="btn-${recipeId}" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">▲</span></span><span class="recipe-name-text" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">【${r.recipe_name}】</span>
+                            <span class="tree-unit">　${recipeMark}</span><span class="toggle-btn" id="btn-${recipeId}" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">▲</span><span class="recipe-name-text" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">【${r.recipe_name}】</span>
                         </td>
                     </tr>`;
                     
                     // 2. 完成品
-                    const outputBranch = isLastRecipe ? '   ' : '│  ';
+                    const outputLine = isLastRecipe ? "　 " : "│  ";
                     html += `
                     <tr class="row-output row-sub" data-parent="${skillId}">
                         <td data-parent="${recipeId}">
-                            <span class="tree-line">   ${outputBranch}   ┗</span>
-                            <span class="btn-wrapper"></span>
+                            <span class="tree-unit">　${outputLine}　┗</span>
                             <input type="checkbox" class="cb"><span>${r.output_item_name}</span>
                         </td>
                     </tr>`;
                     
-                    // 3. 素材（親が最後かどうかを引き継ぐ）
+                    // 3. 素材
                     html += renderMaterials(r, recipeId, [isLastRecipe, true]);
                 });
             });
