@@ -2,102 +2,134 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>エリシア攻略：レシピ検索</title>
+    <title>エリシア攻略 DB</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; background: #f4f1ea; padding: 20px; }
-        .card { background: white; border-radius: 8px; padding: 18px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 6px solid #2e8b57; }
-        .search-box { margin-bottom: 20px; padding: 12px; width: 100%; box-sizing: border-box; font-size: 16px; border: 2px solid #ddd; border-radius: 4px; }
-        .recipe-name { color: #8b4513; font-size: 0.85em; font-weight: bold; margin-bottom: 4px; }
-        .item-name { color: #2c3e50; font-size: 1.3em; display: block; margin-bottom: 8px; }
-        .info-row { margin-bottom: 10px; }
-        .tag { display: inline-block; background: #eef5ee; color: #2e8b57; padding: 3px 10px; border-radius: 4px; font-size: 0.85em; margin-right: 5px; border: 1px solid #d0e0d0; }
+        :root { --sidebar-width: 280px; --primary-color: #2e8b57; }
+        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f1ea; }
         
-        .detail-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; }
-        .section-title { font-size: 0.9em; font-weight: bold; color: #d35400; margin-bottom: 6px; display: flex; align-items: center; }
-        .material-list { list-style: none; padding: 0; margin: 0; }
-        .material-item { font-size: 0.95em; color: #444; padding: 4px 0; border-bottom: 1px dashed #f0f0f0; display: flex; justify-content: space-between; }
-        .location-box { margin-top: 10px; font-size: 0.9em; color: #555; background: #fdfaf2; padding: 8px; border-radius: 4px; line-height: 1.4; }
+        /* 左サイドバー */
+        .sidebar { width: var(--sidebar-width); background: #2c3e50; color: white; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
+        .sidebar h2 { font-size: 1.2em; margin-bottom: 20px; color: #ecf0f1; border-bottom: 1px solid #3e4f5f; padding-bottom: 10px; }
+        .nav-btn { background: none; border: 1px solid #3e4f5f; color: #bdc3c7; padding: 12px; margin-bottom: 10px; text-align: left; cursor: pointer; border-radius: 4px; transition: 0.3s; }
+        .nav-btn:hover, .nav-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .search-box { width: 100%; padding: 10px; border-radius: 4px; border: none; margin-top: 20px; box-sizing: border-box; }
+
+        /* 右メインエリア */
+        .main-content { flex: 1; overflow-y: auto; padding: 30px; box-sizing: border-box; }
+        .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .data-table th { background: #f8f9fa; padding: 12px 15px; text-align: left; border-bottom: 2px solid #eee; color: #666; font-size: 0.9em; }
+        .data-table td { padding: 12px 15px; border-bottom: 1px solid #eee; vertical-align: top; }
+        .data-table tr:hover { background: #fafafa; }
+
+        /* 階層・詳細のスタイル */
+        .item-title { font-weight: bold; color: #2c3e50; font-size: 1.1em; }
+        .material-group { font-size: 0.9em; color: #555; margin-top: 5px; line-height: 1.6; }
+        .price-tag { color: #d35400; font-weight: bold; }
+        .location-tag { display: inline-block; background: #eef5ee; color: var(--primary-color); padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <h2>📜 エリシア攻略：レシピ検索</h2>
-    <input type="text" id="searchInput" class="search-box" placeholder="アイテム名で検索（例：マジカルドロップ）...">
-    <div id="display-area">準備中...</div>
+    <div class="sidebar">
+        <h2>📦 エリシア DB</h2>
+        <button class="nav-btn active" onclick="changeMode('recipes')">レシピ一覧</button>
+        <button class="nav-btn" onclick="changeMode('items')">生産品一覧</button>
+        
+        <input type="text" id="searchInput" class="search-box" placeholder="名称で検索...">
+    </div>
+
+    <div class="main-content">
+        <table class="data-table">
+            <thead>
+                <tr id="table-head">
+                    <!-- 動的に切り替え -->
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- データがここに並ぶ -->
+            </tbody>
+        </table>
+    </div>
 
     <script>
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
+        const client = supabase.createClient(S_URL, S_KEY);
 
-        window.onload = function() {
-            const client = supabase.createClient(S_URL, S_KEY);
-            const input = document.getElementById('searchInput');
-            const display = document.getElementById('display-area');
+        let currentMode = 'recipes'; // 最初はレシピ表示
 
-            async function getData() {
-                display.innerHTML = '検索中...';
-                try {
-                    let query = client.from('recipes').select('*');
-                    if (input.value) {
-                        query = query.ilike('output_item_name', `%${input.value}%`);
-                    }
-                    
-                    const { data, error } = await query;
-                    if (error) throw error;
+        function changeMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.includes(mode === 'recipes' ? 'レシピ' : '生産品'));
+            });
+            fetchData();
+        }
 
-                    display.innerHTML = '';
-                    if (!data || data.length === 0) {
-                        display.innerHTML = '該当するレシピが見つかりませんでした。';
-                        return;
-                    }
+        async function fetchData() {
+            const searchTerm = document.getElementById('searchInput').value;
+            const head = document.getElementById('table-head');
+            const body = document.getElementById('table-body');
+            body.innerHTML = '<tr><td>読み込み中...</td></tr>';
 
-                    data.forEach(item => {
-                        const card = document.createElement('div');
-                        card.className = 'card';
-                        
-                        // 素材リストの組み立て（データがあるものだけ表示）
-                        let materialsHtml = '';
-                        for(let i=1; i<=3; i++) {
-                            const mName = item[`material_${i}`];
-                            const mQty = item[`material_${i}_qty`];
-                            if(mName && mName !== 'NULL') {
-                                materialsHtml += `<li class="material-item"><span>・${mName}</span> <span>${mQty || 1}個</span></li>`;
-                            }
-                        }
-
-                        card.innerHTML = `
-                            <div class="recipe-name">📖 ${item.recipe_name || 'レシピ不明'}</div>
-                            <strong class="item-name">✨ ${item.output_item_name || '名称未設定'}</strong>
-                            
-                            <div class="info-row">
-                                <span class="tag">🛡 ${item.skill_type || 'スキル不明'}</span>
-                                <span class="tag">Lv.${item.skill_lv || '-'}</span>
-                                <span class="tag">👤 ${item.required_jobs || '全職'}</span>
-                            </div>
-
-                            <div class="detail-section">
-                                <div class="section-title">🛠 必要素材</div>
-                                <ul class="material-list">
-                                    ${materialsHtml || '<li class="material-item">素材情報なし</li>'}
-                                </ul>
-                                
-                                <div class="location-box">
-                                    <strong>📍 入手先 / 備考</strong><br>
-                                    ${item.location || 'フィールドドロップ、または店売り'}
-                                </div>
-                            </div>
-                        `;
-                        display.appendChild(card);
-                    });
-                } catch (err) {
-                    display.innerHTML = 'エラーが発生しました: ' + err.message;
-                }
+            // ヘッダーの切り替え
+            if (currentMode === 'recipes') {
+                head.innerHTML = '<th>完成品 / レシピ名</th><th>必要素材・個数</th><th>入手方法・備考</th>';
+            } else {
+                head.innerHTML = '<th>アイテム名</th><th>価格情報</th><th>備考</th>';
             }
 
-            input.addEventListener('input', getData);
-            getData(); 
-        };
+            try {
+                let query = client.from(currentMode).select('*');
+                if (searchTerm) {
+                    const column = currentMode === 'recipes' ? 'output_item_name' : 'name';
+                    query = query.ilike(column, `%${searchTerm}%`);
+                }
+
+                const { data, error } = await query;
+                if (error) throw error;
+
+                body.innerHTML = '';
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    
+                    if (currentMode === 'recipes') {
+                        // レシピモード：階層的に素材を表示
+                        let materials = [];
+                        for(let i=1; i<=3; i++) {
+                            if(row[`material_${i}`] && row[`material_${i}`] !== 'NULL') {
+                                materials.push(`・${row[`material_${i}`]} (${row[`material_${i}_qty`] || 1}個)`);
+                            }
+                        }
+                        tr.innerHTML = `
+                            <td>
+                                <div class="item-title">✨ ${row.output_item_name}</div>
+                                <div style="font-size:0.8em; color: #999;">📖 ${row.recipe_name}</div>
+                            </td>
+                            <td><div class="material-group">${materials.join('<br>')}</div></td>
+                            <td><div class="location-tag">📍 ${row.location || '不明'}</div></td>
+                        `;
+                    } else {
+                        // 生産品モード：価格や詳細
+                        tr.innerHTML = `
+                            <td><div class="item-title">📦 ${row.name}</div></td>
+                            <td>
+                                <span class="price-tag">💰 買: ${row.buy_price || '-'}</span><br>
+                                <span style="color:#7f8c8d;">🪙 売: ${row.sell_price || '-'}</span>
+                            </td>
+                            <td><div class="location-tag">${row.location || '店売り等'}</div></td>
+                        `;
+                    }
+                    body.appendChild(tr);
+                });
+            } catch (err) {
+                body.innerHTML = `<tr><td>エラー: ${err.message}</td></tr>`;
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('input', fetchData);
+        window.onload = fetchData;
     </script>
 </body>
 </html>
