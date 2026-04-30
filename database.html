@@ -2,22 +2,21 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>エリシア生産レシピ一覧</title>
+    <title>エリシア生産データ一覧</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 10px; color: #000; font-size: 12px; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #999; padding: 3px 6px; text-align: left; }
-        th { background: #eee; font-weight: normal; position: sticky; top: 0; }
-        tr:nth-child(even) { background: #f9f9f9; }
-        .qty { color: #d00; text-align: center; width: 30px; }
-        .lv { text-align: center; width: 40px; }
-        h1 { font-size: 16px; margin: 0 0 10px 0; }
+        th, td { border: 1px solid #666; padding: 2px 5px; text-align: left; }
+        th { background: #e1e1e1; font-weight: normal; position: sticky; top: 0; }
+        tr:nth-child(even) { background: #f5f5f5; }
+        /* 数字列を少し目立たせる */
+        .qty { color: #d00; text-align: right; font-weight: bold; width: 25px; }
+        .lv { text-align: center; width: 30px; }
     </style>
 </head>
 <body>
 
-    <h1>エリシア生産レシピ一覧</h1>
     <table>
         <thead>
             <tr>
@@ -26,17 +25,15 @@
                 <th class="lv">Lv</th>
                 <th>レシピ名</th>
                 <th>完成品</th>
-                <th>素材1</th>
-                <th class="qty">個</th>
-                <th>素材2</th>
-                <th class="qty">個</th>
-                <th>素材3</th>
-                <th class="qty">個</th>
-                <th>主な入手場所</th>
+                <th>素材1</th><th class="qty">個</th>
+                <th>素材2</th><th class="qty">個</th>
+                <th>素材3</th><th class="qty">個</th>
+                <th>素材4</th><th class="qty">個</th>
+                <th>入手場所</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
-            <tr><td colspan="12">読み込み中...</td></tr>
+            <tr><td colspan="13">読み込み中...</td></tr>
         </tbody>
     </table>
 
@@ -48,7 +45,7 @@
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             
-            // 指定の並び順（スキル→レベル順）で取得
+            // 全件取得し、スキル名とレベル順に並べる
             const { data, error } = await client
                 .from('recipes')
                 .select('*')
@@ -56,28 +53,29 @@
                 .order('skill_lv', { ascending: true });
             
             if (error) {
-                tbody.innerHTML = '<tr><td colspan="12">エラーが発生しました</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="13">エラーが発生しました</td></tr>';
                 return;
             }
 
             let html = '';
             data.forEach(r => {
-                // 職業（仮にskill_typeから判別、または空欄）
-                const job = r.job_category || ""; 
-                
+                // 各カラム名が実際のDBと一致しているか確認が必要ですが、
+                // 一般的な命名規則(material_1_qtyなど)に基づいて出力します。
                 html += `
                 <tr>
-                    <td>${job}</td>
+                    <td>${r.job_category || ''}</td>
                     <td>${r.skill_type || ''}</td>
                     <td class="lv">${r.skill_lv || ''}</td>
                     <td>${r.recipe_name || ''}</td>
                     <td>${r.output_item_name || ''}</td>
                     <td>${r.material_1 || ''}</td>
-                    <td class="qty">${r.material_1_qty || ''}</td>
+                    <td class="qty">${r.material_1_qty ?? ''}</td>
                     <td>${r.material_2 || ''}</td>
-                    <td class="qty">${r.material_2_qty || ''}</td>
+                    <td class="qty">${r.material_2_qty ?? ''}</td>
                     <td>${r.material_3 || ''}</td>
-                    <td class="qty">${r.material_3_qty || ''}</td>
+                    <td class="qty">${r.material_3_qty ?? ''}</td>
+                    <td>${r.material_4 || ''}</td>
+                    <td class="qty">${r.material_4_qty ?? ''}</td>
                     <td>${r.location || ''}</td>
                 </tr>`;
             });
