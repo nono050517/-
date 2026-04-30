@@ -5,14 +5,14 @@
     <title>エリシア生産データ一覧</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 10px; color: #000; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #666; padding: 2px 5px; text-align: left; }
-        th { background: #e1e1e1; font-weight: normal; position: sticky; top: 0; }
-        tr:nth-child(even) { background: #f5f5f5; }
-        /* 数字列を少し目立たせる */
-        .qty { color: #d00; text-align: right; font-weight: bold; width: 25px; }
-        .lv { text-align: center; width: 30px; }
+        body { font-family: sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; line-height: 1.2; }
+        th, td { border: 1px solid #444; padding: 1px 4px; text-align: left; }
+        th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; }
+        tr:nth-child(even) { background: #f0f0f0; }
+        /* 数量列：赤字で右寄せ、幅を固定 */
+        .qty { color: #d00; text-align: right; width: 20px; font-weight: normal; }
+        .lv { text-align: center; width: 25px; }
     </style>
 </head>
 <body>
@@ -25,10 +25,10 @@
                 <th class="lv">Lv</th>
                 <th>レシピ名</th>
                 <th>完成品</th>
-                <th>素材1</th><th class="qty">数量</th>
-                <th>素材2</th><th class="qty">数量</th>
-                <th>素材3</th><th class="qty">数量</th>
-                <th>素材4</th><th class="qty">数量</th>
+                <th>素材1</th><th class="qty">数</th>
+                <th>素材2</th><th class="qty">数</th>
+                <th>素材3</th><th class="qty">数</th>
+                <th>素材4</th><th class="qty">数</th>
                 <th>入手場所</th>
             </tr>
         </thead>
@@ -45,7 +45,6 @@
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             
-            // 全件取得し、スキル名とレベル順に並べる
             const { data, error } = await client
                 .from('recipes')
                 .select('*')
@@ -59,8 +58,6 @@
 
             let html = '';
             data.forEach(r => {
-                // 各カラム名が実際のDBと一致しているか確認が必要ですが、
-                // 一般的な命名規則(material_1_qtyなど)に基づいて出力します。
                 html += `
                 <tr>
                     <td>${r.job_category || ''}</td>
@@ -69,13 +66,13 @@
                     <td>${r.recipe_name || ''}</td>
                     <td>${r.output_item_name || ''}</td>
                     <td>${r.material_1 || ''}</td>
-                    <td>${r.amount_1 || ''}</td>
+                    <td class="qty">${r.amount_1 ?? ''}</td>
                     <td>${r.material_2 || ''}</td>
-                    <td>${r.amount_2 || ''}</td>
+                    <td class="qty">${r.amount_2 ?? ''}</td>
                     <td>${r.material_3 || ''}</td>
-                    <td>${r.amount_3 || ''}</td>
+                    <td class="qty">${r.amount_3 ?? ''}</td>
                     <td>${r.material_4 || ''}</td>
-                    <td>${r.amount_4 || ''}</td>
+                    <td class="qty">${r.amount_4 ?? ''}</td>
                     <td>${r.location || ''}</td>
                 </tr>`;
             });
