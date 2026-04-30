@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>エリシア生産データ一覧</title>
+    <title>エリシア生産データ一覧（職業アコーディオン版）</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
@@ -10,32 +10,30 @@
         th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; vertical-align: top; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         
-        .row-header { background: #e0e0e0; font-weight: bold; font-size: 12px; }
-        .row-sub { color: #555; }
+        /* 階層別背景色 */
+        .row-job { background: #b0b0b0; font-weight: bold; font-size: 13px; cursor: pointer; }
+        .row-skill { background: #e0e0e0; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .row-recipe { color: #333; font-weight: bold; cursor: pointer; }
         .row-output { font-weight: bold; background: #f4f8ff; }
+        .row-sub { color: #555; }
+        
+        .hidden { display: none; }
         
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
-        .craft-inline { color: #0066cc; font-weight: bold; margin-left: 10px; }
-        .craft-lv { color: #0066cc; font-weight: bold; }
         
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         
-        /* 縦棒専用スタイル：MSゴシック固定でズレを徹底排除 */
         .tree-line { 
-            font-family: "MS Gothic", "Osaka-mono", "monospace"; 
+            font-family: "MS Gothic", monospace; 
             white-space: pre; 
             color: #bbb; 
             display: inline-block;
             letter-spacing: 0;
-            font-size: 12px; /* 記号が綺麗に見えるサイズ */
+            font-size: 12px;
         }
         
-        /* 縦棒を消すための透明化設定 */
-        .invisible { opacity: 0; }
-
-        .group-sep { border-top: 2px solid #666 !important; }
-        .recipe-name-text { color: #333; font-weight: bold; vertical-align: middle; }
+        .toggle-icon { display: inline-block; width: 15px; text-align: center; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -43,7 +41,7 @@
     <table>
         <thead>
             <tr>
-                <th>生産レシピ・チェックリスト（縦ライン修正版）</th>
+                <th>生産レシピ（職業 ＞ スキル ＞ レシピ）</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
@@ -55,6 +53,24 @@
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
+
+        // 開閉制御（子要素すべてにクラスを付け外し）
+        function toggleLayer(id, btnId) {
+            const elements = document.querySelectorAll(`[data-parent*="${id}"]`);
+            const btn = document.getElementById(btnId);
+            const isHiding = !elements[0].classList.contains('hidden');
+
+            elements.forEach(el => {
+                if (isHiding) {
+                    el.classList.add('hidden');
+                } else {
+                    // 親が閉じている場合は表示しないロジックが必要だが、
+                    // シンプルにするため直下の子だけ制御する運用にする
+                    el.classList.remove('hidden');
+                }
+            });
+            if (btn) btn.textContent = isHiding ? '▶' : '▼';
+        }
 
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
@@ -78,7 +94,7 @@
                 return match ? `購入：${match.location} - ${match.target}` : '';
             };
 
-            const renderMaterials = (recipe, parentTrace = []) => {
+            const renderMaterials = (recipe, pId, parentTrace = []) => {
                 let rows = '';
                 const materials = [];
                 for (let i = 1; i <= 4; i++) {
@@ -89,79 +105,65 @@
 
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
-                    
-                    // 階層の深さに応じて「│  」か「   」を配置
                     let prefix = '';
-                    parentTrace.forEach((isParentLast) => {
-                        prefix += isParentLast ? '   ' : '│  ';
-                    });
+                    parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
                     
                     const mark = isLast ? '┗' : '┣';
-                    const subR = recipes.find(r => r.output_item_name === m.name);
-                    
-                    let craftInfo = '';
-                    if (subR) {
-                        const fullJob = getFullJobName(subR.required_jobs);
-                        craftInfo = `<span class="craft-inline">生産：${fullJob}：${subR.skill_type}<span class="craft-lv">(Lv${subR.skill_lv})</span></span>`;
-                    }
-
-                    rows += `
-                    <tr class="row-sub">
-                        <td>
-                            <span class="tree-line">${prefix}${mark}</span>
-                            <input type="checkbox" class="cb"><span>${m.name}</span>
-                            <span class="qty-inline">(×${m.qty || 0})</span>
-                            <span class="loc-inline">${getLocText(m.name)}</span>
-                            ${craftInfo}
-                        </td>
+                    rows += `<tr class="row-sub" data-parent="${pId}">
+                        <td><span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb"><span>${m.name}</span><span class="qty-inline">(×${m.qty || 0})</span><span class="loc-inline">${getLocText(m.name)}</span></td>
                     </tr>`;
-
-                    if (subR) rows += renderMaterials(subR, [...parentTrace, isLast]);
+                    const subR = recipes.find(r => r.output_item_name === m.name);
+                    if (subR) rows += renderMaterials(subR, pId, [...parentTrace, isLast]);
                 });
                 return rows;
             };
 
-            const grouped = {};
+            // データの構造化（Job > Skill > Recipes）
+            const jobGroup = {};
             recipes.forEach(r => {
-                const key = `${r.required_jobs}_${r.skill_type}_${r.skill_lv}`;
-                if (!grouped[key]) grouped[key] = { job: r.required_jobs, skill: r.skill_type, lv: r.skill_lv, list: [] };
-                grouped[key].list.push(r);
+                if (!jobGroup[r.required_jobs]) jobGroup[r.required_jobs] = {};
+                const sKey = `${r.skill_type}_${r.skill_lv}`;
+                if (!jobGroup[r.required_jobs][sKey]) jobGroup[r.required_jobs][sKey] = [];
+                jobGroup[r.required_jobs][sKey].push(r);
             });
 
             let html = '';
-            Object.values(grouped).forEach((group, gIdx) => {
-                const fullJob = getFullJobName(group.job);
+            Object.keys(jobGroup).forEach((jobCode, jIdx) => {
+                const jobName = getFullJobName(jobCode);
+                const jobId = `job-${jIdx}`;
                 
-                html += `
-                <tr class="row-header ${gIdx > 0 ? 'group-sep' : ''}">
-                    <td>${fullJob}：${group.skill} (Lv${group.lv})</td>
+                // 1. 職業行
+                html += `<tr class="row-job" onclick="toggleLayer('${jobId}', 'btn-${jobId}')">
+                    <td><span class="toggle-icon" id="btn-${jobId}">▼</span>${jobName}</td>
                 </tr>`;
 
-                group.list.forEach((r, rIdx) => {
-                    const isLastRecipe = (rIdx === group.list.length - 1);
-                    const recipeMark = isLastRecipe ? '┗' : '┣';
+                Object.keys(jobGroup[jobCode]).forEach((skillKey, sIdx) => {
+                    const skillId = `${jobId}-skill-${sIdx}`;
+                    const recipesInSkill = jobGroup[jobCode][skillKey];
+                    const [sType, sLv] = skillKey.split('_');
 
-                    // レシピ名：先頭に「見えない枝」を置くことで、下の完成品の縦棒と位置を完璧に合わせる
-                    html += `
-                    <tr class="row-sub">
-                        <td>
-                            <span class="tree-line"><span class="invisible">│  </span>${recipeMark}</span><span class="recipe-name-text">【${r.recipe_name}】</span>
-                        </td>
+                    // 2. スキル行
+                    html += `<tr class="row-skill" data-parent="${jobId}" onclick="toggleLayer('${skillId}', 'btn-${skillId}')">
+                        <td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${skillId}">▼</span>${sType} (Lv${sLv})</td>
                     </tr>`;
-                    
-                    // 完成品
-                    const outputPrefix = isLastRecipe ? '   ' : '│  ';
-                    html += `
-                    <tr class="row-output row-sub">
-                        <td>
-                            <span class="tree-line"><span class="invisible">│  </span>${outputPrefix}┗</span>
-                            <input type="checkbox" class="cb"><span>${r.output_item_name}</span>
-                            <span class="loc-inline">${getLocText(r.output_item_name)}</span>
-                        </td>
-                    </tr>`;
-                    
-                    // 素材（親が最後なら縦棒を引かない設定で再帰）
-                    html += renderMaterials(r, [isLastRecipe, true]);
+
+                    recipesInSkill.forEach((r, rIdx) => {
+                        const recipeId = `${skillId}-rec-${rIdx}`;
+                        const isLastRec = (rIdx === recipesInSkill.length - 1);
+                        const rMark = isLastRec ? '┗' : '┣';
+
+                        // 3. レシピ名
+                        html += `<tr class="row-recipe row-sub" data-parent="${jobId} ${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')">
+                            <td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▼</span>【${r.recipe_name}】</td>
+                        </tr>`;
+
+                        // 4. 完成品 & 素材
+                        const outPre = isLastRec ? '      ' : '   │  ';
+                        html += `<tr class="row-output row-sub" data-parent="${jobId} ${skillId} ${recipeId}">
+                            <td><span class="tree-line">${outPre}┗ </span><input type="checkbox" class="cb"><span>${r.output_item_name}</span></td>
+                        </tr>`;
+                        html += renderMaterials(r, `${jobId} ${skillId} ${recipeId}`, [isLastRec, true, true]);
+                    });
                 });
             });
             tbody.innerHTML = html;
