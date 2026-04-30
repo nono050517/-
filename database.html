@@ -2,46 +2,48 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>エリシア攻略データベース</title>
+    <title>エリシア攻略：レシピ検索</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: sans-serif; background: #f4f1ea; padding: 20px; }
-        .card { background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #8b4513; }
+        .card { background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #2e8b57; }
         .search-box { margin-bottom: 20px; padding: 10px; width: 100%; box-sizing: border-box; font-size: 16px; }
-        strong { color: #2c3e50; font-size: 1.2em; }
+        .recipe-name { color: #8b4513; font-size: 0.85em; font-weight: bold; }
+        .item-name { color: #2c3e50; font-size: 1.2em; display: block; margin: 5px 0; }
+        .info { font-size: 0.9em; color: #666; }
+        .tag { display: inline-block; background: #e0eede; color: #2e8b57; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; }
     </style>
 </head>
 <body>
 
-    <h2>📦 エリシア攻略データベース</h2>
-    <!-- ここから oninput を削除しました -->
-    <input type="text" id="searchInput" class="search-box" placeholder="アイテム名で検索...">
+    <h2>📜 エリシア攻略：レシピ検索</h2>
+    <input type="text" id="searchInput" class="search-box" placeholder="完成品の名前で検索（例：マジカルドロップ）...">
     <div id="display-area">準備中...</div>
 
     <script>
-        // 設定エリア（ここを自分の情報に！）
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
 
-        // 全てを読み込んでから実行する「安全装置」
         window.onload = function() {
             const client = supabase.createClient(S_URL, S_KEY);
             const input = document.getElementById('searchInput');
             const display = document.getElementById('display-area');
 
             async function getData() {
-                display.innerHTML = '読み込み中...';
+                display.innerHTML = '検索中...';
                 try {
-                    let query = client.from('items').select('*');
+                    // テーブル名を recipes に、検索対象を output_item_name に変更
+                    let query = client.from('recipes').select('*');
                     if (input.value) {
-                        query = query.ilike('name', `%${input.value}%`);
+                        query = query.ilike('output_item_name', `%${input.value}%`);
                     }
+                    
                     const { data, error } = await query;
                     if (error) throw error;
 
                     display.innerHTML = '';
                     if (!data || data.length === 0) {
-                        display.innerHTML = '見つかりませんでした。';
+                        display.innerHTML = '該当するレシピが見つかりませんでした。';
                         return;
                     }
 
@@ -49,9 +51,13 @@
                         const card = document.createElement('div');
                         card.className = 'card';
                         card.innerHTML = `
-                            <strong>${item.name || '無名'}</strong><br>
-                            📍 ${item.location || '不明'}<br>
-                            🛒 買: ${item.buy_price || '-'} / 🪙 売: ${item.sell_price || '-'}
+                            <div class="recipe-name">📖 ${item.recipe_name || '名称不明'}</div>
+                            <strong class="item-name">✨ ${item.output_item_name || '???'}</strong>
+                            <div class="info">
+                                <span class="tag">${item.skill_type || '不明'}</span>
+                                <span class="tag">Lv.${item.skill_lv || '1'}</span>
+                                <span class="tag">職: ${item.required_jobs || '全職'}</span>
+                            </div>
                         `;
                         display.appendChild(card);
                     });
@@ -60,10 +66,8 @@
                 }
             }
 
-            // 入力されたら検索を実行する
             input.addEventListener('input', getData);
-            // 最初にデータを表示する
-            getData();
+            getData(); // 最初は全件表示
         };
     </script>
 </body>
