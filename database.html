@@ -12,18 +12,15 @@
         .row-recipe { background: #f0f0f0; font-weight: bold; }
         .row-output { background: #e8f0ff !important; font-weight: bold; }
         .row-material { background: #fff; }
-        /* 中間素材（生産品）のハイライト */
-        .row-sub-recipe { background: #fffdf0; font-size: 10px; color: #555; }
+        .row-sub { font-size: 10px; color: #555; }
         
         .lv { text-align: center; width: 25px; }
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
         .craft-inline { color: #0066cc; font-weight: bold; }
         
-        .indent-1 { padding-left: 15px !important; } /* 完成品 */
-        .indent-2 { padding-left: 35px !important; } /* 第1素材 */
-        .indent-3 { padding-left: 55px !important; color: #777; } /* 中間素材のレシピ */
-        .indent-4 { padding-left: 75px !important; color: #999; } /* 中間素材の素材 */
+        /* ツリーの見た目調整 */
+        .tree-line { font-family: monospace; white-space: pre; color: #ccc; }
     </style>
 </head>
 <body>
@@ -34,7 +31,7 @@
                 <th>職業</th>
                 <th>スキル</th>
                 <th class="lv">Lv</th>
-                <th>レシピ構成・掘り下げ</th>
+                <th>レシピ構成（無限掘り下げ）</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
@@ -62,69 +59,53 @@
             const recipes = rRes.data;
             const itemsData = iRes.data || [];
 
-            // 購入場所を取得
             const getLocText = (itemName) => {
                 const match = itemsData.find(item => item.name === itemName && item.method === "購入");
                 return match ? `購入：${match.location} - ${match.target}` : '';
             };
 
-            // そのアイテムが「作れるもの（レシピがあるか）」を探す
-            const getSubRecipe = (itemName) => {
-                return recipes.find(r => r.output_item_name === itemName);
+            // 【重要】素材を再帰的に掘り下げる関数
+            const renderMaterials = (recipe, depth = 0, isParentLast = true) => {
+                let rows = '';
+                const materials = [];
+                for (let i = 1; i <= 4; i++) {
+                    if (recipe[`material_${i}`] && recipe[`material_${i}`] !== 'NULL') {
+                        materials.push({ name: recipe[`material_${i}`], qty: recipe[`amount_${i}`], num: i });
+                    }
+                }
+
+                materials.forEach((m, idx) => {
+                    const isLast = (idx === materials.length - 1);
+                    const prefix = depth === 0 ? '' : (isParentLast ? '　 ' : '│  ').repeat(depth);
+                    const mark = isLast ? '┗' : '┣';
+                    const mLoc = getLocText(m.name);
+                    const subR = recipes.find(r => r.output_item_name === m.name);
+
+                    rows += `
+                    <tr class="row-material ${depth > 0 ? 'row-sub' : ''}">
+                        <td colspan="3"></td>
+                        <td><span class="tree-line">${prefix}${mark}</span>素材${m.num}：${m.name} <span class="qty-inline">(×${m.qty || 0})</span> <span class="loc-inline">${mLoc}</span></td>
+                    </tr>`;
+
+                    if (subR) {
+                        const subPrefix = prefix + (isLast ? '　 ' : '│  ');
+                        rows += `
+                        <tr class="row-sub">
+                            <td colspan="3"></td>
+                            <td><span class="tree-line">${subPrefix}┗</span><span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}：${subR.recipe_name}</span></td>
+                        </tr>`;
+                        // さらに深く掘り下げる（アロマオイルの下のハーブなど）
+                        rows += renderMaterials(subR, depth + 1, isLast);
+                    }
+                });
+                return rows;
             };
 
             let html = '';
             recipes.forEach(r => {
-                // 1. レシピ名
                 html += `<tr class="row-recipe"><td>${r.required_jobs || ''}</td><td>${r.skill_type || ''}</td><td class="lv">${r.skill_lv || ''}</td><td>${r.recipe_name || ''}</td></tr>`;
-
-                // 2. 完成品
-                html += `<tr class="row-output"><td colspan="3"></td><td class="indent-1">┗ ${r.output_item_name || ''} <span class="loc-inline">${getLocText(r.output_item_name)}</span></td></tr>`;
-
-                // 3. 素材の抽出
-                const materials = [];
-                for (let i = 1; i <= 4; i++) {
-                    if (r[`material_${i}`] && r[`material_${i}`] !== 'NULL') {
-                        materials.push({ name: r[`material_${i}`], qty: r[`amount_${i}`], num: i });
-                    }
-                }
-
-                // 4. 素材ループ
-                materials.forEach((m, idx) => {
-                    const isLast = (idx === materials.length - 1);
-                    const mark = isLast ? '┗' : '┣';
-                    const mLoc = getLocText(m.name);
-                    const subR = getSubRecipe(m.name); // 中間素材レシピがあるか確認
-
-                    html += `
-                    <tr class="row-material">
-                        <td colspan="3"></td>
-                        <td class="indent-2">${mark} 素材${m.num}：${m.name} <span class="qty-inline">(×${m.qty || 0})</span> <span class="loc-inline">${mLoc}</span></td>
-                    </tr>`;
-
-                    // 5. 中間素材レシピがあれば表示
-                    if (subR) {
-                        html += `
-                        <tr class="row-sub-recipe">
-                            <td colspan="3"></td>
-                            <td class="indent-3">　 └ <span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}：${subR.recipe_name}</span></td>
-                        </tr>`;
-                        // 中間素材の素材を表示
-                        for (let j = 1; j <= 4; j++) {
-                            const smName = subR[`material_${j}`];
-                            const smQty = subR[`amount_${j}`];
-                            if (smName && smName !== 'NULL') {
-                                const isSubLast = (j === 4 || !subR[`material_${j+1}`] || subR[`material_${j+1}`] === 'NULL');
-                                const subMark = isSubLast ? '┗' : '┣';
-                                html += `
-                                <tr class="row-sub-recipe">
-                                    <td colspan="3"></td>
-                                    <td class="indent-4">　 　 ${subMark} 素材${j}：${smName} (×${smQty || 0})</td>
-                                </tr>`;
-                            }
-                        }
-                    }
-                });
+                html += `<tr class="row-output"><td colspan="3"></td><td><span class="tree-line">┗</span>【完成】${r.output_item_name || ''} <span class="loc-inline">${getLocText(r.output_item_name)}</span></td></tr>`;
+                html += renderMaterials(r);
             });
             tbody.innerHTML = html;
         }
