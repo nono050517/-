@@ -21,17 +21,21 @@
         
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         
-        /* ズレを防ぐため等幅フォントを適用し、文字間隔をリセット */
+        /* 縦棒専用スタイル：MSゴシック固定でズレを徹底排除 */
         .tree-line { 
-            font-family: "Consolas", "Monaco", "Courier New", monospace; 
+            font-family: "MS Gothic", "Osaka-mono", "monospace"; 
             white-space: pre; 
             color: #bbb; 
             display: inline-block;
-            letter-spacing: 0; /* 調整 */
+            letter-spacing: 0;
+            font-size: 12px; /* 記号が綺麗に見えるサイズ */
         }
         
+        /* 縦棒を消すための透明化設定 */
+        .invisible { opacity: 0; }
+
         .group-sep { border-top: 2px solid #666 !important; }
-        .recipe-name-text { color: #333; font-weight: bold; }
+        .recipe-name-text { color: #333; font-weight: bold; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -39,7 +43,7 @@
     <table>
         <thead>
             <tr>
-                <th>生産レシピ・チェックリスト（1列統合版）</th>
+                <th>生産レシピ・チェックリスト（縦ライン修正版）</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
@@ -74,7 +78,7 @@
                 return match ? `購入：${match.location} - ${match.target}` : '';
             };
 
-            const renderMaterials = (recipe, depth = 0, parentTrace = []) => {
+            const renderMaterials = (recipe, parentTrace = []) => {
                 let rows = '';
                 const materials = [];
                 for (let i = 1; i <= 4; i++) {
@@ -86,14 +90,10 @@
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
                     
-                    // インデントの修正：レシピ名階層(3文字分)を考慮
+                    // 階層の深さに応じて「│  」か「   」を配置
                     let prefix = '';
-                    parentTrace.forEach((isParentLast, pIdx) => {
-                        if (pIdx === 0) {
-                            prefix += isParentLast ? '   ' : '│  '; // レシピ名の枝
-                        } else {
-                            prefix += isParentLast ? '   ' : '│  '; // 完成品の枝
-                        }
+                    parentTrace.forEach((isParentLast) => {
+                        prefix += isParentLast ? '   ' : '│  ';
                     });
                     
                     const mark = isLast ? '┗' : '┣';
@@ -102,7 +102,7 @@
                     let craftInfo = '';
                     if (subR) {
                         const fullJob = getFullJobName(subR.required_jobs);
-                        craftInfo = `<span class="craft-inline">生産：${fullJob}：${subR.skill_type}<span class="craft-lv">(Lv${subR.skill_lv})</span>：${subR.recipe_name}</span>`;
+                        craftInfo = `<span class="craft-inline">生産：${fullJob}：${subR.skill_type}<span class="craft-lv">(Lv${subR.skill_lv})</span></span>`;
                     }
 
                     rows += `
@@ -116,7 +116,7 @@
                         </td>
                     </tr>`;
 
-                    if (subR) rows += renderMaterials(subR, depth + 1, [...parentTrace, isLast]);
+                    if (subR) rows += renderMaterials(subR, [...parentTrace, isLast]);
                 });
                 return rows;
             };
@@ -141,27 +141,27 @@
                     const isLastRecipe = (rIdx === group.list.length - 1);
                     const recipeMark = isLastRecipe ? '┗' : '┣';
 
-                    // 1. レシピ名（先頭に半角スペース3つを入れることで縦棒と合わせる）
+                    // レシピ名：先頭に「見えない枝」を置くことで、下の完成品の縦棒と位置を完璧に合わせる
                     html += `
                     <tr class="row-sub">
                         <td>
-                            <span class="tree-line">   ${recipeMark}</span><span class="recipe-name-text">【${r.recipe_name}】</span>
+                            <span class="tree-line"><span class="invisible">│  </span>${recipeMark}</span><span class="recipe-name-text">【${r.recipe_name}】</span>
                         </td>
                     </tr>`;
                     
-                    // 2. 完成品
+                    // 完成品
                     const outputPrefix = isLastRecipe ? '   ' : '│  ';
                     html += `
                     <tr class="row-output row-sub">
                         <td>
-                            <span class="tree-line">   ${outputPrefix}┗</span>
+                            <span class="tree-line"><span class="invisible">│  </span>${outputPrefix}┗</span>
                             <input type="checkbox" class="cb"><span>${r.output_item_name}</span>
                             <span class="loc-inline">${getLocText(r.output_item_name)}</span>
                         </td>
                     </tr>`;
                     
-                    // 3. 素材（親のisLastRecipe情報を引き継いでインデントを計算）
-                    html += renderMaterials(r, 0, [isLastRecipe, true]);
+                    // 素材（親が最後なら縦棒を引かない設定で再帰）
+                    html += renderMaterials(r, [isLastRecipe, true]);
                 });
             });
             tbody.innerHTML = html;
