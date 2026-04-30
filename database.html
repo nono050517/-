@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>エリシア生産データ一覧（重複排除版）</title>
+    <title>エリシア生産データ一覧（職業マスタ順）</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
@@ -10,8 +10,8 @@
         th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; vertical-align: top; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         
-        .row-job { background: #b0b0b0; font-weight: bold; font-size: 13px; cursor: pointer; height: 24px; }
-        .row-skill { background: #e0e0e0; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .row-job { background: #b0b0b0; font-weight: bold; font-size: 13px; cursor: pointer; height: 26px; }
+        .row-skill { background: #e8e8e8; font-weight: bold; font-size: 12px; cursor: pointer; }
         .row-recipe { color: #333; font-weight: bold; cursor: pointer; }
         .row-output { font-weight: bold; background: #f4f8ff; }
         .row-sub { color: #555; }
@@ -31,7 +31,6 @@
         }
         
         .toggle-icon { display: inline-block; width: 15px; text-align: center; margin-right: 5px; }
-        .job-label { vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -39,11 +38,11 @@
     <table>
         <thead>
             <tr>
-                <th>生産レシピ（重複データ除外済み）</th>
+                <th>生産レシピ（職業マスタ順）</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
-            <tr><td>読み込み中...</td></tr>
+            <tr><td>データ読み込み中...</td></tr>
         </tbody>
     </table>
 
@@ -62,7 +61,6 @@
                 if (isHiding) {
                     el.classList.add('hidden');
                 } else {
-                    // 親の階層が閉じているかチェックする簡易実装
                     const parents = el.getAttribute('data-parent').split(' ');
                     const isAnyParentHidden = parents.some(p => {
                         const pBtn = document.getElementById(`btn-${p}`);
@@ -76,20 +74,16 @@
 
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
+            // job_masters も order 指定なしで取得（テーブルのデフォルト順を期待）
             const [rRes, iRes, jRes] = await Promise.all([
-                client.from('recipes').select('*').order('required_jobs').order('skill_type').order('skill_lv'),
+                client.from('recipes').select('*').order('skill_type').order('skill_lv'),
                 client.from('items').select('*'),
-                client.from('job_masters').select('*')
+                client.from('job_masters').select('*') 
             ]);
 
             const recipes = rRes.data || [];
             const itemsData = iRes.data || [];
             const jobsData = jRes.data || [];
-
-            const getFullJobName = (shortName) => {
-                const match = jobsData.find(j => j.short_name === shortName);
-                return match ? match.full_name : shortName;
-            };
 
             const getLocText = (itemName) => {
                 const match = itemsData.find(item => item.name === itemName && item.method === "購入");
@@ -109,7 +103,6 @@
                     const isLast = (idx === materials.length - 1);
                     let prefix = '';
                     parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
-                    
                     const mark = isLast ? '┗' : '┣';
                     rows += `<tr class="row-sub" data-parent="${pId}">
                         <td><span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb"><span>${m.name}</span><span class="qty-inline">(×${m.qty || 0})</span><span class="loc-inline">${getLocText(m.name)}</span></td>
@@ -120,39 +113,43 @@
                 return rows;
             };
 
-            const jobGroup = {};
-            recipes.forEach(r => {
-                if (!jobGroup[r.required_jobs]) jobGroup[r.required_jobs] = {};
-                const sKey = `${r.skill_type}_${r.skill_lv}`;
-                if (!jobGroup[r.required_jobs][sKey]) jobGroup[r.required_jobs][sKey] = [];
-                jobGroup[r.required_jobs][sKey].push(r);
-            });
-
             let html = '';
-            Object.keys(jobGroup).forEach((jobCode, jIdx) => {
-                const jobName = getFullJobName(jobCode);
+
+            // 1. まず職業マスタの順番でループを回す
+            jobsData.forEach((job, jIdx) => {
+                const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
+                if (jobRecipes.length === 0) return; // レシピがない職業は飛ばす
+
                 const jobId = `job-${jIdx}`;
-                
                 html += `<tr class="row-job" onclick="toggleLayer('${jobId}', 'btn-${jobId}')">
-                    <td><span class="toggle-icon" id="btn-${jobId}">▼</span><span class="job-label">${jobName}</span></td>
+                    <td><span class="toggle-icon" id="btn-${jobId}">▼</span>${job.full_name}</td>
                 </tr>`;
 
-                Object.keys(jobGroup[jobCode]).forEach((skillKey, sIdx) => {
+                // 2. 職業内のスキルでグループ化
+                const skillGroup = {};
+                jobRecipes.forEach(r => {
+                    const sKey = `${r.skill_type}_${r.skill_lv}`;
+                    if (!skillGroup[sKey]) skillGroup[sKey] = [];
+                    skillGroup[sKey].push(r);
+                });
+
+                Object.keys(skillGroup).forEach((skillKey, sIdx) => {
                     const skillId = `${jobId}-skill-${sIdx}`;
-                    const recipesInSkill = jobGroup[jobCode][skillKey];
                     const [sType, sLv] = skillKey.split('_');
+                    const filteredRecipes = [];
+                    const seen = new Set();
+
+                    // スキル内の重複レシピ排除
+                    skillGroup[skillKey].forEach(r => {
+                        if (!seen.has(r.recipe_name)) {
+                            seen.add(r.recipe_name);
+                            filteredRecipes.push(r);
+                        }
+                    });
 
                     html += `<tr class="row-skill" data-parent="${jobId}" onclick="toggleLayer('${skillId}', 'btn-${skillId}')">
                         <td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${skillId}">▼</span>${sType} (Lv${sLv})</td>
                     </tr>`;
-
-                    // --- 重複排除の処理 ---
-                    const seenRecipes = new Set();
-                    const filteredRecipes = recipesInSkill.filter(r => {
-                        if (seenRecipes.has(r.recipe_name)) return false;
-                        seenRecipes.add(r.recipe_name);
-                        return true;
-                    });
 
                     filteredRecipes.forEach((r, rIdx) => {
                         const recipeId = `${skillId}-rec-${rIdx}`;
@@ -171,9 +168,10 @@
                     });
                 });
             });
+
             tbody.innerHTML = html;
         }
-            loadAllRecipes();
+        loadAllRecipes();
     </script>
 </body>
 </html>
