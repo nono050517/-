@@ -2,43 +2,40 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>エリシア攻略：全レシピ階層表示</title>
+    <title>エリシア生産データ一覧</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; background: #fff; color: #202122; line-height: 1.4; }
-        .main-content { padding: 30px 50px; max-width: 1200px; margin: auto; }
-        h1 { font-family: serif; border-bottom: 1px solid #a2a9b1; font-weight: normal; }
-        
-        .tree-container { border: 1px solid #a2a9b1; background: #f8f9fa; padding: 20px; }
-        .tree-node { list-style: none; padding-left: 0; }
-        .tree-node ul { 
-            list-style: none; 
-            padding-left: 35px; 
-            border-left: 1px solid #c8ccd1; 
-            margin: 5px 0;
-        }
-        .tree-node li { padding: 5px 10px; border-bottom: 1px solid #eef0f2; }
-
-        .item-name { font-weight: bold; }
-        /* 数量をレシピ通りの赤文字で表示 */
-        .qty-num { color: #d33; font-weight: bold; margin: 0 8px; font-size: 1.1em; }
-        .info-text { color: #54595d; font-size: 0.85em; }
-        .shop-tag { 
-            color: #0066cc; font-size: 0.82em; background: #fff; 
-            padding: 1px 6px; border: 1px solid #a2a9b1; border-radius: 2px; margin-left: 10px;
-        }
-        .root-item { margin-top: 30px; border-top: 2px solid #a2a9b1; padding-top: 10px; }
+        body { font-family: sans-serif; margin: 0; padding: 20px; color: #000; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; }
+        th { background: #f2f2f2; font-weight: normal; }
+        tr:nth-child(even) { background: #fafafa; }
+        .qty { color: #d00; }
+        h1 { font-size: 18px; margin: 0 0 10px 0; border-bottom: 1px solid #000; }
     </style>
 </head>
 <body>
 
-    <div class="main-content">
-        <h1>エリシア生産データベース</h1>
-        <div id="display-area" class="tree-container">
-            <ul id="tree-root" class="tree-node">
-                <li>読み込み中...</li>
-            </ul>
-        </div>
+    <h1>エリシア生産レシピ一覧</h1>
+    <div id="table-area">
+        <table>
+            <thead>
+                <tr>
+                    <th>完成品</th>
+                    <th>レシピ名 / Lv</th>
+                    <th>材料1</th>
+                    <th>個数</th>
+                    <th>材料2</th>
+                    <th>個数</th>
+                    <th>材料3</th>
+                    <th>個数</th>
+                    <th>入手場所</th>
+                </tr>
+            </thead>
+            <tbody id="recipe-body">
+                <tr><td colspan="9">データ読み込み中...</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <script>
@@ -46,85 +43,44 @@
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
-        async function buildTree(itemName) {
-            // そのアイテムを作るレシピを取得
-            const { data: recipes } = await client.from('recipes').select('*').eq('output_item_name', itemName);
+        async function loadAllRecipes() {
+            const tbody = document.getElementById('recipe-body');
             
-            let html = `<li>`;
-            if (recipes && recipes.length > 0) {
-                const r = recipes[0];
-                html += `<span class="item-name">■ ${itemName}</span>`;
-                html += `<span class="info-text">(${r.recipe_name || ''} / Lv.${r.skill_lv || ''})</span>`;
-                if(r.location) html += `<span class="shop-tag">${r.location}</span>`;
-
-                html += `<ul>`;
-                // 素材1〜3をループ
-                for (let i = 1; i <= 3; i++) {
-                    const mName = r[`material_${i}`];
-                    const mQty = r[`material_${i}_qty`];
-
-                    if (mName && mName !== 'NULL' && mName !== '') {
-                        // 次の階層へ（計算はせず、その素材単体の必要数を渡す）
-                        html += await buildSubTree(mName, mQty);
-                    }
-                }
-                html += `</ul>`;
-            } else {
-                html += `<span class="item-name">・ ${itemName}</span>`;
-                html += `<span class="shop-tag">ショップ・採取</span>`;
-            }
-            html += `</li>`;
-            return html;
-        }
-
-        // 子階層専用の関数（数量表示を伴う）
-        async function buildSubTree(itemName, qty) {
-            const { data: recipes } = await client.from('recipes').select('*').eq('output_item_name', itemName);
+            // データを全件取得（名称順）
+            const { data, error } = await client
+                .from('recipes')
+                .select('*')
+                .order('output_item_name', { ascending: true });
             
-            let html = `<li>`;
-            html += `<span class="item-name">・ ${itemName}</span>`;
-            html += `<span class="qty-num">${qty}個</span>`; // レシピに書かれた個数をそのまま表示
-
-            if (recipes && recipes.length > 0) {
-                const r = recipes[0];
-                html += `<span class="info-text">(${r.recipe_name || ''} / Lv.${r.skill_lv || ''})</span>`;
-                
-                html += `<ul>`;
-                for (let i = 1; i <= 3; i++) {
-                    const mName = r[`material_${i}`];
-                    const mQty = r[`material_${i}_qty`];
-                    if (mName && mName !== 'NULL' && mName !== '') {
-                        html += await buildSubTree(mName, mQty);
-                    }
-                }
-                html += `</ul>`;
-            } else {
-                // 素材の入手場所を表示
-                const { data: itemInfo } = await client.from('recipes').select('location').eq('output_item_name', itemName).limit(1);
-                const loc = (itemInfo && itemInfo[0] && itemInfo[0].location) ? itemInfo[0].location : "ショップ・採取";
-                html += `<span class="shop-tag">${loc}</span>`;
+            if (error) {
+                tbody.innerHTML = '<tr><td colspan="9">エラー: ' + error.message + '</td></tr>';
+                return;
             }
-            html += `</li>`;
-            return html;
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9">データがありません。</td></tr>';
+                return;
+            }
+
+            let html = '';
+            data.forEach(r => {
+                html += `
+                <tr>
+                    <td>${r.output_item_name || ''}</td>
+                    <td>${r.recipe_name || ''} (Lv.${r.skill_lv || ''})</td>
+                    <td>${r.material_1 || ''}</td>
+                    <td class="qty">${r.material_1_qty || ''}</td>
+                    <td>${r.material_2 || ''}</td>
+                    <td class="qty">${r.material_2_qty || ''}</td>
+                    <td>${r.material_3 || ''}</td>
+                    <td class="qty">${r.material_3_qty || ''}</td>
+                    <td>${r.location || ''}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
         }
 
-        async function loadAllTrees() {
-            const root = document.getElementById('tree-root');
-            const { data: allItems } = await client.from('recipes').select('output_item_name');
-            if (!allItems) return;
-
-            const uniqueItems = [...new Set(allItems.map(item => item.output_item_name))];
-            root.innerHTML = '';
-            for (const itemName of uniqueItems) {
-                const treeHtml = await buildTree(itemName);
-                const wrapper = document.createElement('div');
-                wrapper.className = 'root-item';
-                wrapper.innerHTML = treeHtml;
-                root.appendChild(wrapper);
-            }
-        }
-
-        loadAllTrees();
+        loadAllRecipes();
     </script>
 </body>
 </html>
