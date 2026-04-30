@@ -16,15 +16,16 @@
         
         .hidden { display: none; }
         
-        /* ズレの元凶であるボタン幅を固定 */
+        /* ボタンと記号の幅を統一 */
         .toggle-btn { 
             cursor: pointer; 
             display: inline-block; 
-            width: 1.2em; /* 幅を固定してズレを防止 */
+            width: 12px; 
             text-align: center; 
             font-weight: bold; 
             color: #666;
             user-select: none;
+            margin: 0 2px;
         }
 
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
@@ -33,17 +34,18 @@
         
         .cb { vertical-align: middle; margin: 0 4px 0 2px; cursor: pointer; }
         
-        /* フォントと幅を完全に固定 */
+        /* 等幅フォントで位置を固定 */
         .tree-line { 
             font-family: "Consolas", "Monaco", monospace; 
             white-space: pre; 
             color: #bbb; 
             display: inline-block;
             letter-spacing: 0;
+            vertical-align: middle;
         }
         
         .group-sep { border-top: 2px solid #666 !important; }
-        .recipe-name-text { color: #333; font-weight: bold; cursor: pointer; }
+        .recipe-name-text { color: #333; font-weight: bold; cursor: pointer; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -106,10 +108,17 @@
 
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
-                    // 階層を合わせるためのインデント調整（ボタン幅1.2em分を考慮）
-                    let prefix = '      '; // レシピ名・完成品の段落分
-                    parentTrace.slice(1).forEach(isParentLast => {
-                        prefix += isParentLast ? '   ' : '│  ';
+                    
+                    // インデントの再計算：ボタン幅(3スペース分相当)を考慮
+                    let prefix = '';
+                    parentTrace.forEach((isParentLast, i) => {
+                        if (i === 0) {
+                             prefix += isParentLast ? '   ' : '│  '; // レシピの枝
+                        } else if (i === 1) {
+                             prefix += isParentLast ? '      ' : '│     '; // 完成品の枝（ボタン分を確保）
+                        } else {
+                             prefix += isParentLast ? '   ' : '│  '; // 素材以降
+                        }
                     });
                     
                     const mark = isLast ? '┗' : '┣';
@@ -155,19 +164,17 @@
                     // 1. レシピ名
                     html += `
                     <tr class="row-sub" data-parent="${skillId}">
-                        <td onclick="toggleGroup('${recipeId}')">
-                            <span class="tree-line">   ${recipeMark}</span>
-                            <span class="toggle-btn" id="btn-${recipeId}">▲</span>
-                            <span class="recipe-name-text">【${r.recipe_name}】</span>
+                        <td>
+                            <span class="tree-line">   ${recipeMark}</span><span class="toggle-btn" id="btn-${recipeId}" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">▲</span><span class="recipe-name-text" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">【${r.recipe_name}】</span>
                         </td>
                     </tr>`;
                     
-                    // 2. 完成品
+                    // 2. 完成品（ボタンの分だけ横にズラし、縦棒を通す）
                     const outputPrefix = isLastRecipe ? '   ' : '│  ';
                     html += `
-                    <tr class="row-output row-sub" data-parent="${skillId}">
+                    <tr class="row-output row-sub" data-parent="${skillId}" data-parent-sub="${recipeId}">
                         <td data-parent="${recipeId}">
-                            <span class="tree-line">   ${outputPrefix}┗</span>
+                            <span class="tree-line">   ${outputPrefix}   ┗</span>
                             <input type="checkbox" class="cb"><span>${r.output_item_name}</span>
                         </td>
                     </tr>`;
