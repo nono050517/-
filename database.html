@@ -17,10 +17,11 @@
 <body>
 
     <h2>📜 エリシア攻略：レシピ検索</h2>
-    <input type="text" id="searchInput" class="search-box" placeholder="完成品の名前で検索（例：マジカルドロップ）...">
+    <input type="text" id="searchInput" class="search-box" placeholder="完成品の名前で検索...">
     <div id="display-area">準備中...</div>
 
     <script>
+        // 和田さんに教えてもらった接続情報
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
 
@@ -32,7 +33,6 @@
             async function getData() {
                 display.innerHTML = '検索中...';
                 try {
-                    // テーブル名を recipes に、検索対象を output_item_name に変更
                     let query = client.from('recipes').select('*');
                     if (input.value) {
                         query = query.ilike('output_item_name', `%${input.value}%`);
@@ -67,7 +67,7 @@
             }
 
             input.addEventListener('input', getData);
-            getData(); // 最初は全件表示
+            getData(); 
         };
     </script>
 </body>
