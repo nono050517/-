@@ -20,17 +20,16 @@
 
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
-        .craft-inline { color: #0066cc; font-weight: bold; }
+        .craft-inline { color: #0066cc; font-weight: bold; margin-left: 10px; }
         
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         
-        /* ツリー記号のズレを防止する設定 */
         .tree-line { 
-            font-family: "Consolas", "Monaco", "Courier New", monospace; /* 等幅フォントを徹底 */
+            font-family: "Consolas", "Monaco", "Courier New", monospace; 
             white-space: pre; 
             color: #bbb; 
             display: inline-block;
-            letter-spacing: 0.1em; /* 記号間の微調整 */
+            letter-spacing: 0.1em;
         }
     </style>
 </head>
@@ -89,13 +88,18 @@
                     
                     let prefix = '';
                     parentTrace.forEach(isParentLast => {
-                        // 記号と半角スペース2つで文字の下に揃うよう調整
                         prefix += isParentLast ? '   ' : '│  ';
                     });
                     const mark = isLast ? '┗' : '┣';
                     
                     const mLoc = getLocText(m.name);
                     const subR = recipes.find(r => r.output_item_name === m.name);
+
+                    // 素材行の構築（生産レシピがある場合は横に並べる）
+                    let craftInfo = '';
+                    if (subR) {
+                        craftInfo = `<span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}：${subR.recipe_name}</span>`;
+                    }
 
                     rows += `
                     <tr class="row-material ${depth > 0 ? 'row-sub' : ''}">
@@ -105,24 +109,13 @@
                             <input type="checkbox" class="cb"><span>${m.name}</span>
                             <span class="qty-inline">(×${m.qty || 0})</span>
                             <span class="loc-inline">${mLoc}</span>
+                            ${craftInfo}
                         </td>
                     </tr>`;
 
+                    // 下層がある場合は再帰
                     if (subR) {
                         const newTrace = [...parentTrace, isLast];
-                        let subPrefix = '';
-                        newTrace.forEach(isL => {
-                            subPrefix += isL ? '   ' : '│  ';
-                        });
-
-                        rows += `
-                        <tr class="row-sub">
-                            <td colspan="3"></td>
-                            <td>
-                                <span class="tree-line">${subPrefix}┗</span>
-                                <span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}：${subR.recipe_name}</span>
-                            </td>
-                        </tr>`;
                         rows += renderMaterials(subR, depth + 1, newTrace);
                     }
                 });
