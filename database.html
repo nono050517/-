@@ -5,45 +5,47 @@
     <title>エリシア生産データ一覧</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: "Meiryo", "MS Gothic", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; vertical-align: top; white-space: nowrap; }
+        body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; line-height: 1.4; }
+        th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; vertical-align: top; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         
-        .row-header { background: #e0e0e0; font-weight: bold; cursor: pointer; }
+        .row-header { background: #e0e0e0; font-weight: bold; font-size: 12px; cursor: pointer; }
         .row-sub { color: #555; }
         .row-output { font-weight: bold; background: #f4f8ff; }
         
         .hidden { display: none; }
         
-        /* 縦棒と枝の幅を完全に固定（1ユニット = 18px） */
-        .tree-unit { 
-            font-family: "MS Gothic", "Courier New", monospace; 
+        /* インデントとボタンの幅を等幅フォントで完全に制御 */
+        .tree-line { 
+            font-family: "Consolas", "Monaco", monospace; 
+            white-space: pre; 
+            color: #bbb; 
             display: inline-block;
-            width: 18px; 
-            text-align: center;
-            color: #bbb;
             letter-spacing: 0;
+            vertical-align: middle;
+            font-size: 11px;
         }
         
-        /* ボタン専用の固定幅ユニット */
-        .btn-unit {
+        .btn-box {
             display: inline-block;
-            width: 22px;
+            width: 1.5em; /* ボタン1つ分の幅を固定 */
             text-align: center;
         }
-
+        
         .toggle-btn { 
             cursor: pointer; 
             font-weight: bold; 
             color: #666;
             user-select: none;
+            display: inline-block;
         }
 
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
         
         .cb { vertical-align: middle; margin: 0 4px 0 2px; cursor: pointer; }
+        .group-sep { border-top: 2px solid #666 !important; }
         .recipe-name-text { color: #333; font-weight: bold; cursor: pointer; vertical-align: middle; }
     </style>
 </head>
@@ -52,7 +54,7 @@
     <table>
         <thead>
             <tr>
-                <th>生産レシピ（開閉：▼開 / ▲閉）</th>
+                <th>生産レシピ（クリックで開閉：▼開 / ▲閉）</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
@@ -106,15 +108,16 @@
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
                     
-                    let prefixHtml = "";
+                    // 縦棒の連続性を守るためのprefix生成
+                    let prefix = "";
                     parentTrace.forEach((isParentLast, d) => {
                         if (d === 0) {
-                            prefixHtml += `<span class="tree-unit">${isParentLast ? ' ' : '│'}</span>`;
+                            prefix += isParentLast ? "   " : "│  "; // レシピの枝
                         } else if (d === 1) {
-                            // 完成品＋ボタン幅分の隙間を確保
-                            prefixHtml += `<span class="tree-unit">${isParentLast ? ' ' : '│'}</span><span class="btn-unit"></span>`;
+                            // 完成品＋ボタン幅分のオフセット
+                            prefix += isParentLast ? "      " : "│     "; 
                         } else {
-                            prefixHtml += `<span class="tree-unit">${isParentLast ? ' ' : '│'}</span>`;
+                            prefix += isParentLast ? "   " : "│  "; // それ以降の階層
                         }
                     });
                     
@@ -123,8 +126,7 @@
                     rows += `
                     <tr class="row-sub" data-parent="${parentId}">
                         <td>
-                            ${prefixHtml}<span class="tree-unit">${mark}</span>
-                            <span class="btn-unit"></span>
+                            <span class="tree-line">${prefix}${mark}   </span>
                             <input type="checkbox" class="cb"><span>${m.name}</span>
                             <span class="qty-inline">(×${m.qty || 0})</span>
                             <span class="loc-inline">${getLocText(m.name)}</span>
@@ -150,8 +152,8 @@
                 const skillId = `group-${gIdx}`;
 
                 html += `
-                <tr class="row-header" onclick="toggleGroup('${skillId}')">
-                    <td><span class="btn-unit"><span class="toggle-btn" id="btn-${skillId}">▲</span></span> ${fullJob}：${group.skill} (Lv${group.lv})</td>
+                <tr class="row-header ${gIdx > 0 ? 'group-sep' : ''}" onclick="toggleGroup('${skillId}')">
+                    <td><span class="btn-box"><span class="toggle-btn" id="btn-${skillId}">▲</span></span> ${fullJob}：${group.skill} (Lv${group.lv})</td>
                 </tr>`;
 
                 group.list.forEach((r, rIdx) => {
@@ -159,26 +161,25 @@
                     const isLastRecipe = (rIdx === group.list.length - 1);
                     const recipeMark = isLastRecipe ? "┗" : "┣";
 
-                    // 1. レシピ名
+                    // レシピ名
                     html += `
                     <tr class="row-sub" data-parent="${skillId}">
                         <td>
-                            <span class="tree-unit"> </span><span class="tree-unit">${recipeMark}</span><span class="btn-unit"><span class="toggle-btn" id="btn-${recipeId}" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">▲</span></span><span class="recipe-name-text" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">【${r.recipe_name}】</span>
+                            <span class="tree-line">   ${recipeMark}</span><span class="btn-box"><span class="toggle-btn" id="btn-${recipeId}" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">▲</span></span><span class="recipe-name-text" onclick="event.stopPropagation(); toggleGroup('${recipeId}')">【${r.recipe_name}】</span>
                         </td>
                     </tr>`;
                     
-                    // 2. 完成品
-                    const outputLine = isLastRecipe ? " " : "│";
+                    // 完成品
+                    const outputVertical = isLastRecipe ? "   " : "│  ";
                     html += `
                     <tr class="row-output row-sub" data-parent="${skillId}">
                         <td data-parent="${recipeId}">
-                            <span class="tree-unit"> </span><span class="tree-unit">${outputLine}</span><span class="btn-unit"></span><span class="tree-unit">┗</span>
-                            <span class="btn-unit"></span>
+                            <span class="tree-line">   ${outputVertical}   ┗   </span>
                             <input type="checkbox" class="cb"><span>${r.output_item_name}</span>
                         </td>
                     </tr>`;
                     
-                    // 3. 素材
+                    // 素材階層へ
                     html += renderMaterials(r, recipeId, [isLastRecipe, true]);
                 });
             });
