@@ -2,50 +2,43 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>エリシア攻略：精密階層DB</title>
+    <title>エリシア攻略：全レシピ一括表示</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: #fff; color: #202122; }
-        .sidebar { width: 260px; background: #f8f9fa; border-right: 1px solid #a2a9b1; padding: 20px; box-sizing: border-box; }
-        .sidebar h2 { font-size: 1.1em; border-bottom: 1px solid #a2a9b1; padding-bottom: 5px; margin-top: 0; }
-        .search-box { width: 100%; padding: 8px; border: 1px solid #a2a9b1; margin-top: 15px; box-sizing: border-box; }
-
-        .main-content { flex: 1; overflow-y: auto; padding: 30px 50px; }
-        h1 { font-family: serif; border-bottom: 1px solid #a2a9b1; font-weight: normal; margin-bottom: 20px; }
-
-        /* 階層リストのデザイン調整 */
+        body { font-family: sans-serif; margin: 0; background: #fff; color: #202122; line-height: 1.5; }
+        .main-content { padding: 30px 50px; max-width: 1000px; margin: auto; }
+        h1 { font-family: serif; border-bottom: 1px solid #a2a9b1; font-weight: normal; margin-bottom: 25px; }
+        
+        .tree-container { border: 1px solid #a2a9b1; background: #f8f9fa; padding: 20px; }
         .tree-node { list-style: none; padding-left: 0; }
         .tree-node ul { 
             list-style: none; 
-            padding-left: 35px; /* 段差を強調 */
+            padding-left: 30px; 
             border-left: 1px solid #c8ccd1; 
             margin: 4px 0;
         }
-        .tree-node li { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; }
-        .tree-node li:hover { background-color: #f0f7ff; }
+        .tree-node li { padding: 4px 10px; border-bottom: 1px solid #eef0f2; }
+        .tree-node li:hover { background-color: #eaf3ff; }
 
-        .item-name { font-weight: bold; font-size: 1.1em; }
-        .qty-label { color: #d33; font-weight: bold; margin: 0 10px; font-size: 1.1em; }
-        .recipe-info { color: #54595d; font-size: 0.85em; }
-        .shop-info { 
-            color: #0066cc; font-size: 0.85em; background: #f8f9fa; 
-            padding: 2px 8px; border: 1px solid #a2a9b1; border-radius: 3px; margin-left: 10px;
+        .item-name { font-weight: bold; }
+        .qty-label { color: #d33; font-weight: bold; margin: 0 10px; }
+        .info-text { color: #54595d; font-size: 0.85em; }
+        .shop-tag { 
+            color: #0066cc; font-size: 0.82em; background: #fff; 
+            padding: 1px 6px; border: 1px solid #a2a9b1; border-radius: 2px; margin-left: 10px;
         }
+        .root-item { margin-top: 20px; border-top: 2px solid #a2a9b1; padding-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <h2>案内</h2>
-        <input type="text" id="searchInput" class="search-box" placeholder="アイテム名を入力...">
-        <p style="font-size: 0.75em; color: #72777d; margin-top: 10px;">Enterで検索開始</p>
-    </div>
-
     <div class="main-content">
-        <h1 id="item-title">生産ツリー表示</h1>
-        <ul id="tree-root" class="tree-node">
-            <li>検索窓にアイテム名を入れてください。</li>
-        </ul>
+        <h1>エリシア生産データベース（全一覧）</h1>
+        <div id="display-area" class="tree-container">
+            <ul id="tree-root" class="tree-node">
+                <li>データベースを読み込み中...</li>
+            </ul>
+        </div>
     </div>
 
     <script>
@@ -53,77 +46,71 @@
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
+        // 階層を再帰的に構築する関数
         async function buildTree(itemName, totalNeeded = 1) {
-            // レシピ情報を取得
             const { data: recipes } = await client.from('recipes').select('*').eq('output_item_name', itemName);
             
             let html = `<li>`;
-            
             if (recipes && recipes.length > 0) {
                 const r = recipes[0];
                 html += `<span class="item-name">■ ${itemName}</span>`;
                 html += `<span class="qty-label">${totalNeeded} 個</span>`;
-                html += `<span class="recipe-info">(${r.recipe_name || 'レシピ不明'} / ${r.skill_type || ''} Lv.${r.skill_lv || ''})</span>`;
-                
-                // ショップ情報等があれば表示
-                if(r.location && r.location !== 'NULL') {
-                    html += `<span class="shop-info">場所: ${r.location}</span>`;
-                }
+                html += `<span class="info-text">(${r.recipe_name || ''} / Lv.${r.skill_lv || ''})</span>`;
+                if(r.location) html += `<span class="shop-tag">${r.location}</span>`;
 
                 html += `<ul>`;
                 for (let i = 1; i <= 3; i++) {
                     const mName = r[`material_${i}`];
-                    // 個数が取れない場合は「1」として扱う（0個回避）
-                    let mQty = parseInt(r[`material_${i}_qty`]);
-                    if (isNaN(mQty) || mQty <= 0) mQty = 1; 
+                    // 数量計算の修正：確実に数値へ変換。取得できなければ1個とする。
+                    let mQty = Number(r[`material_${i}_qty`]);
+                    if (!mQty || mQty <= 0) mQty = 1;
 
                     if (mName && mName !== 'NULL' && mName !== '') {
-                        // 子の必要数 = 1つ作るのに必要な数 × 今回作りたい総数
                         html += await buildTree(mName, mQty * totalNeeded);
                     }
                 }
                 html += `</ul>`;
             } else {
-                // 素材（末端）
+                // レシピがない末端素材
                 html += `<span class="item-name">・ ${itemName}</span>`;
                 html += `<span class="qty-label">${totalNeeded} 個</span>`;
                 
-                // 素材の入手先を再検索（recipesテーブル内に情報がある場合を想定）
-                const { data: itemInfo } = await client.from('recipes').select('location, buy_price').eq('output_item_name', itemName).limit(1);
-                if (itemInfo && itemInfo[0] && itemInfo[0].location) {
-                    const price = itemInfo[0].buy_price ? ` / 💰${itemInfo[0].buy_price}G` : "";
-                    html += `<span class="shop-info">入手: ${itemInfo[0].location}${price}</span>`;
-                } else {
-                    html += `<span class="shop-info">入手: ショップ・採取・ドロップ</span>`;
-                }
+                // 素材の入手場所を検索
+                const { data: itemInfo } = await client.from('recipes').select('location').eq('output_item_name', itemName).limit(1);
+                const loc = (itemInfo && itemInfo[0] && itemInfo[0].location) ? itemInfo[0].location : "ショップ・採取";
+                html += `<span class="shop-tag">${loc}</span>`;
             }
-            
             html += `</li>`;
             return html;
         }
 
-        async function startSearch() {
-            const val = document.getElementById('searchInput').value;
-            if (!val) return;
-            
+        async function loadAllTrees() {
             const root = document.getElementById('tree-root');
-            const title = document.getElementById('item-title');
-            root.innerHTML = '<li>読み込み中...</li>';
-
-            const { data } = await client.from('recipes').select('output_item_name').ilike('output_item_name', `%${val}%`).limit(1);
             
-            if (data && data.length > 0) {
-                const target = data[0].output_item_name;
-                title.innerText = target;
-                root.innerHTML = await buildTree(target, 1);
-            } else {
-                root.innerHTML = '<li>該当アイテムが見つかりませんでした。</li>';
+            // 1. まず全ての「完成品（output_item_name）」を取得
+            const { data: allItems, error } = await client.from('recipes').select('output_item_name');
+            
+            if (error || !allItems) {
+                root.innerHTML = '<li>データの取得に失敗しました。</li>';
+                return;
+            }
+
+            // 2. 重複を除去
+            const uniqueItems = [...new Set(allItems.map(item => item.output_item_name))];
+            
+            // 3. 全てのアイテムに対してツリーを作成して表示
+            root.innerHTML = '';
+            for (const itemName of uniqueItems) {
+                const treeHtml = await buildTree(itemName, 1);
+                const wrapper = document.createElement('div');
+                wrapper.className = 'root-item';
+                wrapper.innerHTML = treeHtml;
+                root.appendChild(wrapper);
             }
         }
 
-        document.getElementById('searchInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') startSearch();
-        });
+        // ページ読み込み時に実行
+        loadAllTrees();
     </script>
 </body>
 </html>
