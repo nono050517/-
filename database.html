@@ -21,6 +21,7 @@
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
         .craft-inline { color: #0066cc; font-weight: bold; margin-left: 10px; }
+        .lv-label { font-size: 0.9em; color: #666; margin-left: 4px; }
         
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         
@@ -81,8 +82,7 @@
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
                     
-                    // インデントの計算（depth=0の時から1つ右に下げる）
-                    let prefix = '   '; // 完成品の直下を一段下げるための固定インデント
+                    let prefix = '   '; 
                     parentTrace.forEach(isParentLast => {
                         prefix += isParentLast ? '   ' : '│  ';
                     });
@@ -90,7 +90,12 @@
                     
                     const mLoc = getLocText(m.name);
                     const subR = recipes.find(r => r.output_item_name === m.name);
-                    let craftInfo = subR ? `<span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}：${subR.recipe_name}</span>` : '';
+                    
+                    // スキル名の横に (LvX) を追加
+                    let craftInfo = '';
+                    if (subR) {
+                        craftInfo = `<span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}<span class="lv-label">(Lv${subR.skill_lv})</span>：${subR.recipe_name}</span>`;
+                    }
 
                     rows += `
                     <tr class="row-material ${depth > 0 ? 'row-sub' : ''}">
