@@ -9,12 +9,15 @@
         table { width: 100%; border-collapse: collapse; line-height: 1.2; }
         th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; }
+        /* 完成品行 */
         .row-output { background: #e8f0ff !important; font-weight: bold; }
+        /* 素材行 */
         .row-material { background: #fff; }
         .lv { text-align: center; width: 25px; }
-        .loc { font-size: 11px; color: #b35900; font-weight: bold; white-space: pre-wrap; }
-        /* 数量のデザイン */
-        .qty-inline { color: #d00; font-weight: bold; margin-left: 4px; }
+        /* アイテム名の横の数量 */
+        .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
+        /* 入手場所のテキスト */
+        .loc-inline { color: #b35900; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -26,12 +29,11 @@
                 <th>スキル</th>
                 <th class="lv">Lv</th>
                 <th>レシピ名</th>
-                <th>アイテム名（完成品/素材）</th>
-                <th class="loc">入手場所 (location - target)</th>
+                <th>アイテム構成・入手場所</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
-            <tr><td colspan="6">データ読み込み中...</td></tr>
+            <tr><td colspan="5">データ読み込み中...</td></tr>
         </tbody>
     </table>
 
@@ -49,48 +51,53 @@
             ]);
 
             if (rRes.error) {
-                tbody.innerHTML = '<tr><td colspan="6">エラー: ' + rRes.error.message + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5">エラー: ' + rRes.error.message + '</td></tr>';
                 return;
             }
 
             const recipes = rRes.data;
             const itemsData = iRes.data || [];
 
-            const getLoc = (itemName) => {
+            // 入手場所の文字列を作成する関数
+            const getLocText = (itemName) => {
                 if (!itemName) return '';
                 const match = itemsData.find(item => 
                     item.name === itemName && item.method === "購入"
                 );
                 if (match && match.location && match.target) {
-                    return `${match.location} - ${match.target}`;
+                    return `購入：${match.location} - ${match.target}`;
                 }
-                return '-';
+                return ''; // 購入情報がない場合は何も表示しない
             };
 
             let html = '';
             recipes.forEach(r => {
                 // 1. 完成品の行
+                const outputLoc = getLocText(r.output_item_name);
                 html += `
                 <tr class="row-output">
                     <td>${r.required_jobs || ''}</td>
                     <td>${r.skill_type || ''}</td>
                     <td class="lv">${r.skill_lv || ''}</td>
                     <td>${r.recipe_name || ''}</td>
-                    <td>【完成】${r.output_item_name || ''}</td>
-                    <td class="loc">${getLoc(r.output_item_name)}</td>
+                    <td>【完成】${r.output_item_name || ''} <span class="loc-inline">${outputLoc}</span></td>
                 </tr>`;
 
-                // 2. 素材の行（数量をアイテム名の横に表示）
+                // 2. 素材の行 (1行に集約)
                 for (let i = 1; i <= 4; i++) {
                     const mName = r[`material_${i}`];
                     const mQty = r[`amount_${i}`];
 
                     if (mName && mName !== 'NULL' && mName !== '') {
+                        const mLoc = getLocText(mName);
                         html += `
                         <tr class="row-material">
                             <td colspan="4"></td>
-                            <td>└ 素材${i}: ${mName} <span class="qty-inline">(×${mQty || 0})</span></td>
-                            <td class="loc">${getLoc(mName)}</td>
+                            <td>
+                                ┗素材${i}：${mName} 
+                                <span class="qty-inline">(×${mQty || 0})</span>
+                                <span class="loc-inline">${mLoc}</span>
+                            </td>
                         </tr>`;
                     }
                 }
