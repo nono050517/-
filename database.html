@@ -10,9 +10,10 @@
         th, td { border: 1px solid #444; padding: 1px 4px; text-align: left; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; }
         tr:nth-child(even) { background: #f0f0f0; }
-        /* 数量列：赤字で右寄せ、幅を固定 */
-        .qty { color: #d00; text-align: right; width: 20px; font-weight: normal; }
+        .qty { color: #d00; text-align: right; width: 20px; }
         .lv { text-align: center; width: 25px; }
+        /* 入手場所：複数ある場合を想定して少し広めに */
+        .loc { width: 150px; font-size: 10px; color: #0055aa; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -29,11 +30,11 @@
                 <th>素材2</th><th class="qty">数</th>
                 <th>素材3</th><th class="qty">数</th>
                 <th>素材4</th><th class="qty">数</th>
-                <th>入手場所</th>
+                <th class="loc">入手場所（場所 - 誰）</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
-            <tr><td colspan="13">読み込み中...</td></tr>
+            <tr><td colspan="13">データ読み込み中...</td></tr>
         </tbody>
     </table>
 
@@ -45,19 +46,42 @@
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             
-            const { data, error } = await client
+            // 1. レシピデータを取得
+            const { data: recipes, error: rError } = await client
                 .from('recipes')
                 .select('*')
                 .order('skill_type', { ascending: true })
                 .order('skill_lv', { ascending: true });
+
+            // 2. 商人データを取得（場所と誰を紐づける用）
+            const { data: merchants, error: mError } = await client
+                .from('merchants') // テーブル名が異なる場合はここを修正してください
+                .select('*');
             
-            if (error) {
+            if (rError) {
                 tbody.innerHTML = '<tr><td colspan="13">エラーが発生しました</td></tr>';
                 return;
             }
 
             let html = '';
-            data.forEach(r => {
+            recipes.forEach(r => {
+                // 「場所 - 誰」の紐づけ処理
+                let locList = [];
+                
+                // データベース内の location フィールドがあればまず入れる
+                if (r.location) locList.push(r.location);
+
+                // 商人データ(merchants)がある場合、完成品名で検索して「場所 - 商人」を作る
+                if (merchants) {
+                    const sellers = merchants.filter(m => m.item_name === r.output_item_name);
+                    sellers.forEach(s => {
+                        locList.push(`${s.location} - ${s.merchant_name}`);
+                    });
+                }
+
+                // 重複を削除して改行でつなぐ
+                const uniqueLocs = [...new Set(locList)].join('\n');
+
                 html += `
                 <tr>
                     <td>${r.job_category || ''}</td>
@@ -73,7 +97,7 @@
                     <td class="qty">${r.amount_3 ?? ''}</td>
                     <td>${r.material_4 || ''}</td>
                     <td class="qty">${r.amount_4 ?? ''}</td>
-                    <td>${r.location || ''}</td>
+                    <td class="loc">${uniqueLocs}</td>
                 </tr>`;
             });
             tbody.innerHTML = html;
