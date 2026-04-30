@@ -43,10 +43,10 @@
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             
-            // レシピと商人データを取得
-            const [rRes, mRes] = await Promise.all([
+            // 1. recipesテーブルとitemsテーブルからデータを取得
+            const [rRes, iRes] = await Promise.all([
                 client.from('recipes').select('*').order('skill_type').order('skill_lv'),
-                client.from('merchants').select('*') 
+                client.from('items').select('*') // 画像の通り 'items' テーブルを指定
             ]);
 
             if (rRes.error) {
@@ -55,25 +55,28 @@
             }
 
             const recipes = rRes.data;
-            const merchants = mRes.data || [];
+            const itemsData = iRes.data || [];
 
-            // 入手場所検索 (location - target)
+            // 入手場所を検索する関数
             const getLoc = (itemName) => {
                 if (!itemName) return '';
-                const sellers = merchants.filter(m => 
-                    (m.item_name === itemName) || (m.product === itemName) || (m.販売物品 === itemName)
+                
+                // itemsテーブルから、名前が一致し、かつ入手方法が「購入」のものを探す
+                const match = itemsData.find(item => 
+                    item.name === itemName && item.method === "購入"
                 );
-                if (sellers.length === 0) return '-';
-                return sellers.map(s => {
-                    const loc = s.location || s.場所 || '不明';
-                    const target = s.target || s.商人名 || s.誰 || '不明';
-                    return `${loc} - ${target}`;
-                }).join('\n');
+                
+                // 一致するものがあり、かつ場所とターゲットの情報がある場合のみ表示
+                if (match && match.location && match.target) {
+                    return `${match.location} - ${match.target}`;
+                }
+                
+                return '-';
             };
 
             let html = '';
             recipes.forEach(r => {
-                // 1. 完成品行
+                // 1. 完成品の行
                 html += `
                 <tr class="row-output">
                     <td>${r.job_category || ''}</td>
@@ -85,7 +88,7 @@
                     <td class="loc">${getLoc(r.output_item_name)}</td>
                 </tr>`;
 
-                // 2. 素材1～4行をループ
+                // 2. 素材1〜4の行
                 for (let i = 1; i <= 4; i++) {
                     const mName = r[`material_${i}`];
                     const mQty = r[`amount_${i}`];
