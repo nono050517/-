@@ -2,41 +2,43 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>エリシア生産データ一覧</title>
+    <title>エリシア生産レシピ一覧</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 20px; color: #000; font-size: 13px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; }
-        th { background: #f2f2f2; font-weight: normal; }
-        tr:nth-child(even) { background: #fafafa; }
-        .qty { color: #d00; }
-        h1 { font-size: 18px; margin: 0 0 10px 0; border-bottom: 1px solid #000; }
+        body { font-family: sans-serif; margin: 0; padding: 10px; color: #000; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #999; padding: 3px 6px; text-align: left; }
+        th { background: #eee; font-weight: normal; position: sticky; top: 0; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .qty { color: #d00; text-align: center; width: 30px; }
+        .lv { text-align: center; width: 40px; }
+        h1 { font-size: 16px; margin: 0 0 10px 0; }
     </style>
 </head>
 <body>
 
     <h1>エリシア生産レシピ一覧</h1>
-    <div id="table-area">
-        <table>
-            <thead>
-                <tr>
-                    <th>完成品</th>
-                    <th>レシピ名 / Lv</th>
-                    <th>材料1</th>
-                    <th>個数</th>
-                    <th>材料2</th>
-                    <th>個数</th>
-                    <th>材料3</th>
-                    <th>個数</th>
-                    <th>入手場所</th>
-                </tr>
-            </thead>
-            <tbody id="recipe-body">
-                <tr><td colspan="9">データ読み込み中...</td></tr>
-            </tbody>
-        </table>
-    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>職業</th>
+                <th>スキル</th>
+                <th class="lv">Lv</th>
+                <th>レシピ名</th>
+                <th>完成品</th>
+                <th>素材1</th>
+                <th class="qty">個</th>
+                <th>素材2</th>
+                <th class="qty">個</th>
+                <th>素材3</th>
+                <th class="qty">個</th>
+                <th>主な入手場所</th>
+            </tr>
+        </thead>
+        <tbody id="recipe-body">
+            <tr><td colspan="12">読み込み中...</td></tr>
+        </tbody>
+    </table>
 
     <script>
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
@@ -46,28 +48,30 @@
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             
-            // データを全件取得（名称順）
+            // 指定の並び順（スキル→レベル順）で取得
             const { data, error } = await client
                 .from('recipes')
                 .select('*')
-                .order('output_item_name', { ascending: true });
+                .order('skill_type', { ascending: true })
+                .order('skill_lv', { ascending: true });
             
             if (error) {
-                tbody.innerHTML = '<tr><td colspan="9">エラー: ' + error.message + '</td></tr>';
-                return;
-            }
-
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9">データがありません。</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="12">エラーが発生しました</td></tr>';
                 return;
             }
 
             let html = '';
             data.forEach(r => {
+                // 職業（仮にskill_typeから判別、または空欄）
+                const job = r.job_category || ""; 
+                
                 html += `
                 <tr>
+                    <td>${job}</td>
+                    <td>${r.skill_type || ''}</td>
+                    <td class="lv">${r.skill_lv || ''}</td>
+                    <td>${r.recipe_name || ''}</td>
                     <td>${r.output_item_name || ''}</td>
-                    <td>${r.recipe_name || ''} (Lv.${r.skill_lv || ''})</td>
                     <td>${r.material_1 || ''}</td>
                     <td class="qty">${r.material_1_qty || ''}</td>
                     <td>${r.material_2 || ''}</td>
