@@ -5,8 +5,8 @@
     <title>エリシア生産データ一覧</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
-        table { width: 100%; border-collapse: collapse; line-height: 1.4; }
+        body { font-family: "Meiryo", "Hiragino Kaku Gothic ProN", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; line-height: 1.4; table-layout: fixed; }
         th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; }
         
@@ -14,20 +14,23 @@
         .row-output { background: #e8f0ff !important; font-weight: bold; }
         .row-sub { color: #555; }
         
-        .lv { text-align: center; width: 25px; }
+        .lv { text-align: center; width: 40px; }
+        .job-col { width: 80px; }
+        .skill-col { width: 100px; }
+
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
         .craft-inline { color: #0066cc; font-weight: bold; }
         
-        /* チェックボックスとテキストの配置 */
-        .cb { vertical-align: middle; margin-right: 4px; cursor: pointer; }
+        .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         
-        /* ツリー記号のフォントと配置 */
+        /* ツリー記号のズレを防止する設定 */
         .tree-line { 
-            font-family: "Courier New", Courier, monospace; 
+            font-family: "Consolas", "Monaco", "Courier New", monospace; /* 等幅フォントを徹底 */
             white-space: pre; 
-            color: #ccc; 
+            color: #bbb; 
             display: inline-block;
+            letter-spacing: 0.1em; /* 記号間の微調整 */
         }
     </style>
 </head>
@@ -36,10 +39,10 @@
     <table>
         <thead>
             <tr>
-                <th>職業</th>
-                <th>スキル</th>
+                <th class="job-col">職業</th>
+                <th class="skill-col">スキル</th>
                 <th class="lv">Lv</th>
-                <th>レシピ構成（チェックリスト形式）</th>
+                <th>レシピ構成（チェックリスト）</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
@@ -72,23 +75,22 @@
                 return match ? `購入：${match.location} - ${match.target}` : '';
             };
 
-            // 素材を再帰的に掘り下げる関数
             const renderMaterials = (recipe, depth = 0, parentTrace = []) => {
                 let rows = '';
                 const materials = [];
                 for (let i = 1; i <= 4; i++) {
                     if (recipe[`material_${i}`] && recipe[`material_${i}`] !== 'NULL') {
-                        materials.push({ name: recipe[`material_${i}`], qty: recipe[`amount_${i}`], num: i });
+                        materials.push({ name: recipe[`material_${i}`], qty: recipe[`amount_${i}`] });
                     }
                 }
 
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
                     
-                    // インデント記号の生成
                     let prefix = '';
                     parentTrace.forEach(isParentLast => {
-                        prefix += isParentLast ? '　 ' : '│  ';
+                        // 記号と半角スペース2つで文字の下に揃うよう調整
+                        prefix += isParentLast ? '   ' : '│  ';
                     });
                     const mark = isLast ? '┗' : '┣';
                     
@@ -100,7 +102,7 @@
                         <td colspan="3"></td>
                         <td>
                             <span class="tree-line">${prefix}${mark}</span>
-                            <input type="checkbox" class="cb"><label>素材${m.num}：${m.name}</label>
+                            <input type="checkbox" class="cb"><span>${m.name}</span>
                             <span class="qty-inline">(×${m.qty || 0})</span>
                             <span class="loc-inline">${mLoc}</span>
                         </td>
@@ -110,7 +112,7 @@
                         const newTrace = [...parentTrace, isLast];
                         let subPrefix = '';
                         newTrace.forEach(isL => {
-                            subPrefix += isL ? '　 ' : '│  ';
+                            subPrefix += isL ? '   ' : '│  ';
                         });
 
                         rows += `
@@ -121,7 +123,6 @@
                                 <span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}：${subR.recipe_name}</span>
                             </td>
                         </tr>`;
-                        // 深掘り（次の階層へ）
                         rows += renderMaterials(subR, depth + 1, newTrace);
                     }
                 });
@@ -130,21 +131,18 @@
 
             let html = '';
             recipes.forEach(r => {
-                // レシピ親行
                 html += `<tr class="row-recipe"><td>${r.required_jobs || ''}</td><td>${r.skill_type || ''}</td><td class="lv">${r.skill_lv || ''}</td><td>${r.recipe_name || ''}</td></tr>`;
                 
-                // 完成品行
                 html += `
                 <tr class="row-output">
                     <td colspan="3"></td>
                     <td>
                         <span class="tree-line">┗</span>
-                        <input type="checkbox" class="cb"><label>【完成】${r.output_item_name || ''}</label>
+                        <input type="checkbox" class="cb"><span>${r.output_item_name || ''}</span>
                         <span class="loc-inline">${getLocText(r.output_item_name)}</span>
                     </td>
                 </tr>`;
                 
-                // 素材の展開
                 html += renderMaterials(r, 0, []);
             });
             tbody.innerHTML = html;
