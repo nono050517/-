@@ -43,10 +43,9 @@
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             
-            // 1. recipesテーブルとitemsテーブルからデータを取得
             const [rRes, iRes] = await Promise.all([
                 client.from('recipes').select('*').order('skill_type').order('skill_lv'),
-                client.from('items').select('*') // 画像の通り 'items' テーブルを指定
+                client.from('items').select('*')
             ]);
 
             if (rRes.error) {
@@ -57,29 +56,23 @@
             const recipes = rRes.data;
             const itemsData = iRes.data || [];
 
-            // 入手場所を検索する関数
             const getLoc = (itemName) => {
                 if (!itemName) return '';
-                
-                // itemsテーブルから、名前が一致し、かつ入手方法が「購入」のものを探す
                 const match = itemsData.find(item => 
                     item.name === itemName && item.method === "購入"
                 );
-                
-                // 一致するものがあり、かつ場所とターゲットの情報がある場合のみ表示
                 if (match && match.location && match.target) {
                     return `${match.location} - ${match.target}`;
                 }
-                
                 return '-';
             };
 
             let html = '';
             recipes.forEach(r => {
-                // 1. 完成品の行
+                // 1. 完成品の行 (職業を required_jobs に修正)
                 html += `
                 <tr class="row-output">
-                    <td>${r.job_category || ''}</td>
+                    <td>${r.required_jobs || ''}</td>
                     <td>${r.skill_type || ''}</td>
                     <td class="lv">${r.skill_lv || ''}</td>
                     <td>${r.recipe_name || ''}</td>
@@ -88,7 +81,6 @@
                     <td class="loc">${getLoc(r.output_item_name)}</td>
                 </tr>`;
 
-                // 2. 素材1〜4の行
                 for (let i = 1; i <= 4; i++) {
                     const mName = r[`material_${i}`];
                     const mQty = r[`amount_${i}`];
