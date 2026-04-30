@@ -10,23 +10,22 @@
         th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; }
         
-        /* ① 親レシピ行の書体統一 */
         .row-recipe { background: #f0f0f0; font-weight: bold; font-size: 12px; }
-        .skill-title { font-weight: bold; } /* Lvラベルと書体を統一 */
+        .skill-title { font-weight: bold; }
         
         .row-output { background: #e8f0ff !important; font-weight: bold; }
         .row-sub { color: #555; }
         
-        .job-col { width: 60px; }
-        .skill-col { width: 140px; }
-        .lv-col { width: 30px; }
-
+        /* 列幅の調整：正式名称が入るよう少し広げました */
+        .job-col { width: 100px; }
+        .skill-col { width: 160px; }
+        
         .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
         .loc-inline { color: #b35900; font-weight: bold; }
         
-        /* ② 下層の生産情報の書体統一 */
+        /* 生産情報の書体（青字・太字で統一） */
         .craft-inline { color: #0066cc; font-weight: bold; margin-left: 10px; }
-        .craft-lv { color: #0066cc; font-weight: bold; } /* スキル名と同じ色・太さに */
+        .craft-lv { color: #0066cc; font-weight: bold; }
         
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         
@@ -46,12 +45,11 @@
             <tr>
                 <th class="job-col">職業</th>
                 <th class="skill-col">スキル (Lv)</th>
-                <th class="lv-col">Lv</th>
                 <th>レシピ構成（チェックリスト）</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
-            <tr><td colspan="4">読み込み中...</td></tr>
+            <tr><td colspan="3">読み込み中...</td></tr>
         </tbody>
     </table>
 
@@ -62,13 +60,24 @@
 
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
-            const [rRes, iRes] = await Promise.all([
+            
+            // recipes, items, job_masters の3つのテーブルからデータを取得
+            const [rRes, iRes, jRes] = await Promise.all([
                 client.from('recipes').select('*').order('skill_type').order('skill_lv'),
-                client.from('items').select('*')
+                client.from('items').select('*'),
+                client.from('job_masters').select('*')
             ]);
 
             const recipes = rRes.data || [];
             const itemsData = iRes.data || [];
+            const jobsData = jRes.data || [];
+
+            // 略称を正式名称に変換する関数
+            const getFullJobName = (shortName) => {
+                if (!shortName) return '';
+                const match = jobsData.find(j => j.short_name === shortName);
+                return match ? match.full_name : shortName;
+            };
 
             const getLocText = (itemName) => {
                 const match = itemsData.find(item => item.name === itemName && item.method === "購入");
@@ -97,13 +106,14 @@
                     
                     let craftInfo = '';
                     if (subR) {
-                        // 下層の書体統一
-                        craftInfo = `<span class="craft-inline">生産：${subR.required_jobs}：${subR.skill_type}<span class="craft-lv">(Lv${subR.skill_lv})</span>：${subR.recipe_name}</span>`;
+                        // 【変更】職業を正式名称に変換
+                        const fullJob = getFullJobName(subR.required_jobs);
+                        craftInfo = `<span class="craft-inline">生産：${fullJob}：${subR.skill_type}<span class="craft-lv">(Lv${subR.skill_lv})</span>：${subR.recipe_name}</span>`;
                     }
 
                     rows += `
                     <tr class="row-material ${depth > 0 ? 'row-sub' : ''}">
-                        <td colspan="3"></td>
+                        <td colspan="2"></td>
                         <td>
                             <span class="tree-line">${prefix}${mark}</span>
                             <input type="checkbox" class="cb"><span>${m.name}</span>
@@ -122,20 +132,20 @@
 
             let html = '';
             recipes.forEach(r => {
-                // 親レシピの書体統一
                 const skillWithLv = `<span class="skill-title">${r.skill_type || ''} (Lv${r.skill_lv || ''})</span>`;
+                // 【変更】親レシピの職業を正式名称に変換
+                const fullJob = getFullJobName(r.required_jobs);
                 
                 html += `
                 <tr class="row-recipe">
-                    <td>${r.required_jobs || ''}</td>
+                    <td>${fullJob}</td>
                     <td>${skillWithLv}</td>
-                    <td style="text-align:center;">${r.skill_lv || ''}</td>
                     <td>${r.recipe_name || ''}</td>
                 </tr>`;
                 
                 html += `
                 <tr class="row-output">
-                    <td colspan="3"></td>
+                    <td colspan="2"></td>
                     <td>
                         <span class="tree-line">┗</span>
                         <input type="checkbox" class="cb"><span>${r.output_item_name || ''}</span>
