@@ -16,7 +16,7 @@
         .row-output { font-weight: bold; background: #f4f8ff; }
         .row-sub { color: #555; }
         
-        .hidden { display: none; }
+        .hidden { display: none !important; } /* 強制的に非表示にする */
         
         .method-label {
             display: inline-block;
@@ -44,7 +44,6 @@
             margin: 3px 0 5px 45px;
             border-radius: 4px;
             box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
-            display: block;
         }
         .source-item { margin-bottom: 2px; }
         .craft-detail { color: #0066cc; font-weight: bold; }
@@ -86,29 +85,35 @@
             await loadAllRecipes();
         }
 
-        // 階層の開閉
+        // 階層の開閉：行（tr）のみを操作する
         function toggleLayer(id, btnId) {
-            // tr（行）だけを探す
             const elements = document.querySelectorAll(`tr[data-parent*="${id}"]`);
             const btn = document.getElementById(btnId);
             if (elements.length === 0) return;
             
-            const isHiding = !elements[0].classList.contains('hidden');
+            const isExpanding = btn.textContent === '▶';
 
             elements.forEach(el => {
-                if (isHiding) {
-                    el.classList.add('hidden');
-                } else {
+                if (isExpanding) {
                     const parents = el.getAttribute('data-parent').split(' ');
-                    // 親のどれか一つでも閉じている（▶）なら表示しない
                     const isAnyParentHidden = parents.some(p => {
                         const pBtn = document.getElementById(`btn-${p}`);
                         return pBtn && pBtn.textContent === '▶';
                     });
                     if (!isAnyParentHidden) el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
                 }
             });
-            btn.textContent = isHiding ? '▶' : '▼';
+            btn.textContent = isExpanding ? '▼' : '▶';
+        }
+
+        // 詳細ラベルの個別開閉用
+        function toggleDetail(detailId) {
+            const el = document.getElementById(detailId);
+            if (el) {
+                el.classList.toggle('hidden');
+            }
         }
 
         async function loadAllRecipes() {
@@ -141,7 +146,7 @@
                 const buySites = matches.filter(m => m.method === '購入');
                 if (buySites.length > 0) {
                     const id = `${baseId}-buy`;
-                    labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); document.getElementById('${id}').classList.toggle('hidden')">購入</span>`;
+                    labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${id}')">購入</span>`;
                     details += `<div id="${id}" class="source-container hidden">`;
                     buySites.forEach(m => {
                         details += `<div class="source-item">●購入：${m.location} (${m.target})</div>`;
@@ -153,7 +158,7 @@
                 const dropSites = matches.filter(m => m.method === 'ドロップ');
                 if (dropSites.length > 0) {
                     const id = `${baseId}-drop`;
-                    labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); document.getElementById('${id}').classList.toggle('hidden')">ドロップ</span>`;
+                    labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${id}')">ドロップ</span>`;
                     details += `<div id="${id}" class="source-container hidden">`;
                     dropSites.forEach(m => {
                         details += `<div class="source-item">◆ドロップ：${m.location} (${m.target})</div>`;
@@ -165,7 +170,7 @@
                 if (craftR) {
                     const id = `${baseId}-craft`;
                     const fullJob = getFullJobName(craftR.required_jobs);
-                    labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); document.getElementById('${id}').classList.toggle('hidden')">生産</span>`;
+                    labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${id}')">生産</span>`;
                     details += `<div id="${id}" class="source-container hidden">
                         <div class="craft-detail">生産：${fullJob}：${craftR.skill_type}(Lv${craftR.skill_lv})</div>
                     </div>`;
@@ -246,12 +251,10 @@
                         const isLastRec = (rIdx === filteredRecipes.length - 1);
                         const rMark = isLastRec ? '┗' : '┣';
 
-                        // レシピ行
                         html += `<tr class="row-recipe row-sub hidden" data-parent="${jobId} ${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')">
                             <td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▶</span>【${r.recipe_name}】</td>
                         </tr>`;
 
-                        // 完成品行
                         const outPre = isLastRec ? '      ' : '   │  ';
                         const outMethods = getMethodElements(r.output_item_name, recipeId, 99, r.recipe_name);
                         html += `<tr class="row-output row-sub hidden" data-parent="${jobId} ${skillId} ${recipeId}">
@@ -263,7 +266,6 @@
                             </td>
                         </tr>`;
                         
-                        // 材料行
                         html += renderMaterials(r, `${jobId} ${skillId} ${recipeId}`, [isLastRec, true, true]);
                     });
                 });
