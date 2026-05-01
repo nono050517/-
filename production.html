@@ -1,0 +1,99 @@
+<style>
+    /* 入手方法ラベルのスタイル */
+    .method-label {
+        display: inline-block;
+        font-size: 9px;
+        padding: 1px 4px;
+        margin-left: 5px;
+        border-radius: 3px;
+        cursor: pointer;
+        user-select: none;
+        border: 1px solid #ccc;
+        background: #fdfdfd;
+    }
+    .label-buy { color: #b35900; border-color: #b35900; }
+    .label-drop { color: #ff6600; border-color: #ff6600; }
+    .label-craft { color: #0066cc; border-color: #0066cc; }
+    
+    .method-label:hover { opacity: 0.7; background: #eee; }
+
+    /* 詳細情報の枠 */
+    .source-container {
+        font-size: 10px;
+        background: #fffdf0;
+        border: 1px solid #ffe58f;
+        padding: 4px 8px;
+        margin: 3px 0 5px 25px;
+        border-radius: 4px;
+    }
+    .craft-detail {
+        color: #0066cc;
+        font-weight: bold;
+        margin: 2px 0;
+    }
+</style>
+
+<script>
+    // 入手方法を判定してラベルと詳細HTMLを生成するメインロジック
+    const getSourceElements = (itemName, itemsData, recipes, pId, idx, jobsData) => {
+        const matches = itemsData.filter(item => item.name === itemName);
+        const craftR = recipes.find(r => r.output_item_name === itemName);
+        
+        let labels = '';
+        let details = '';
+        const baseId = `detail-${pId.replace(/[\s-]/g, '_')}-${idx}`;
+
+        // 購入・ドロップの判定
+        const hasBuy = matches.some(m => m.method === '購入');
+        const hasDrop = matches.some(m => m.method === 'ドロップ');
+
+        if (hasBuy) {
+            const id = `${baseId}-buy`;
+            labels += `<span class="method-label label-buy" onclick="document.getElementById('${id}').classList.toggle('hidden')">購入</span>`;
+            let txt = `<div id="${id}" class="source-container hidden">`;
+            matches.filter(m => m.method === '購入').forEach(m => {
+                txt += `<div>●購入：${m.location} (${m.target})</div>`;
+            });
+            txt += `</div>`;
+            details += txt;
+        }
+
+        if (hasDrop) {
+            const id = `${baseId}-drop`;
+            labels += `<span class="method-label label-drop" onclick="document.getElementById('${id}').classList.toggle('hidden')">ドロップ</span>`;
+            let txt = `<div id="${id}" class="source-container hidden">`;
+            matches.filter(m => m.method === 'ドロップ').forEach(m => {
+                txt += `<div>◆ドロップ：${m.location} (${m.target})</div>`;
+            });
+            txt += `</div>`;
+            details += txt;
+        }
+
+        // 生産（レシピ）の判定
+        if (craftR) {
+            const id = `${baseId}-craft`;
+            const fullJob = jobsData.find(j => j.short_name === craftR.required_jobs)?.full_name || craftR.required_jobs;
+            labels += `<span class="method-label label-craft" onclick="document.getElementById('${id}').classList.toggle('hidden')">生産</span>`;
+            details += `<div id="${id}" class="source-container hidden">
+                <div class="craft-detail">生産：${fullJob}：${craftR.skill_type}(Lv${craftR.skill_lv})</div>
+            </div>`;
+        }
+
+        return { labels, details };
+    };
+
+    // renderMaterials内の書き換え
+    /*
+    const { labels, details } = getSourceElements(m.name, itemsData, recipes, pId, idx, jobsData);
+    rows += `<tr class="row-sub hidden" data-parent="${pId}">
+        <td>
+            <span class="tree-line">${prefix}${mark}</span>
+            <input type="checkbox" class="cb">
+            <span>${m.name}</span>
+            <span class="qty-inline">(×${m.qty || 0})</span>
+            ${labels}
+            ${details}
+        </td>
+    </tr>`;
+    */
+</script>
