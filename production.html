@@ -36,22 +36,20 @@
         .label-craft { color: #0066cc; border-color: #0066cc; }
         .method-label:hover { background: #eee; }
 
-        /* ★インデントの調整：ツリーの縦線分を考慮して右にずらしました */
         .source-container {
             font-size: 10px;
             background: #fffdf0;
             border: 1px solid #ffe58f;
             padding: 4px 8px;
-            margin: 3px 0 5px 45px; /* 左マージンを増やして位置を合わせました */
+            margin: 3px 0 5px 45px;
             border-radius: 4px;
             box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
-            display: block; /* 確実に改行されるように */
+            display: block;
         }
         .source-item { margin-bottom: 2px; }
         .craft-detail { color: #0066cc; font-weight: bold; }
 
         .qty-inline { color: #d00; font-weight: bold; margin-right: 2px; }
-        
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         
         .tree-line { 
@@ -88,8 +86,9 @@
             await loadAllRecipes();
         }
 
+        // 階層の開閉用（詳細パネルは触らないように修正）
         function toggleLayer(id, btnId) {
-            const elements = document.querySelectorAll(`[data-parent*="${id}"]`);
+            const elements = document.querySelectorAll(`tr[data-parent*="${id}"]`);
             const btn = document.getElementById(btnId);
             if (elements.length === 0) return;
             const isHiding = !elements[0].classList.contains('hidden');
@@ -126,21 +125,19 @@
                 return match ? match.full_name : shortName;
             };
 
-            // ★詳細情報のIDが重複しないよう、recipe_nameも含めて生成するようにしました
             const getMethodElements = (itemName, pId, idx, currentRecipeName) => {
                 const matches = itemsData.filter(item => item.name === itemName);
                 const craftR = recipes.find(r => r.output_item_name === itemName);
                 
                 let labels = '';
                 let details = '';
-                // 完全に一意なIDを作成
                 const safeRecipeName = currentRecipeName ? currentRecipeName.replace(/[\s-【】]/g, '_') : 'none';
                 const baseId = `src-${safeRecipeName}-${pId.replace(/[\s-]/g, '_')}-${idx}`;
 
                 const buySites = matches.filter(m => m.method === '購入');
                 if (buySites.length > 0) {
                     const id = `${baseId}-buy`;
-                    labels += `<span class="method-label label-buy" onclick="document.getElementById('${id}').classList.toggle('hidden')">購入</span>`;
+                    labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); document.getElementById('${id}').classList.toggle('hidden')">購入</span>`;
                     let txt = `<div id="${id}" class="source-container hidden">`;
                     buySites.forEach(m => {
                         txt += `<div class="source-item">●購入：${m.location} (${m.target})</div>`;
@@ -152,7 +149,7 @@
                 const dropSites = matches.filter(m => m.method === 'ドロップ');
                 if (dropSites.length > 0) {
                     const id = `${baseId}-drop`;
-                    labels += `<span class="method-label label-drop" onclick="document.getElementById('${id}').classList.toggle('hidden')">ドロップ</span>`;
+                    labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); document.getElementById('${id}').classList.toggle('hidden')">ドロップ</span>`;
                     let txt = `<div id="${id}" class="source-container hidden">`;
                     dropSites.forEach(m => {
                         txt += `<div class="source-item">◆ドロップ：${m.location} (${m.target})</div>`;
@@ -164,7 +161,7 @@
                 if (craftR) {
                     const id = `${baseId}-craft`;
                     const fullJob = getFullJobName(craftR.required_jobs);
-                    labels += `<span class="method-label label-craft" onclick="document.getElementById('${id}').classList.toggle('hidden')">生産</span>`;
+                    labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); document.getElementById('${id}').classList.toggle('hidden')">生産</span>`;
                     details += `<div id="${id}" class="source-container hidden">
                         <div class="craft-detail">生産：${fullJob}：${craftR.skill_type}(Lv${craftR.skill_lv})</div>
                     </div>`;
@@ -188,7 +185,6 @@
                     parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
                     const mark = isLast ? '┗' : '┣';
 
-                    // 親のレシピ名を渡してIDを完全に分けました
                     const { labels, details } = getMethodElements(m.name, pId, idx, recipe.recipe_name);
 
                     rows += `<tr class="row-sub hidden" data-parent="${pId}">
