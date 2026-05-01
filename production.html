@@ -19,9 +19,6 @@
         /* 行(tr)の非表示 */
         tr.hidden { display: none; }
         
-        /* ラベル詳細(div)の非表示 */
-        div.hidden { display: none; }
-        
         .method-label {
             display: inline-block;
             font-size: 9px;
@@ -89,36 +86,49 @@
             await loadAllRecipes();
         }
 
+        // 階層の開閉
         function toggleLayer(id, btnId) {
-            const elements = document.querySelectorAll(`tr[data-parent*="${id}"]`);
             const btn = document.getElementById(btnId);
-            if (elements.length === 0) return;
-            
             const isExpanding = btn.textContent === '▶';
-
+            
+            // 指定したIDを「直近の親」として持つ行だけを探す
+            // これにより、職業をクリックした時に全レシピが一気に開くのを防ぎます
+            const elements = document.querySelectorAll(`tr[data-parent]`);
+            
             elements.forEach(el => {
-                if (isExpanding) {
-                    const parents = el.getAttribute('data-parent').split(' ');
-                    const isAnyParentHidden = parents.some(p => {
-                        const pBtn = document.getElementById(`btn-${p}`);
-                        return pBtn && pBtn.textContent === '▶';
-                    });
-                    if (!isAnyParentHidden) el.classList.remove('hidden');
-                } else {
-                    el.classList.add('hidden');
+                const parents = el.getAttribute('data-parent').split(' ');
+                const immediateParent = parents[parents.length - 1]; // 最後のIDが直近の親
+                
+                if (immediateParent === id) {
+                    if (isExpanding) {
+                        el.classList.remove('hidden');
+                    } else {
+                        // 閉じるときは、その子孫もすべて隠す
+                        recursiveHide(el.getAttribute('data-id'));
+                        el.classList.add('hidden');
+                    }
                 }
             });
             btn.textContent = isExpanding ? '▼' : '▶';
         }
 
+        // 子孫要素を再帰的に隠す
+        function recursiveHide(parentId) {
+            if (!parentId) return;
+            const children = document.querySelectorAll(`tr[data-parent*="${parentId}"]`);
+            children.forEach(child => {
+                child.classList.add('hidden');
+                const childBtn = document.getElementById(`btn-${child.getAttribute('data-id')}`);
+                if (childBtn) childBtn.textContent = '▶';
+                recursiveHide(child.getAttribute('data-id'));
+            });
+        }
+
+        // ラベル詳細の開閉
         function toggleDetail(detailId) {
             const el = document.getElementById(detailId);
             if (el) {
-                if (el.style.display === 'block') {
-                    el.style.display = 'none';
-                } else {
-                    el.style.display = 'block';
-                }
+                el.style.display = (el.style.display === 'none') ? 'block' : 'none';
             }
         }
 
@@ -178,7 +188,6 @@
                         <div class="craft-detail">生産：${fullJob}：${craftR.skill_type}(Lv${craftR.skill_lv})</div>
                     </div>`;
                 }
-
                 return { labels, details };
             };
 
@@ -196,7 +205,6 @@
                     let prefix = '';
                     parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
                     const mark = isLast ? '┗' : '┣';
-
                     const { labels, details } = getMethodElements(m.name, pId, idx, recipe.recipe_name);
 
                     rows += `<tr class="row-sub hidden" data-parent="${pId}">
@@ -204,8 +212,7 @@
                             <span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb">
                             <span>${m.name}</span>
                             <span class="qty-inline">(×${m.qty || 0})</span>
-                            ${labels}
-                            ${details}
+                            ${labels}${details}
                         </td>
                     </tr>`;
 
@@ -221,7 +228,7 @@
                 if (jobRecipes.length === 0) return;
 
                 const jobId = `job-${jIdx}`;
-                html += `<tr class="row-job" onclick="toggleLayer('${jobId}', 'btn-${jobId}')">
+                html += `<tr class="row-job" data-id="${jobId}" onclick="toggleLayer('${jobId}', 'btn-${jobId}')">
                     <td><span class="toggle-icon" id="btn-${jobId}">▶</span>${job.full_name}</td>
                 </tr>`;
 
@@ -237,15 +244,9 @@
                     const [sType, sLv] = skillKey.split('_');
                     const filteredRecipes = [];
                     const seen = new Set();
+                    skillGroup[skillKey].forEach(r => { if (!seen.has(r.recipe_name)) { seen.add(r.recipe_name); filteredRecipes.push(r); } });
 
-                    skillGroup[skillKey].forEach(r => {
-                        if (!seen.has(r.recipe_name)) {
-                            seen.add(r.recipe_name);
-                            filteredRecipes.push(r);
-                        }
-                    });
-
-                    html += `<tr class="row-skill hidden" data-parent="${jobId}" onclick="toggleLayer('${skillId}', 'btn-${skillId}')">
+                    html += `<tr class="row-skill hidden" data-id="${skillId}" data-parent="${jobId}" onclick="toggleLayer('${skillId}', 'btn-${skillId}')">
                         <td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${skillId}">▶</span>${sType} (Lv${sLv})</td>
                     </tr>`;
 
@@ -254,28 +255,25 @@
                         const isLastRec = (rIdx === filteredRecipes.length - 1);
                         const rMark = isLastRec ? '┗' : '┣';
 
-                        html += `<tr class="row-recipe row-sub hidden" data-parent="${jobId} ${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')">
+                        html += `<tr class="row-recipe row-sub hidden" data-id="${recipeId}" data-parent="${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')">
                             <td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▶</span>【${r.recipe_name}】</td>
                         </tr>`;
 
                         const outPre = isLastRec ? '      ' : '   │  ';
                         const outMethods = getMethodElements(r.output_item_name, recipeId, 99, r.recipe_name);
-                        html += `<tr class="row-output row-sub hidden" data-parent="${jobId} ${skillId} ${recipeId}">
+                        html += `<tr class="row-output row-sub hidden" data-parent="${recipeId}">
                             <td>
                                 <span class="tree-line">${outPre}┗ </span><input type="checkbox" class="cb">
                                 <span>${r.output_item_name}</span>
-                                ${outMethods.labels}
-                                ${outMethods.details}
+                                ${outMethods.labels}${outMethods.details}
                             </td>
                         </tr>`;
-                        
-                        html += renderMaterials(r, `${jobId} ${skillId} ${recipeId}`, [isLastRec, true, true]);
+                        html += renderMaterials(r, recipeId, [isLastRec, true, true]);
                     });
                 });
             });
             tbody.innerHTML = html;
         }
-
         init();
     </script>
 </body>
