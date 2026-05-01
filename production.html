@@ -7,61 +7,65 @@
     <style>
         body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; }
         table { width: 100%; border-collapse: collapse; line-height: 1.4; }
-        th, td { border: 1px solid #444; padding: 2px 4px; text-align: left; vertical-align: top; }
+        th, td { border: 1px solid #444; padding: 4px 6px; text-align: left; vertical-align: top; }
         th { background: #d2d2d2; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         
-        .row-job { background: #b0b0b0; font-weight: bold; font-size: 13px; cursor: pointer; height: 26px; }
+        .row-job { background: #b0b0b0; font-weight: bold; font-size: 13px; cursor: pointer; height: 30px; }
         .row-skill { background: #e8e8e8; font-weight: bold; font-size: 12px; cursor: pointer; }
         .row-recipe { color: #333; font-weight: bold; cursor: pointer; }
         .row-output { font-weight: bold; background: #f4f8ff; }
         .row-sub { color: #555; }
         
-        /* 行(tr)の非表示 */
         tr.hidden { display: none; }
         
         .method-label {
             display: inline-block;
             font-size: 9px;
-            padding: 0px 4px;
-            margin-left: 4px;
+            padding: 0px 5px;
+            margin-left: 6px;
             border-radius: 3px;
             cursor: pointer;
             user-select: none;
             border: 1px solid #ccc;
             background: #fff;
             vertical-align: middle;
-            line-height: 1.2;
+            line-height: 1.3;
         }
         .label-buy { color: #b35900; border-color: #b35900; }
         .label-drop { color: #ff6600; border-color: #ff6600; }
         .label-craft { color: #0066cc; border-color: #0066cc; }
         .method-label:hover { background: #eee; }
 
+        /* 詳細ボックスのインデントをラベルに合わせる */
         .source-container {
             font-size: 10px;
             background: #fffdf0;
             border: 1px solid #ffe58f;
-            padding: 4px 8px;
-            margin: 3px 0 5px 45px;
+            padding: 5px 10px;
+            margin: 4px 0 6px 80px; /* 左側を大きく開けてラベル付近に合わせる */
             border-radius: 4px;
-            box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.05);
+            width: fit-content;
+            min-width: 200px;
         }
-        .source-item { margin-bottom: 2px; }
+        .source-item { margin-bottom: 3px; border-bottom: 1px dashed #eee; padding-bottom: 2px; }
+        .source-item:last-child { border-bottom: none; }
         .craft-detail { color: #0066cc; font-weight: bold; }
 
-        .qty-inline { color: #d00; font-weight: bold; margin-right: 2px; }
-        .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
+        .qty-inline { color: #d00; font-weight: bold; margin-right: 4px; }
+        .cb { vertical-align: middle; margin: 0 8px 0 4px; cursor: pointer; }
         
+        /* ツリーのインデント幅を1.5倍〜2倍に拡大 */
         .tree-line { 
             font-family: "MS Gothic", monospace; 
             white-space: pre; 
             color: #bbb; 
             display: inline-block;
-            letter-spacing: 0;
-            font-size: 12px;
+            letter-spacing: 0.1em; /* 文字間を広げて見やすく */
+            font-size: 13px;
         }
         
-        .toggle-icon { display: inline-block; width: 15px; text-align: center; margin-right: 5px; }
+        .toggle-icon { display: inline-block; width: 20px; text-align: center; margin-right: 8px; }
     </style>
 </head>
 <body>
@@ -86,24 +90,19 @@
             await loadAllRecipes();
         }
 
-        // 階層の開閉
         function toggleLayer(id, btnId) {
             const btn = document.getElementById(btnId);
             const isExpanding = btn.textContent === '▶';
-            
-            // 指定したIDを「直近の親」として持つ行だけを探す
-            // これにより、職業をクリックした時に全レシピが一気に開くのを防ぎます
             const elements = document.querySelectorAll(`tr[data-parent]`);
             
             elements.forEach(el => {
                 const parents = el.getAttribute('data-parent').split(' ');
-                const immediateParent = parents[parents.length - 1]; // 最後のIDが直近の親
+                const immediateParent = parents[parents.length - 1];
                 
                 if (immediateParent === id) {
                     if (isExpanding) {
                         el.classList.remove('hidden');
                     } else {
-                        // 閉じるときは、その子孫もすべて隠す
                         recursiveHide(el.getAttribute('data-id'));
                         el.classList.add('hidden');
                     }
@@ -112,7 +111,6 @@
             btn.textContent = isExpanding ? '▼' : '▶';
         }
 
-        // 子孫要素を再帰的に隠す
         function recursiveHide(parentId) {
             if (!parentId) return;
             const children = document.querySelectorAll(`tr[data-parent*="${parentId}"]`);
@@ -124,11 +122,10 @@
             });
         }
 
-        // ラベル詳細の開閉
         function toggleDetail(detailId) {
             const el = document.getElementById(detailId);
             if (el) {
-                el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+                el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
             }
         }
 
@@ -203,8 +200,9 @@
                 materials.forEach((m, idx) => {
                     const isLast = (idx === materials.length - 1);
                     let prefix = '';
-                    parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
-                    const mark = isLast ? '┗' : '┣';
+                    // インデント幅を広げる（スペースを増やす）
+                    parentTrace.forEach(isParentLast => { prefix += isParentLast ? '      ' : '│     '; });
+                    const mark = isLast ? '┗━━' : '┣━━';
                     const { labels, details } = getMethodElements(m.name, pId, idx, recipe.recipe_name);
 
                     rows += `<tr class="row-sub hidden" data-parent="${pId}">
@@ -247,23 +245,23 @@
                     skillGroup[skillKey].forEach(r => { if (!seen.has(r.recipe_name)) { seen.add(r.recipe_name); filteredRecipes.push(r); } });
 
                     html += `<tr class="row-skill hidden" data-id="${skillId}" data-parent="${jobId}" onclick="toggleLayer('${skillId}', 'btn-${skillId}')">
-                        <td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${skillId}">▶</span>${sType} (Lv${sLv})</td>
+                        <td><span class="tree-line">┗━━ </span><span class="toggle-icon" id="btn-${skillId}">▶</span>${sType} (Lv${sLv})</td>
                     </tr>`;
 
                     filteredRecipes.forEach((r, rIdx) => {
                         const recipeId = `${skillId}-rec-${rIdx}`;
                         const isLastRec = (rIdx === filteredRecipes.length - 1);
-                        const rMark = isLastRec ? '┗' : '┣';
+                        const rMark = isLastRec ? '┗━━' : '┣━━';
 
                         html += `<tr class="row-recipe row-sub hidden" data-id="${recipeId}" data-parent="${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')">
-                            <td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▶</span>【${r.recipe_name}】</td>
+                            <td><span class="tree-line">      ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▶</span>【${r.recipe_name}】</td>
                         </tr>`;
 
-                        const outPre = isLastRec ? '      ' : '   │  ';
+                        const outPre = isLastRec ? '            ' : '      │     ';
                         const outMethods = getMethodElements(r.output_item_name, recipeId, 99, r.recipe_name);
                         html += `<tr class="row-output row-sub hidden" data-parent="${recipeId}">
                             <td>
-                                <span class="tree-line">${outPre}┗ </span><input type="checkbox" class="cb">
+                                <span class="tree-line">${outPre}┗━━ </span><input type="checkbox" class="cb">
                                 <span>${r.output_item_name}</span>
                                 ${outMethods.labels}${outMethods.details}
                             </td>
