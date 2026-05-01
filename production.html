@@ -126,7 +126,6 @@
                 return match ? match.full_name : shortName;
             };
 
-            // 入手方法ラベルと詳細を生成
             const getMethodElements = (itemName, pId, idx) => {
                 const matches = itemsData.filter(item => item.name === itemName);
                 const craftR = recipes.find(r => r.output_item_name === itemName);
@@ -135,7 +134,6 @@
                 let details = '';
                 const baseId = `src-${pId.replace(/[\s-]/g, '_')}-${idx}`;
 
-                // 購入の判定
                 const buySites = matches.filter(m => m.method === '購入');
                 if (buySites.length > 0) {
                     const id = `${baseId}-buy`;
@@ -148,7 +146,6 @@
                     details += txt;
                 }
 
-                // ドロップの判定
                 const dropSites = matches.filter(m => m.method === 'ドロップ');
                 if (dropSites.length > 0) {
                     const id = `${baseId}-drop`;
@@ -161,7 +158,6 @@
                     details += txt;
                 }
 
-                // 生産(レシピ)の判定
                 if (craftR) {
                     const id = `${baseId}-craft`;
                     const fullJob = getFullJobName(craftR.required_jobs);
@@ -246,7 +242,8 @@
                         const isLastRec = (rIdx === filteredRecipes.length - 1);
                         const rMark = isLastRec ? '┗' : '┣';
 
-                        html += `<tr class="row-recipe row-sub hidden" data-parent="${jobId} ${skillId}" onclick="toggleLayer('${recipeId}', 'btn('${recipeId}')')">
+                        // ★ここで修正: onclickの引数を正しくしました
+                        html += `<tr class="row-recipe row-sub hidden" data-parent="${jobId} ${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')">
                             <td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▶</span>【${r.recipe_name}】</td>
                         </tr>`;
 
