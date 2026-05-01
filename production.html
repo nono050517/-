@@ -18,9 +18,6 @@
         
         .hidden { display: none; }
         
-        /* ラベルと詳細を囲むコンテナ */
-        .item-row-content { display: inline; }
-
         .method-label {
             display: inline-block;
             font-size: 9px;
@@ -39,16 +36,15 @@
         .label-craft { color: #0066cc; border-color: #0066cc; }
         .method-label:hover { background: #eee; }
 
-        /* 詳細枠のスタイル修正 */
         .source-container {
             font-size: 10px;
             background: #fffdf0;
             border: 1px solid #ffe58f;
             padding: 4px 8px;
-            margin: 3px 0 5px 45px; /* インデントを材料名の位置に合わせる */
+            margin: 3px 0 5px 45px;
             border-radius: 4px;
             box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
-            display: block; /* 展開時は独立したブロックに */
+            display: block;
         }
         .source-item { margin-bottom: 2px; }
         .craft-detail { color: #0066cc; font-weight: bold; }
@@ -90,11 +86,13 @@
             await loadAllRecipes();
         }
 
-        // 階層の開閉用：tr要素（行）だけをターゲットにする
+        // 階層の開閉
         function toggleLayer(id, btnId) {
+            // tr（行）だけを探す
             const elements = document.querySelectorAll(`tr[data-parent*="${id}"]`);
             const btn = document.getElementById(btnId);
             if (elements.length === 0) return;
+            
             const isHiding = !elements[0].classList.contains('hidden');
 
             elements.forEach(el => {
@@ -102,6 +100,7 @@
                     el.classList.add('hidden');
                 } else {
                     const parents = el.getAttribute('data-parent').split(' ');
+                    // 親のどれか一つでも閉じている（▶）なら表示しない
                     const isAnyParentHidden = parents.some(p => {
                         const pBtn = document.getElementById(`btn-${p}`);
                         return pBtn && pBtn.textContent === '▶';
@@ -143,25 +142,23 @@
                 if (buySites.length > 0) {
                     const id = `${baseId}-buy`;
                     labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); document.getElementById('${id}').classList.toggle('hidden')">購入</span>`;
-                    let txt = `<div id="${id}" class="source-container hidden">`;
+                    details += `<div id="${id}" class="source-container hidden">`;
                     buySites.forEach(m => {
-                        txt += `<div class="source-item">●購入：${m.location} (${m.target})</div>`;
+                        details += `<div class="source-item">●購入：${m.location} (${m.target})</div>`;
                     });
-                    txt += `</div>`;
-                    details += txt;
+                    details += `</div>`;
                 }
 
-                // ドロップ（購入の右側にラベルが並ぶよう、labelsにそのまま追加）
+                // ドロップ
                 const dropSites = matches.filter(m => m.method === 'ドロップ');
                 if (dropSites.length > 0) {
                     const id = `${baseId}-drop`;
                     labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); document.getElementById('${id}').classList.toggle('hidden')">ドロップ</span>`;
-                    let txt = `<div id="${id}" class="source-container hidden">`;
+                    details += `<div id="${id}" class="source-container hidden">`;
                     dropSites.forEach(m => {
-                        txt += `<div class="source-item">◆ドロップ：${m.location} (${m.target})</div>`;
+                        details += `<div class="source-item">◆ドロップ：${m.location} (${m.target})</div>`;
                     });
-                    txt += `</div>`;
-                    details += txt;
+                    details += `</div>`;
                 }
 
                 // 生産
@@ -196,12 +193,10 @@
 
                     rows += `<tr class="row-sub hidden" data-parent="${pId}">
                         <td>
-                            <div class="item-row-content">
-                                <span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb">
-                                <span>${m.name}</span>
-                                <span class="qty-inline">(×${m.qty || 0})</span>
-                                ${labels}
-                            </div>
+                            <span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb">
+                            <span>${m.name}</span>
+                            <span class="qty-inline">(×${m.qty || 0})</span>
+                            ${labels}
                             ${details}
                         </td>
                     </tr>`;
@@ -251,14 +246,24 @@
                         const isLastRec = (rIdx === filteredRecipes.length - 1);
                         const rMark = isLastRec ? '┗' : '┣';
 
+                        // レシピ行
                         html += `<tr class="row-recipe row-sub hidden" data-parent="${jobId} ${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')">
                             <td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▶</span>【${r.recipe_name}】</td>
                         </tr>`;
 
+                        // 完成品行
                         const outPre = isLastRec ? '      ' : '   │  ';
+                        const outMethods = getMethodElements(r.output_item_name, recipeId, 99, r.recipe_name);
                         html += `<tr class="row-output row-sub hidden" data-parent="${jobId} ${skillId} ${recipeId}">
-                            <td><span class="tree-line">${outPre}┗ </span><input type="checkbox" class="cb"><span>${r.output_item_name}</span></td>
+                            <td>
+                                <span class="tree-line">${outPre}┗ </span><input type="checkbox" class="cb">
+                                <span>${r.output_item_name}</span>
+                                ${outMethods.labels}
+                                ${outMethods.details}
+                            </td>
                         </tr>`;
+                        
+                        // 材料行
                         html += renderMaterials(r, `${jobId} ${skillId} ${recipeId}`, [isLastRec, true, true]);
                     });
                 });
