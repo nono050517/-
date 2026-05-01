@@ -18,6 +18,9 @@
         
         .hidden { display: none; }
         
+        /* ラベルと詳細を囲むコンテナ */
+        .item-row-content { display: inline; }
+
         .method-label {
             display: inline-block;
             font-size: 9px;
@@ -36,15 +39,16 @@
         .label-craft { color: #0066cc; border-color: #0066cc; }
         .method-label:hover { background: #eee; }
 
+        /* 詳細枠のスタイル修正 */
         .source-container {
             font-size: 10px;
             background: #fffdf0;
             border: 1px solid #ffe58f;
             padding: 4px 8px;
-            margin: 3px 0 5px 45px;
+            margin: 3px 0 5px 45px; /* インデントを材料名の位置に合わせる */
             border-radius: 4px;
             box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
-            display: block;
+            display: block; /* 展開時は独立したブロックに */
         }
         .source-item { margin-bottom: 2px; }
         .craft-detail { color: #0066cc; font-weight: bold; }
@@ -86,7 +90,7 @@
             await loadAllRecipes();
         }
 
-        // 階層の開閉用（詳細パネルは触らないように修正）
+        // 階層の開閉用：tr要素（行）だけをターゲットにする
         function toggleLayer(id, btnId) {
             const elements = document.querySelectorAll(`tr[data-parent*="${id}"]`);
             const btn = document.getElementById(btnId);
@@ -134,6 +138,7 @@
                 const safeRecipeName = currentRecipeName ? currentRecipeName.replace(/[\s-【】]/g, '_') : 'none';
                 const baseId = `src-${safeRecipeName}-${pId.replace(/[\s-]/g, '_')}-${idx}`;
 
+                // 購入
                 const buySites = matches.filter(m => m.method === '購入');
                 if (buySites.length > 0) {
                     const id = `${baseId}-buy`;
@@ -146,6 +151,7 @@
                     details += txt;
                 }
 
+                // ドロップ（購入の右側にラベルが並ぶよう、labelsにそのまま追加）
                 const dropSites = matches.filter(m => m.method === 'ドロップ');
                 if (dropSites.length > 0) {
                     const id = `${baseId}-drop`;
@@ -158,6 +164,7 @@
                     details += txt;
                 }
 
+                // 生産
                 if (craftR) {
                     const id = `${baseId}-craft`;
                     const fullJob = getFullJobName(craftR.required_jobs);
@@ -189,10 +196,12 @@
 
                     rows += `<tr class="row-sub hidden" data-parent="${pId}">
                         <td>
-                            <span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb">
-                            <span>${m.name}</span>
-                            <span class="qty-inline">(×${m.qty || 0})</span>
-                            ${labels}
+                            <div class="item-row-content">
+                                <span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb">
+                                <span>${m.name}</span>
+                                <span class="qty-inline">(×${m.qty || 0})</span>
+                                ${labels}
+                            </div>
                             ${details}
                         </td>
                     </tr>`;
