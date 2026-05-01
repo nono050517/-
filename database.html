@@ -50,145 +50,164 @@
         </tbody>
     </table>
 
-    <script>
-        const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
-        const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
-        const client = supabase.createClient(S_URL, S_KEY);
+   <script>
+    const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
+    const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
+    const client = supabase.createClient(S_URL, S_KEY);
 
-        function toggleLayer(id, btnId) {
-            const elements = document.querySelectorAll(`[data-parent*="${id}"]`);
-            const btn = document.getElementById(btnId);
-            if (elements.length === 0) return;
-            const isHiding = !elements[0].classList.contains('hidden');
+    // ★ここでパスワードを設定（好きな数字や文字に変えてください）
+    const PASS = "0000"; 
 
-            elements.forEach(el => {
-                if (isHiding) {
-                    el.classList.add('hidden');
-                } else {
-                    const parents = el.getAttribute('data-parent').split(' ');
-                    const isAnyParentHidden = parents.some(p => {
-                        const pBtn = document.getElementById(`btn-${p}`);
-                        return pBtn && pBtn.textContent === '▶';
-                    });
-                    if (!isAnyParentHidden) el.classList.remove('hidden');
-                }
-            });
-            if (btn) btn.textContent = isHiding ? '▶' : '▼';
+    // 画面が開いた時に一番最初に動く処理
+    async function init() {
+        let input = prompt("パスワードを入力してください");
+
+        if (input !== PASS) {
+            alert("パスワードが違います。");
+            document.body.innerHTML = "<h1 style='text-align:center; margin-top:50px;'>閲覧権限がありません</h1>";
+        } else {
+            // パスワードが合っていたらデータを読み込む
+            await loadAllRecipes();
         }
+    }
 
-        async function loadAllRecipes() {
-            const tbody = document.getElementById('recipe-body');
-            const [rRes, iRes, jRes] = await Promise.all([
-                client.from('recipes').select('*').order('skill_type').order('skill_lv'),
-                client.from('items').select('*'),
-                client.from('job_masters').select('*')
-            ]);
+    // レイヤーの開閉処理
+    function toggleLayer(id, btnId) {
+        const elements = document.querySelectorAll(`[data-parent*="${id}"]`);
+        const btn = document.getElementById(btnId);
+        if (elements.length === 0) return;
+        const isHiding = !elements[0].classList.contains('hidden');
 
-            const recipes = rRes.data || [];
-            const itemsData = iRes.data || [];
-            const jobsData = jRes.data || [];
+        elements.forEach(el => {
+            if (isHiding) {
+                el.classList.add('hidden');
+            } else {
+                const parents = el.getAttribute('data-parent').split(' ');
+                const isAnyParentHidden = parents.some(p => {
+                    const pBtn = document.getElementById(`btn-${p}`);
+                    return pBtn && pBtn.textContent === '▶';
+                });
+                if (!isAnyParentHidden) el.classList.remove('hidden');
+            }
+        });
+        if (btn) btn.textContent = isHiding ? '▶' : '▼';
+    }
 
-            const getFullJobName = (shortName) => {
-                const match = jobsData.find(j => j.short_name === shortName);
-                return match ? match.full_name : shortName;
-            };
+    // データの読み込みと表示処理
+    async function loadAllRecipes() {
+        const tbody = document.getElementById('recipe-body');
+        const [rRes, iRes, jRes] = await Promise.all([
+            client.from('recipes').select('*').order('skill_type').order('skill_lv'),
+            client.from('items').select('*'),
+            client.from('job_masters').select('*')
+        ]);
 
-            const getLocText = (itemName) => {
-                const match = itemsData.find(item => item.name === itemName && item.method === "購入");
-                return match ? `購入：${match.location} - ${match.target}` : '';
-            };
+        const recipes = rRes.data || [];
+        const itemsData = iRes.data || [];
+        const jobsData = jRes.data || [];
 
-            const renderMaterials = (recipe, pId, parentTrace = []) => {
-                let rows = '';
-                const materials = [];
-                for (let i = 1; i <= 4; i++) {
-                    if (recipe[`material_${i}`] && recipe[`material_${i}`] !== 'NULL') {
-                        materials.push({ name: recipe[`material_${i}`], qty: recipe[`amount_${i}`] });
-                    }
+        const getFullJobName = (shortName) => {
+            const match = jobsData.find(j => j.short_name === shortName);
+            return match ? match.full_name : shortName;
+        };
+
+        const getLocText = (itemName) => {
+            const match = itemsData.find(item => item.name === itemName && item.method === "購入");
+            return match ? `購入：${match.location} - ${match.target}` : '';
+        };
+
+        const renderMaterials = (recipe, pId, parentTrace = []) => {
+            let rows = '';
+            const materials = [];
+            for (let i = 1; i <= 4; i++) {
+                if (recipe[`material_${i}`] && recipe[`material_${i}`] !== 'NULL') {
+                    materials.push({ name: recipe[`material_${i}`], qty: recipe[`amount_${i}`] });
+                }
+            }
+
+            materials.forEach((m, idx) => {
+                const isLast = (idx === materials.length - 1);
+                let prefix = '';
+                parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
+                const mark = isLast ? '┗' : '┣';
+
+                const subR = recipes.find(r => r.output_item_name === m.name);
+                let craftInfo = '';
+                if (subR) {
+                    const fullJob = getFullJobName(subR.required_jobs);
+                    craftInfo = `<span class="craft-inline">生産：${fullJob}：${subR.skill_type}<span class="craft-lv">(Lv${subR.skill_lv})</span></span>`;
                 }
 
-                materials.forEach((m, idx) => {
-                    const isLast = (idx === materials.length - 1);
-                    let prefix = '';
-                    parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
-                    const mark = isLast ? '┗' : '┣';
-
-                    // 素材が生産可能かチェックし、情報を構築
-                    const subR = recipes.find(r => r.output_item_name === m.name);
-                    let craftInfo = '';
-                    if (subR) {
-                        const fullJob = getFullJobName(subR.required_jobs);
-                        craftInfo = `<span class="craft-inline">生産：${fullJob}：${subR.skill_type}<span class="craft-lv">(Lv${subR.skill_lv})</span></span>`;
-                    }
-
-                    rows += `<tr class="row-sub" data-parent="${pId}">
-                        <td>
-                            <span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb"><span>${m.name}</span>
-                            <span class="qty-inline">(×${m.qty || 0})</span>
-                            <span class="loc-inline">${getLocText(m.name)}</span>
-                            ${craftInfo}
-                        </td>
-                    </tr>`;
-
-                    if (subR) rows += renderMaterials(subR, pId, [...parentTrace, isLast]);
-                });
-                return rows;
-            };
-
-            let html = '';
-            jobsData.forEach((job, jIdx) => {
-                const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
-                if (jobRecipes.length === 0) return;
-
-                const jobId = `job-${jIdx}`;
-                html += `<tr class="row-job" onclick="toggleLayer('${jobId}', 'btn-${jobId}')">
-                    <td><span class="toggle-icon" id="btn-${jobId}">▼</span>${job.full_name}</td>
+                rows += `<tr class="row-sub" data-parent="${pId}">
+                    <td>
+                        <span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb"><span>${m.name}</span>
+                        <span class="qty-inline">(×${m.qty || 0})</span>
+                        <span class="loc-inline">${getLocText(m.name)}</span>
+                        ${craftInfo}
+                    </td>
                 </tr>`;
 
-                const skillGroup = {};
-                jobRecipes.forEach(r => {
-                    const sKey = `${r.skill_type}_${r.skill_lv}`;
-                    if (!skillGroup[sKey]) skillGroup[sKey] = [];
-                    skillGroup[sKey].push(r);
+                if (subR) rows += renderMaterials(subR, pId, [...parentTrace, isLast]);
+            });
+            return rows;
+        };
+
+        let html = '';
+        jobsData.forEach((job, jIdx) => {
+            const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
+            if (jobRecipes.length === 0) return;
+
+            const jobId = `job-${jIdx}`;
+            html += `<tr class="row-job" onclick="toggleLayer('${jobId}', 'btn-${jobId}')">
+                <td><span class="toggle-icon" id="btn-${jobId}">▼</span>${job.full_name}</td>
+            </tr>`;
+
+            const skillGroup = {};
+            jobRecipes.forEach(r => {
+                const sKey = `${r.skill_type}_${r.skill_lv}`;
+                if (!skillGroup[sKey]) skillGroup[sKey] = [];
+                skillGroup[sKey].push(r);
+            });
+
+            Object.keys(skillGroup).forEach((skillKey, sIdx) => {
+                const skillId = `${jobId}-skill-${sIdx}`;
+                const [sType, sLv] = skillKey.split('_');
+                const filteredRecipes = [];
+                const seen = new Set();
+
+                skillGroup[skillKey].forEach(r => {
+                    if (!seen.has(r.recipe_name)) {
+                        seen.add(r.recipe_name);
+                        filteredRecipes.push(r);
+                    }
                 });
 
-                Object.keys(skillGroup).forEach((skillKey, sIdx) => {
-                    const skillId = `${jobId}-skill-${sIdx}`;
-                    const [sType, sLv] = skillKey.split('_');
-                    const filteredRecipes = [];
-                    const seen = new Set();
+                html += `<tr class="row-skill" data-parent="${jobId}" onclick="toggleLayer('${skillId}', 'btn-${skillId}')">
+                    <td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${skillId}">▼</span>${sType} (Lv${sLv})</td>
+                </tr>`;
 
-                    skillGroup[skillKey].forEach(r => {
-                        if (!seen.has(r.recipe_name)) {
-                            seen.add(r.recipe_name);
-                            filteredRecipes.push(r);
-                        }
-                    });
+                filteredRecipes.forEach((r, rIdx) => {
+                    const recipeId = `${skillId}-rec-${rIdx}`;
+                    const isLastRec = (rIdx === filteredRecipes.length - 1);
+                    const rMark = isLastRec ? '┗' : '┣';
 
-                    html += `<tr class="row-skill" data-parent="${jobId}" onclick="toggleLayer('${skillId}', 'btn-${skillId}')">
-                        <td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${skillId}">▼</span>${sType} (Lv${sLv})</td>
+                    html += `<tr class="row-recipe row-sub" data-parent="${jobId} ${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')">
+                        <td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▼</span>【${r.recipe_name}】</td>
                     </tr>`;
 
-                    filteredRecipes.forEach((r, rIdx) => {
-                        const recipeId = `${skillId}-rec-${rIdx}`;
-                        const isLastRec = (rIdx === filteredRecipes.length - 1);
-                        const rMark = isLastRec ? '┗' : '┣';
-
-                        html += `<tr class="row-recipe row-sub" data-parent="${jobId} ${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')">
-                            <td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▼</span>【${r.recipe_name}】</td>
-                        </tr>`;
-
-                        const outPre = isLastRec ? '      ' : '   │  ';
-                        html += `<tr class="row-output row-sub" data-parent="${jobId} ${skillId} ${recipeId}">
-                            <td><span class="tree-line">${outPre}┗ </span><input type="checkbox" class="cb"><span>${r.output_item_name}</span></td>
-                        </tr>`;
-                        html += renderMaterials(r, `${jobId} ${skillId} ${recipeId}`, [isLastRec, true, true]);
-                    });
+                    const outPre = isLastRec ? '      ' : '   │  ';
+                    html += `<tr class="row-output row-sub" data-parent="${jobId} ${skillId} ${recipeId}">
+                        <td><span class="tree-line">${outPre}┗ </span><input type="checkbox" class="cb"><span>${r.output_item_name}</span></td>
+                    </tr>`;
+                    html += renderMaterials(r, `${jobId} ${skillId} ${recipeId}`, [isLastRec, true, true]);
                 });
             });
-            tbody.innerHTML = html;
-        }
-        loadAllRecipes();
-    </script>
+        });
+        tbody.innerHTML = html;
+    }
+
+    // 実行開始
+    init();
+</script>
 </body>
 </html>
