@@ -18,7 +18,6 @@
         
         .hidden { display: none; }
         
-        /* 入手方法ラベル */
         .method-label {
             display: inline-block;
             font-size: 9px;
@@ -37,15 +36,16 @@
         .label-craft { color: #0066cc; border-color: #0066cc; }
         .method-label:hover { background: #eee; }
 
-        /* 詳細情報の枠 */
+        /* ★インデントの調整：ツリーの縦線分を考慮して右にずらしました */
         .source-container {
             font-size: 10px;
             background: #fffdf0;
             border: 1px solid #ffe58f;
             padding: 4px 8px;
-            margin: 3px 0 5px 25px;
+            margin: 3px 0 5px 45px; /* 左マージンを増やして位置を合わせました */
             border-radius: 4px;
             box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+            display: block; /* 確実に改行されるように */
         }
         .source-item { margin-bottom: 2px; }
         .craft-detail { color: #0066cc; font-weight: bold; }
@@ -126,13 +126,16 @@
                 return match ? match.full_name : shortName;
             };
 
-            const getMethodElements = (itemName, pId, idx) => {
+            // ★詳細情報のIDが重複しないよう、recipe_nameも含めて生成するようにしました
+            const getMethodElements = (itemName, pId, idx, currentRecipeName) => {
                 const matches = itemsData.filter(item => item.name === itemName);
                 const craftR = recipes.find(r => r.output_item_name === itemName);
                 
                 let labels = '';
                 let details = '';
-                const baseId = `src-${pId.replace(/[\s-]/g, '_')}-${idx}`;
+                // 完全に一意なIDを作成
+                const safeRecipeName = currentRecipeName ? currentRecipeName.replace(/[\s-【】]/g, '_') : 'none';
+                const baseId = `src-${safeRecipeName}-${pId.replace(/[\s-]/g, '_')}-${idx}`;
 
                 const buySites = matches.filter(m => m.method === '購入');
                 if (buySites.length > 0) {
@@ -185,7 +188,8 @@
                     parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
                     const mark = isLast ? '┗' : '┣';
 
-                    const { labels, details } = getMethodElements(m.name, pId, idx);
+                    // 親のレシピ名を渡してIDを完全に分けました
+                    const { labels, details } = getMethodElements(m.name, pId, idx, recipe.recipe_name);
 
                     rows += `<tr class="row-sub hidden" data-parent="${pId}">
                         <td>
@@ -242,7 +246,6 @@
                         const isLastRec = (rIdx === filteredRecipes.length - 1);
                         const rMark = isLastRec ? '┗' : '┣';
 
-                        // ★ここで修正: onclickの引数を正しくしました
                         html += `<tr class="row-recipe row-sub hidden" data-parent="${jobId} ${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')">
                             <td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▶</span>【${r.recipe_name}】</td>
                         </tr>`;
