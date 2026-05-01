@@ -16,7 +16,11 @@
         .row-output { font-weight: bold; background: #f4f8ff; }
         .row-sub { color: #555; }
         
-        .hidden { display: none !important; } /* 強制的に非表示にする */
+        /* 行(tr)の非表示 */
+        tr.hidden { display: none; }
+        
+        /* ラベル詳細(div)の非表示 */
+        div.hidden { display: none; }
         
         .method-label {
             display: inline-block;
@@ -85,7 +89,6 @@
             await loadAllRecipes();
         }
 
-        // 階層の開閉：行（tr）のみを操作する
         function toggleLayer(id, btnId) {
             const elements = document.querySelectorAll(`tr[data-parent*="${id}"]`);
             const btn = document.getElementById(btnId);
@@ -108,11 +111,14 @@
             btn.textContent = isExpanding ? '▼' : '▶';
         }
 
-        // 詳細ラベルの個別開閉用
         function toggleDetail(detailId) {
             const el = document.getElementById(detailId);
             if (el) {
-                el.classList.toggle('hidden');
+                if (el.style.display === 'block') {
+                    el.style.display = 'none';
+                } else {
+                    el.style.display = 'block';
+                }
             }
         }
 
@@ -142,36 +148,33 @@
                 const safeRecipeName = currentRecipeName ? currentRecipeName.replace(/[\s-【】]/g, '_') : 'none';
                 const baseId = `src-${safeRecipeName}-${pId.replace(/[\s-]/g, '_')}-${idx}`;
 
-                // 購入
                 const buySites = matches.filter(m => m.method === '購入');
                 if (buySites.length > 0) {
                     const id = `${baseId}-buy`;
                     labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${id}')">購入</span>`;
-                    details += `<div id="${id}" class="source-container hidden">`;
+                    details += `<div id="${id}" class="source-container" style="display:none;">`;
                     buySites.forEach(m => {
                         details += `<div class="source-item">●購入：${m.location} (${m.target})</div>`;
                     });
                     details += `</div>`;
                 }
 
-                // ドロップ
                 const dropSites = matches.filter(m => m.method === 'ドロップ');
                 if (dropSites.length > 0) {
                     const id = `${baseId}-drop`;
                     labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${id}')">ドロップ</span>`;
-                    details += `<div id="${id}" class="source-container hidden">`;
+                    details += `<div id="${id}" class="source-container" style="display:none;">`;
                     dropSites.forEach(m => {
                         details += `<div class="source-item">◆ドロップ：${m.location} (${m.target})</div>`;
                     });
                     details += `</div>`;
                 }
 
-                // 生産
                 if (craftR) {
                     const id = `${baseId}-craft`;
                     const fullJob = getFullJobName(craftR.required_jobs);
                     labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${id}')">生産</span>`;
-                    details += `<div id="${id}" class="source-container hidden">
+                    details += `<div id="${id}" class="source-container" style="display:none;">
                         <div class="craft-detail">生産：${fullJob}：${craftR.skill_type}(Lv${craftR.skill_lv})</div>
                     </div>`;
                 }
