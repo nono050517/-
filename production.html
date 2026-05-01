@@ -18,6 +18,7 @@
         
         tr.hidden { display: none; }
         
+        /* ラベルの色設定 */
         .method-label {
             display: inline-block;
             font-size: 9px;
@@ -31,18 +32,21 @@
             vertical-align: middle;
             line-height: 1.2;
         }
-        .label-buy { color: #b35900; border-color: #b35900; }
-        .label-drop { color: #ff6600; border-color: #ff6600; }
+        /* 購入：オレンジ */
+        .label-buy { color: #ff8c00; border-color: #ff8c00; }
+        /* ドロップ：緑 */
+        .label-drop { color: #2e8b57; border-color: #2e8b57; }
+        /* 生産：青 */
         .label-craft { color: #0066cc; border-color: #0066cc; }
-        .method-label:hover { background: #eee; }
+        
+        .method-label:hover { background: #f0f0f0; }
 
-        /* 詳細ボックスを右側に大きく寄せる */
         .source-container {
             font-size: 10px;
             background: #fffdf0;
             border: 1px solid #ffe58f;
             padding: 4px 8px;
-            margin: 3px 0 5px 120px; /* 左側の余白を大幅に増やしました */
+            margin: 3px 0 5px 120px;
             border-radius: 4px;
             box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
             width: fit-content;
