@@ -16,41 +16,13 @@
         .row-output { font-weight: bold; background: #f4f8ff; }
         .row-sub { color: #555; }
         
+        /* 最初から隠しておくための設定 */
         .hidden { display: none; }
         
-        /* 入手方法ラベル */
-        .method-label {
-            display: inline-block;
-            font-size: 9px;
-            padding: 0px 4px;
-            margin-left: 4px;
-            border-radius: 3px;
-            cursor: pointer;
-            user-select: none;
-            border: 1px solid #ccc;
-            background: #fff;
-            vertical-align: middle;
-            line-height: 1.2;
-        }
-        .label-buy { color: #b35900; border-color: #b35900; }
-        .label-drop { color: #ff6600; border-color: #ff6600; }
-        .label-craft { color: #0066cc; border-color: #0066cc; }
-        .method-label:hover { background: #eee; }
-
-        /* 詳細情報の枠 */
-        .source-container {
-            font-size: 10px;
-            background: #fffdf0;
-            border: 1px solid #ffe58f;
-            padding: 4px 8px;
-            margin: 3px 0 5px 25px;
-            border-radius: 4px;
-            box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
-        }
-        .source-item { margin-bottom: 2px; }
-        .craft-detail { color: #0066cc; font-weight: bold; }
-
-        .qty-inline { color: #d00; font-weight: bold; margin-right: 2px; }
+        .qty-inline { color: #d00; font-weight: bold; margin-right: 8px; }
+        .loc-inline { color: #b35900; font-weight: bold; }
+        .craft-inline { color: #0066cc; font-weight: bold; margin-left: 10px; }
+        .craft-lv { color: #0066cc; font-weight: bold; }
         
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; }
         
@@ -71,7 +43,7 @@
     <table>
         <thead>
             <tr>
-                <th>生産レシピ・チェックリスト (ラベルクリックで詳細表示)</th>
+                <th>生産レシピ・チェックリスト</th>
             </tr>
         </thead>
         <tbody id="recipe-body">
@@ -84,8 +56,17 @@
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
+        // ★パスワード設定（ここを好きな文字に変えてください）
+        const PASS = "1234"; 
+
         async function init() {
-            await loadAllRecipes();
+            let input = prompt("パスワードを入力してください");
+            if (input !== PASS) {
+                alert("パスワードが違います。");
+                document.body.innerHTML = "<h1 style='text-align:center; margin-top:50px;'>閲覧権限がありません</h1>";
+            } else {
+                await loadAllRecipes();
+            }
         }
 
         function toggleLayer(id, btnId) {
@@ -126,52 +107,9 @@
                 return match ? match.full_name : shortName;
             };
 
-            // 入手方法ラベルと詳細を生成
-            const getMethodElements = (itemName, pId, idx) => {
-                const matches = itemsData.filter(item => item.name === itemName);
-                const craftR = recipes.find(r => r.output_item_name === itemName);
-                
-                let labels = '';
-                let details = '';
-                const baseId = `src-${pId.replace(/[\s-]/g, '_')}-${idx}`;
-
-                // 購入の判定
-                const buySites = matches.filter(m => m.method === '購入');
-                if (buySites.length > 0) {
-                    const id = `${baseId}-buy`;
-                    labels += `<span class="method-label label-buy" onclick="document.getElementById('${id}').classList.toggle('hidden')">購入</span>`;
-                    let txt = `<div id="${id}" class="source-container hidden">`;
-                    buySites.forEach(m => {
-                        txt += `<div class="source-item">●購入：${m.location} (${m.target})</div>`;
-                    });
-                    txt += `</div>`;
-                    details += txt;
-                }
-
-                // ドロップの判定
-                const dropSites = matches.filter(m => m.method === 'ドロップ');
-                if (dropSites.length > 0) {
-                    const id = `${baseId}-drop`;
-                    labels += `<span class="method-label label-drop" onclick="document.getElementById('${id}').classList.toggle('hidden')">ドロップ</span>`;
-                    let txt = `<div id="${id}" class="source-container hidden">`;
-                    dropSites.forEach(m => {
-                        txt += `<div class="source-item">◆ドロップ：${m.location} (${m.target})</div>`;
-                    });
-                    txt += `</div>`;
-                    details += txt;
-                }
-
-                // 生産(レシピ)の判定
-                if (craftR) {
-                    const id = `${baseId}-craft`;
-                    const fullJob = getFullJobName(craftR.required_jobs);
-                    labels += `<span class="method-label label-craft" onclick="document.getElementById('${id}').classList.toggle('hidden')">生産</span>`;
-                    details += `<div id="${id}" class="source-container hidden">
-                        <div class="craft-detail">生産：${fullJob}：${craftR.skill_type}(Lv${craftR.skill_lv})</div>
-                    </div>`;
-                }
-
-                return { labels, details };
+            const getLocText = (itemName) => {
+                const match = itemsData.find(item => item.name === itemName && item.method === "購入");
+                return match ? `購入：${match.location} - ${match.target}` : '';
             };
 
             const renderMaterials = (recipe, pId, parentTrace = []) => {
@@ -189,19 +127,22 @@
                     parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
                     const mark = isLast ? '┗' : '┣';
 
-                    const { labels, details } = getMethodElements(m.name, pId, idx);
+                    const subR = recipes.find(r => r.output_item_name === m.name);
+                    let craftInfo = '';
+                    if (subR) {
+                        const fullJob = getFullJobName(subR.required_jobs);
+                        craftInfo = `<span class="craft-inline">生産：${fullJob}：${subR.skill_type}<span class="craft-lv">(Lv${subR.skill_lv})</span></span>`;
+                    }
 
                     rows += `<tr class="row-sub hidden" data-parent="${pId}">
                         <td>
-                            <span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb">
-                            <span>${m.name}</span>
+                            <span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb"><span>${m.name}</span>
                             <span class="qty-inline">(×${m.qty || 0})</span>
-                            ${labels}
-                            ${details}
+                            <span class="loc-inline">${getLocText(m.name)}</span>
+                            ${craftInfo}
                         </td>
                     </tr>`;
 
-                    const subR = recipes.find(r => r.output_item_name === m.name);
                     if (subR) rows += renderMaterials(subR, pId, [...parentTrace, isLast]);
                 });
                 return rows;
@@ -246,7 +187,7 @@
                         const isLastRec = (rIdx === filteredRecipes.length - 1);
                         const rMark = isLastRec ? '┗' : '┣';
 
-                        html += `<tr class="row-recipe row-sub hidden" data-parent="${jobId} ${skillId}" onclick="toggleLayer('${recipeId}', 'btn('${recipeId}')')">
+                        html += `<tr class="row-recipe row-sub hidden" data-parent="${jobId} ${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')">
                             <td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▶</span>【${r.recipe_name}】</td>
                         </tr>`;
 
