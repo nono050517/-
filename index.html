@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>エリシア生産Wiki風データベース</title>
+    <style>
+        /* Wiki風のシンプルで清潔感のあるスタイル */
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            font-family: sans-serif;
+            color: #333;
+        }
+
+        /* ① 上部：タイトル（Wikiのヘッダー風） */
+        header {
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d0d7de;
+            padding: 10px 20px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ② 左側：サイドバー項目（Wikiのナビゲーション風） */
+        nav {
+            width: 180px;
+            background-color: #ffffff;
+            border-right: 1px solid #d0d7de;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        nav h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        nav li {
+            margin-bottom: 8px;
+        }
+        nav a {
+            text-decoration: none;
+            color: #0969da; /* Wikiっぽいリンク色 */
+            font-size: 14px;
+            cursor: pointer;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        /* ③ 右側：メインコンテンツ */
+        main {
+            flex: 1;
+            padding: 20px 40px;
+            overflow-y: auto;
+            background-color: #fff;
+        }
+        #content-area {
+            line-height: 1.6;
+        }
+
+        /* 最初は隠しておくデータ表示用クラス */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>エリシアオンライン 生産データベース</h1>
+    </header>
+
+    <div class="container">
+        <nav>
+            <h3>メニュー</h3>
+            <ul>
+                <li><a href="#">トップページ</a></li>
+                <li><a onclick="showProductionData()">生産</a></li>
+            </ul>
+            
+            <h3>項目一覧</h3>
+            <ul>
+                <li><a href="#">武器</a></li>
+                <li><a href="#">防具</a></li>
+                <li><a href="#">アイテム</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <div id="content-area">
+                <div id="default-msg">
+                    <h2>ようこそ</h2>
+                    <p>左のメニューから項目を選択してください。</p>
+                </div>
+
+                <div id="production-data" class="hidden">
+                    <h2>エリシア生産データ一覧</h2>
+                    <p>ここに、以前作成した詳細な生産データを流し込むことができます。</p>
+                    <table border="1" style="width:100%; border-collapse: collapse; text-align: left;">
+                        <tr style="background: #f2f2f2;">
+                            <th style="padding: 8px;">カテゴリ</th>
+                            <th style="padding: 8px;">アイテム名</th>
+                            <th style="padding: 8px;">必要素材</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">武器</td>
+                            <td style="padding: 8px;">アイアンソード</td>
+                            <td style="padding: 8px;">鉄鉱石 x3</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 「生産」をクリックした時に実行される処理
+        function showProductionData() {
+            // 初期メッセージを隠す
+            document.getElementById('default-msg').style.display = 'none';
+            // 生産データ一覧を表示する
+            document.getElementById('production-data').classList.remove('hidden');
+        }
+    </script>
+
+</body>
+</html>
