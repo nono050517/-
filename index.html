@@ -89,72 +89,82 @@
         /* --- 3. メインコンテンツ --- */
         main {
             flex: 1;
-            padding: 15px 25px;
+            padding: 15px 35px; /* 左右の余白を少し広く */
             overflow-y: auto;
             background-color: #fff;
-            font-size: 10px;
+            font-size: 11px; /* 少しだけ読みやすく調整 */
         }
         h2.page-title {
             color: #8b5a5a;
-            font-size: 14px;
+            font-size: 16px;
             border-bottom: 2px solid #f5e1e1;
-            margin: 0 0 10px 0;
-            padding-bottom: 5px;
+            margin: 0 0 20px 0;
+            padding-bottom: 8px;
         }
 
+        /* フロントページ セクション調整 */
+        .fp-section {
+            margin-bottom: 30px; /* セクション間の余白を拡大 */
+        }
         .fp-section h3 {
             border-left: 4px solid #8b5a5a;
-            padding-left: 10px;
-            font-size: 11px;
+            padding-left: 12px;
+            font-size: 12px;
             color: #8b5a5a;
-            margin: 18px 0 6px 0;
+            margin: 25px 0 10px 0;
         }
         .fp-section p {
-            line-height: 1.6;
+            line-height: 1.8;
             margin-left: 10px;
-            margin-top: 2px;
-            margin-bottom: 12px;
-            font-size: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
         }
 
-        /* 箇条書きのライン揃え修正 */
-        .fp-section ul { 
-            line-height: 1.6;
-            margin-top: 2px;
-            margin-bottom: 12px;
-            font-size: 10px;
-            list-style-type: disc; 
-            list-style-position: outside; /* 黒丸を外に出す */
-            padding-left: 0 !important;
-            margin-left: 25px !important; /* 見出しの縦ラインに黒丸を合わせるため押し戻す */
+        /* 箇条書きの突き出し問題を解消するCSS */
+        .fp-section ul {
+            list-style: none; /* 標準の点を消す */
+            padding: 0;
+            margin: 10px 0 15px 25px; /* 左側に十分なスペースを確保 */
         }
         .fp-section li {
-            margin-bottom: 6px;
+            position: relative;
+            padding-left: 1.5em; /* 文頭の「・」の場所を固定 */
+            line-height: 1.8;
+            margin-bottom: 8px;
+        }
+        .fp-section li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: #8b5a5a;
+            font-weight: bold;
         }
 
+        /* --- FAQ設定 --- */
         .faq-category {
             background-color: #f5e1e1;
             color: #8b5a5a;
-            padding: 4px 10px;
+            padding: 5px 12px;
             font-weight: bold;
-            margin: 20px 0 10px 0;
+            margin: 25px 0 15px 0;
             border-radius: 4px;
             font-size: 11px;
         }
-        .faq-q { font-weight: bold; color: #a04040; margin-top: 10px; font-size: 10px; }
+        .faq-q { font-weight: bold; color: #a04040; margin-top: 15px; font-size: 11px; }
         .faq-q:before { content: "Q："; color: #8b5a5a; }
-        .faq-a { margin-bottom: 15px; border-left: 2px solid #f5e1e1; padding-left: 10px; line-height: 1.6; }
+        .faq-a { margin-bottom: 20px; border-left: 2px solid #f5e1e1; padding-left: 12px; line-height: 1.8; }
         .faq-a:before { content: "A："; font-weight: bold; color: #8b5a5a; }
 
+        /* 更新履歴 */
         .history-box {
             background-color: #fdf5f5;
             border: 1px solid #f5e1e1;
-            padding: 6px 10px;
-            font-size: 9px;
+            padding: 10px 15px;
+            font-size: 10px;
             color: #7d5a5a;
-            max-height: 80px; 
+            max-height: 100px; 
             overflow-y: auto;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .hidden { display: none !important; }
@@ -197,7 +207,8 @@
         <div class="nav-bar"></div>
 
         <div class="container">
-            <nav>
+            <nav id="sidebar-nav">
+                <!-- ここはJavaScriptでSupabaseから読み込むように拡張可能です -->
                 <h3>■はじめに</h3>
                 <ul>
                     <li><a onclick="showPage('front-page')">FrontPage</a></li>
@@ -258,7 +269,7 @@
                         </p>
                     </div>
 
-                    <div style="background-color: #8b5a5a; color: #fff; padding: 2px 8px; font-weight: bold; font-size: 9px; margin: 15px 0 5px 0;">更新履歴</div>
+                    <div style="background-color: #8b5a5a; color: #fff; padding: 4px 10px; font-weight: bold; font-size: 10px; margin: 30px 0 10px 0;">更新履歴</div>
                     <div class="history-box" id="update-history">読み込み中...</div>
                 </div>
 
@@ -330,6 +341,7 @@
     </div>
 
     <script>
+        // Supabase設定（適宜ご自身のものに置き換えてください）
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
