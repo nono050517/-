@@ -118,6 +118,7 @@
         }
         .fp-section ul { list-style-type: disc; padding-left: 15px; }
 
+        /* FAQ専用スタイル */
         .faq-category {
             background-color: #f5e1e1;
             color: #8b5a5a;
@@ -125,10 +126,11 @@
             font-weight: bold;
             margin: 20px 0 10px 0;
             border-radius: 4px;
+            font-size: 11px;
         }
-        .faq-q { font-weight: bold; color: #a04040; margin-top: 10px; }
+        .faq-q { font-weight: bold; color: #a04040; margin-top: 10px; font-size: 10px; }
         .faq-q:before { content: "Q："; color: #8b5a5a; }
-        .faq-a { margin-bottom: 15px; border-left: 2px solid #f5e1e1; padding-left: 10px; }
+        .faq-a { margin-bottom: 15px; border-left: 2px solid #f5e1e1; padding-left: 10px; line-height: 1.6; }
         .faq-a:before { content: "A："; font-weight: bold; color: #8b5a5a; }
 
         .history-box {
@@ -142,6 +144,8 @@
             line-height: 1.5;
         }
 
+        .hidden { display: none !important; }
+
         /* --- 4. 生産データ一覧テーブル --- */
         table { width: 100%; border-collapse: collapse; line-height: 1.3; background-color: #fff; }
         th { border: 1px solid #ffb6c1; padding: 4px; text-align: left; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; font-size: 10px; }
@@ -152,7 +156,6 @@
         .row-recipe { color: #000; font-weight: bold; cursor: pointer; }
         .row-output { font-weight: bold; background: #fffafb; }
         
-        .hidden { display: none; }
         .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 10px; }
         .toggle-icon { display: inline-block; width: 12px; text-align: center; margin-right: 5px; color: #d02090; }
 
@@ -171,7 +174,7 @@
         .cb { vertical-align: middle; margin: 0 3px; cursor: pointer; accent-color: #e91e63; transform: scale(0.8); }
     </style>
 </head>
-<body onload="loadUpdates()">
+<body onload="initApp()">
 
     <div class="wrapper">
         <header>
@@ -249,7 +252,7 @@
 
                         <div class="faq-category">データ・内容について</div>
                         <div class="faq-q">掲載されている情報が古い（間違っている）のですが。</div>
-                        <p class="faq-a">申し訳ありません。ゲームのアップデートにより仕様が変更される場合があります。もし間違いを見つけた場合は、今後のアップデート（掲示板設置など）をお待ちいただくか、管理人（和田）まで直接お知らせください。</p>
+                        <p class="faq-a">申し訳ありません。ゲームのアップデートにより仕様が変更される場合があります。もし間違いを見つけた場合は、今後のアップデート（掲示板設置など）をお待ちいただくか、管理人まで直接お知らせください。</p>
                         
                         <div class="faq-q">生産レシピの成功率は掲載されていますか？</div>
                         <p class="faq-a">現在、基本的なレシピデータを中心に掲載を進めています。成功率などの詳細データも順次追加予定です。</p>
@@ -284,6 +287,11 @@
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
+        function initApp() {
+            loadUpdates();
+            showPage('front-page');
+        }
+
         async function loadUpdates() {
             const historyBox = document.getElementById('update-history');
             try {
@@ -299,15 +307,25 @@
         }
 
         function showPage(pageId) {
-            document.getElementById('front-page').classList.add('hidden');
-            document.getElementById('faq-page').classList.add('hidden');
-            document.getElementById('production-page').classList.add('hidden');
-            document.getElementById(pageId).classList.remove('hidden');
+            // すべてのメインセクションを隠す
+            const sections = ['front-page', 'faq-page', 'production-page'];
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            
+            // 指定されたセクションを表示
+            const target = document.getElementById(pageId);
+            if (target) {
+                target.classList.remove('hidden');
+                document.getElementById('main-scroll').scrollTop = 0;
+            }
+
             if(pageId === 'production-page') loadAllRecipes();
         }
 
         async function jumpToJob(jobName) {
-            await showPage('production-page');
+            showPage('production-page');
             setTimeout(() => {
                 const rows = document.querySelectorAll('.row-job');
                 rows.forEach(row => {
