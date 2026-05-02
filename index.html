@@ -215,23 +215,18 @@
             </nav>
 
             <main id="main-scroll">
-                <!-- 1. FrontPage (内容を元に戻しました) -->
                 <div id="front-page">
                     <h2 class="page-title">FrontPage</h2>
                     <div class="fp-section">
                         <h3>1. 概要</h3>
                         <p>このサイトは、ASOBIMO,Inc.が提供するスマートフォン向けMMORPG『エリシアオンライン』の情報をまとめた個人運営の非公式データベースサイトです。</p>
                         <p>本作の運営期間は非常に長く、多くの情報が散逸しつつあります。かつて存在したWikiやファンサイトの貴重なデータを集約し、現在のプレイヤーや復帰者の方々が利用しやすい形で残すことを目的としています。</p>
-                        
                         <h3>2. 掲載データについて</h3>
                         <p>現在は「生産データ」を中心に公開しております。その他のアイテムデータや装備品データについても、順次整備を進めていく予定です。</p>
-
                         <h3>3. 使い方</h3>
                         <p>左側のメニューから閲覧したいカテゴリを選択してください。スマートフォンで閲覧される場合は、メニューが隠れている場合があります。</p>
-
                         <h3>4. 謝辞</h3>
                         <p>本サイトの構築にあたり、長年にわたり情報を蓄積してくださった『エリシアオンラインまとめ Wiki*』の有志の皆様、およびプレイヤーの皆様に深く感謝申し上げます。</p>
-
                         <h3>5. 著作権について</h3>
                         <p>本サイトで使用されている画像、シナリオ、キャラクター、システム等の知的財産権は、すべて株式会社アソビモ（ASOBIMO,Inc.）に帰属します。また、引用・転載しているデータの著作権は、それぞれの権利者に帰属します。</p>
                     </div>
@@ -239,27 +234,22 @@
                     <div class="history-box" id="update-history">読み込み中...</div>
                 </div>
 
-                <!-- 2. FAQページ (内容を元に戻しました) -->
                 <div id="faq-page" class="hidden">
                     <h2 class="page-title">よくある質問(FAQ)</h2>
                     <div class="fp-section">
                         <div class="faq-category">サイト全般について</div>
                         <div class="faq-q">このサイトは公式ですか？</div>
                         <p class="faq-a">いいえ、本サイトは有志による非公式のファンサイトです。運営元とは一切関係ありません。</p>
-
                         <div class="faq-q">データの修正依頼や情報提供はどこから行えばよいですか？</div>
                         <p class="faq-a">現在は準備中ですが、今後、連絡用フォームまたは公式SNS等での受付を検討しております。</p>
-
                         <div class="faq-category">生産データについて</div>
                         <div class="faq-q">生産レシピが表示されません。</div>
                         <p class="faq-a">ネットワーク状況により読み込みに時間がかかる場合があります。しばらく待っても表示されない場合は、ページのリロードをお試しください。</p>
-
                         <div class="faq-q">「生産ボタン」が表示されているアイテムとそうでないアイテムがあるのはなぜですか？</div>
                         <p class="faq-a">そのアイテム自体に生産レシピが存在する場合のみ「生産」ボタンが表示されます。素材としてのみ存在するアイテムには表示されません。</p>
                     </div>
                 </div>
 
-                <!-- 3. 生産データページ -->
                 <div id="production-page" class="hidden">
                     <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
                     <table>
@@ -276,7 +266,6 @@
     </div>
 
     <script>
-        /* JavaScript部分は不具合修正を適用した最新版です */
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
@@ -328,7 +317,11 @@
                 const jobsData = jRes.data || [];
                 const getFullJobName = (short) => (jobsData.find(j => j.short_name === short)?.full_name || short);
 
+                // --- 修正点：安全装置を追加 ---
                 const getMethods = (itemName, pId, idx) => {
+                    // 名前が空(null)の場合は処理をしない
+                    if (!itemName) return { labels: '', details: '' };
+                    
                     const matches = itemsData.filter(item => item.name === itemName);
                     const craftR = recipes.find(r => r.output_item_name === itemName);
                     const safeName = itemName.replace(/[\s-【】]/g, '_');
@@ -367,10 +360,10 @@
                         const currentMatId = `${pId}-m${idx}`; 
                         const {labels, details} = getMethods(m.n, pId, idx);
                         
-                        rows += `<tr class="row-sub hidden" data-parent="${pId}" data-id="${currentMatId}"><td><span class="tree-line">${pre}${mark}</span><input type="checkbox" class="cb"><span>${m.n}</span><span style="font-weight:bold;">(×${m.q})</span>${labels}${details}</td></tr>`;
+                        rows += `<tr class="row-sub hidden" data-parent="${pId}" data-id="${currentMatId}"><td><span class="tree-line">${pre}${mark}</span><input type="checkbox" class="cb"><span>${m.n || '名称不明'}</span><span style="font-weight:bold;">(×${m.q})</span>${labels}${details}</td></tr>`;
                         
                         const subR = recipes.find(r => r.output_item_name === m.n);
-                        if(subR) rows += renderMaterials(subR, currentMatId, [...trace, isLast]);
+                        if(subR && m.n) rows += renderMaterials(subR, currentMatId, [...trace, isLast]);
                     });
                     return rows;
                 };
@@ -405,7 +398,7 @@
                 });
                 tbody.innerHTML = html;
                 tbody.setAttribute('data-loaded', 'true');
-            } catch (e) { tbody.innerHTML = `<tr><td>読み込み失敗: ${e.message}</td></tr>`; }
+            } catch (e) { tbody.innerHTML = `<tr><td>読み込み失敗: ${e.message}</td></tr>`; console.error(e); }
         }
 
         function toggleLayer(id, btnId) {
