@@ -5,7 +5,7 @@
     <title>エリシア・アーカイブス (Ellicia Archives)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* --- 1. 全体レイアウト (Wikiベース) --- */
+        /* --- 1. 全体レイアウト --- */
         body {
             margin: 0;
             display: flex;
@@ -19,7 +19,7 @@
         .wrapper {
             display: flex;
             flex-direction: column;
-            width: 80%; /* 左右1割の余白 */
+            width: 80%;
             margin: 0 auto;
             background-color: #fffaf0;
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
@@ -33,7 +33,7 @@
         }
         .header-banner {
             width: 100%;
-            height: 120px; /* バナーの縦幅をスリム化 */
+            height: 120px;
             display: block;
             object-fit: cover;
             object-position: center;
@@ -96,7 +96,7 @@
             padding-bottom: 5px;
         }
 
-        /* --- 4. 生産データ一覧 (Pink Ver.由来のスタイル) --- */
+        /* --- 4. 生産データ一覧 (Pink Ver.由来) --- */
         table { width: 100%; border-collapse: collapse; line-height: 1.4; background-color: #fff; }
         th { border: 1px solid #ffb6c1; padding: 6px; text-align: left; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         td { border: 1px solid #ffdae0; padding: 2px 4px; color: #000; font-size: 11px; }
@@ -106,15 +106,13 @@
         .row-recipe { color: #000; font-weight: bold; cursor: pointer; }
         .row-output { font-weight: bold; background: #fffafb; }
         
-        tr.hidden { display: none; }
+        .hidden { display: none; } /* これでセクションごと隠します */
         .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 12px; }
         .toggle-icon { display: inline-block; width: 15px; text-align: center; margin-right: 5px; color: #d02090; }
 
-        /* 入手方法ラベル */
         .method-label {
             display: inline-block; font-size: 9px; padding: 0px 4px; margin-left: 4px;
             border-radius: 3px; cursor: pointer; border: 1px solid #ccc; background: #fff;
-            vertical-align: middle; line-height: 1.2;
         }
         .label-buy { color: #ff8c00; border-color: #ff8c00; }
         .label-drop { color: #2e8b57; border-color: #2e8b57; }
@@ -123,7 +121,6 @@
         .source-container {
             font-size: 10px; background: #fffafa; border: 1px solid #ffb6c1;
             padding: 4px 8px; margin: 3px 0 5px 20px; border-radius: 6px; color: #000;
-            box-shadow: 2px 2px 5px rgba(255, 182, 193, 0.3); width: fit-content;
         }
         .cb { vertical-align: middle; margin: 0 4px; cursor: pointer; accent-color: #e91e63; }
         
@@ -155,7 +152,7 @@
             </nav>
 
             <main>
-                <!-- FrontPage -->
+                <!-- 1. FrontPage (初期状態: 表示) -->
                 <div id="front-page">
                     <h2 class="page-title">FrontPage</h2>
                     <p>『エリシアオンライン』の歴史と技術を記したアーカイブスへようこそ。</p>
@@ -165,7 +162,7 @@
                     </div>
                 </div>
 
-                <!-- 生産データページ -->
+                <!-- 2. 生産データページ (初期状態: 非表示) -->
                 <div id="production-page" class="hidden">
                     <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
                     <table>
@@ -186,15 +183,20 @@
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
+        // ページ切り替えのコア機能
         function showPage(pageId) {
+            // すべてのコンテンツエリアを一旦隠す
             document.getElementById('front-page').classList.add('hidden');
             document.getElementById('production-page').classList.add('hidden');
+            
+            // 指定されたIDのエリアだけを表示する
             document.getElementById(pageId).classList.remove('hidden');
+            
+            // 生産ページを開いた時だけデータをロードする
             if(pageId === 'production-page') loadAllRecipes();
         }
 
-        // --- Pink Ver. から移植した高度な階層制御ロジック ---
-
+        // --- 階層制御ロジック ---
         function toggleLayer(id, btnId) {
             const btn = document.getElementById(btnId);
             const isExpanding = btn.textContent === '▶';
@@ -295,7 +297,6 @@
                         const sId = `${jobId}-s-${sIdx}`, [type, lv] = gk.split('_');
                         html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}', 'btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
                         
-                        // レシピ名の重複を除去して表示
                         const seen = new Set();
                         const filtered = groups[gk].filter(r => { if(seen.has(r.recipe_name)) return false; seen.add(r.recipe_name); return true; });
 
