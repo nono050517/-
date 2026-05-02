@@ -5,16 +5,22 @@
     <title>エリシア生産データ一覧（Pink Ver.）</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #444; font-size: 11px; background-color: #fff0f5; }
+        /* 文字色を黒に統一 */
+        body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; background-color: #fff0f5; }
         table { width: 100%; border-collapse: collapse; line-height: 1.4; background-color: #fff; }
-        th { border: 1px solid #ffb6c1; padding: 4px 6px; text-align: left; vertical-align: top; background: #ffc0cb; color: #d02090; font-weight: bold; position: sticky; top: 0; z-index: 10; }
-        td { border: 1px solid #ffdae0; padding: 2px 4px; text-align: left; vertical-align: top; }
         
+        /* 見出しの文字も黒に */
+        th { border: 1px solid #ffb6c1; padding: 4px 6px; text-align: left; vertical-align: top; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+        td { border: 1px solid #ffdae0; padding: 2px 4px; text-align: left; vertical-align: top; color: #000; }
+        
+        /* 職業行：文字は白の方が見やすいので維持（もし黒がよければ #000 に変えます！） */
         .row-job { background: #ffb6c1; color: #fff; font-weight: bold; font-size: 13px; cursor: pointer; height: 26px; }
-        .row-skill { background: #fff0f5; color: #d02090; font-weight: bold; font-size: 12px; cursor: pointer; }
-        .row-recipe { color: #333; font-weight: bold; cursor: pointer; }
-        .row-output { font-weight: bold; background: #fffafb; }
-        .row-sub { color: #666; }
+        
+        /* スキル・レシピ・素材：すべて黒文字 */
+        .row-skill { background: #fff0f5; color: #000; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .row-recipe { color: #000; font-weight: bold; cursor: pointer; }
+        .row-output { font-weight: bold; background: #fffafb; color: #000; }
+        .row-sub { color: #000; }
         
         tr.hidden { display: none; }
         
@@ -34,7 +40,6 @@
         .label-buy { color: #ff8c00; border-color: #ff8c00; }
         .label-drop { color: #2e8b57; border-color: #2e8b57; }
         .label-craft { color: #0066cc; border-color: #0066cc; }
-        .method-label:hover { background: #fff5f7; border-width: 1.5px; }
 
         .source-container {
             font-size: 10px;
@@ -45,12 +50,14 @@
             border-radius: 6px;
             box-shadow: 2px 2px 5px rgba(255, 182, 193, 0.3);
             width: fit-content;
+            color: #000;
         }
         .source-item { margin-bottom: 2px; border-bottom: 1px dotted #ffdae0; }
         .source-item:last-child { border-bottom: none; }
         .craft-detail { color: #0066cc; font-weight: bold; }
 
-        .qty-inline { color: #e91e63; font-weight: bold; margin-right: 2px; }
+        /* 数量（×1など）も黒にして、太字で強調 */
+        .qty-inline { color: #000; font-weight: bold; margin-right: 2px; }
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; accent-color: #e91e63; }
         
         .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; display: inline-block; letter-spacing: 0; font-size: 12px; }
@@ -58,7 +65,6 @@
     </style>
 </head>
 <body>
-
     <table>
         <thead>
             <tr>
@@ -71,7 +77,6 @@
     </table>
 
     <script>
-        // API KEYを正しいものに修正しました！
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
@@ -117,9 +122,7 @@
                     client.from('items').select('*'),
                     client.from('job_masters').select('*')
                 ]);
-
                 if (rRes.error) throw rRes.error;
-
                 const recipes = rRes.data || [];
                 const itemsData = iRes.data || [];
                 const jobsData = jRes.data || [];
@@ -145,7 +148,6 @@
                         buySites.forEach(m => { details += `<div class="source-item">●購入：${m.location} (${m.target})</div>`; });
                         details += `</div>`;
                     }
-
                     const dropSites = matches.filter(m => m.method === 'ドロップ');
                     if (dropSites.length > 0) {
                         const id = `${baseId}-drop`;
@@ -154,7 +156,6 @@
                         dropSites.forEach(m => { details += `<div class="source-item">◆ドロップ：${m.location} (${m.target})</div>`; });
                         details += `</div>`;
                     }
-
                     if (craftR) {
                         const id = `${baseId}-craft`;
                         const fullJob = getFullJobName(craftR.required_jobs);
@@ -217,9 +218,7 @@
                     });
                 });
                 tbody.innerHTML = html;
-            } catch (err) {
-                tbody.innerHTML = `<tr><td>エラーが発生しました: ${err.message}</td></tr>`;
-            }
+            } catch (err) { tbody.innerHTML = `<tr><td>エラー: ${err.message}</td></tr>`; }
         }
         init();
     </script>
