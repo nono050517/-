@@ -119,7 +119,7 @@
             margin-bottom: 15px;
         }
 
-        /* --- FAQ設定（2行目以降もピシッと揃う版） --- */
+        /* FAQ設定 */
         .faq-category {
             background-color: #f5e1e1;
             color: #8b5a5a;
@@ -144,7 +144,6 @@
             font-weight: bold; color: #8b5a5a; 
         }
 
-        /* 更新履歴 */
         .history-box {
             background-color: #fdf5f5;
             border: 1px solid #f5e1e1;
@@ -216,78 +215,47 @@
             </nav>
 
             <main id="main-scroll">
-                <!-- 1. FrontPage -->
+                <!-- 1. FrontPage (内容を元に戻しました) -->
                 <div id="front-page">
                     <h2 class="page-title">FrontPage</h2>
-                    
                     <div class="fp-section">
                         <h3>1. 概要</h3>
-                        <p>
-                            このサイトは、MMORPG『エリシアオンライン』のアイテムや生産レシピなどの情報をまとめた、個人運営の非公式データベースサイトです。<br>
-                            プレイヤーの皆様の冒険に役立つ情報を、シンプルで見やすい形で記録・蓄積していくことを目的としています。
-                        </p>
+                        <p>このサイトは、ASOBIMO,Inc.が提供するスマートフォン向けMMORPG『エリシアオンライン』の情報をまとめた個人運営の非公式データベースサイトです。</p>
+                        <p>本作の運営期間は非常に長く、多くの情報が散逸しつつあります。かつて存在したWikiやファンサイトの貴重なデータを集約し、現在のプレイヤーや復帰者の方々が利用しやすい形で残すことを目的としています。</p>
+                        
+                        <h3>2. 掲載データについて</h3>
+                        <p>現在は「生産データ」を中心に公開しております。その他のアイテムデータや装備品データについても、順次整備を進めていく予定です。</p>
 
-                        <h3>2. 利用上の注意点</h3>
-                        <p>
-                            本サイトに掲載されている情報は、有志による調査やプレイヤーからの提供に基づいています。<br>
-                            情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
-                            本サイトを利用したことによって生じたいかなる損害についても、管理人は責任を負いかねます。
-                        </p>
+                        <h3>3. 使い方</h3>
+                        <p>左側のメニューから閲覧したいカテゴリを選択してください。スマートフォンで閲覧される場合は、メニューが隠れている場合があります。</p>
 
-                        <h3>3. 禁止行為と措置</h3>
-                        <p>
-                            ・サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。<br>
-                            ・公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み。<br>
-                            ・禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。
-                        </p>
-
-                        <h3>4. リンクについて</h3>
-                        <p>
-                            本サイトはリンクフリーです。<br>
-                            どのページへリンクしていただいても構いません。<br>
-                            ただし、画像ファイル等への直リンクはご遠慮ください。
-                        </p>
+                        <h3>4. 謝辞</h3>
+                        <p>本サイトの構築にあたり、長年にわたり情報を蓄積してくださった『エリシアオンラインまとめ Wiki*』の有志の皆様、およびプレイヤーの皆様に深く感謝申し上げます。</p>
 
                         <h3>5. 著作権について</h3>
-                        <p>
-                            本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
-                            また、一部のデータについては<b>『エリシアオンラインまとめ Wiki*』</b>より引用・転載しております。<br>
-                            先人の蓄積されたデータに深く感謝いたします。<br>
-                            本サイト内の独自コンテンツ（レイアウト、独自解説文等）の無断転載・再配布は禁止します。
-                        </p>
+                        <p>本サイトで使用されている画像、シナリオ、キャラクター、システム等の知的財産権は、すべて株式会社アソビモ（ASOBIMO,Inc.）に帰属します。また、引用・転載しているデータの著作権は、それぞれの権利者に帰属します。</p>
                     </div>
-
                     <div style="background-color: #8b5a5a; color: #fff; padding: 4px 10px; font-weight: bold; font-size: 10px; margin: 30px 0 10px 0;">更新履歴</div>
                     <div class="history-box" id="update-history">読み込み中...</div>
                 </div>
 
-                <!-- 2. FAQページ（内容充実＋レイアウト修正版） -->
+                <!-- 2. FAQページ (内容を元に戻しました) -->
                 <div id="faq-page" class="hidden">
                     <h2 class="page-title">よくある質問(FAQ)</h2>
                     <div class="fp-section">
                         <div class="faq-category">サイト全般について</div>
                         <div class="faq-q">このサイトは公式ですか？</div>
-                        <p class="faq-a">いいえ、本サイトは有志による非公式のファンサイトです。<br>運営元のアソビモ株式会社様とは一切関係ありません。</p>
-                        
-                        <div class="faq-q">スマホからでも見られますか？</div>
-                        <p class="faq-a">はい、ブラウザから閲覧可能です。<br>シンプルなレイアウトにしているため、移動中の確認にも適しています。</p>
-                        
-                        <div class="faq-q">データの更新頻度はどれくらいですか？</div>
-                        <p class="faq-a">管理人の空き時間での更新となるため不定期ですが、新イベントやアップデート時にはなるべく早く反映できるよう努めています。</p>
+                        <p class="faq-a">いいえ、本サイトは有志による非公式のファンサイトです。運営元とは一切関係ありません。</p>
 
-                        <div class="faq-category">データ・内容について</div>
-                        <div class="faq-q">掲載されている情報が古い（間違っている）のですが。</div>
-                        <p class="faq-a">申し訳ありません。ゲームのアップデートにより仕様が変更される場合があります。もし間違いを見つけた場合は、今後のアップデート（掲示板設置など）をお待ちいただくか、管理人までお知らせください。</p>
-                        
-                        <div class="faq-q">生産レシピの成功率は掲載されていますか？</div>
-                        <p class="faq-a">現在、基本的なレシピデータを中心に掲載を進めています。成功率などの詳細データも順次追加予定です。</p>
+                        <div class="faq-q">データの修正依頼や情報提供はどこから行えばよいですか？</div>
+                        <p class="faq-a">現在は準備中ですが、今後、連絡用フォームまたは公式SNS等での受付を検討しております。</p>
 
-                        <div class="faq-category">リンク・利用について</div>
-                        <div class="faq-q">自分のブログやSNSでこのサイトを紹介してもいいですか？</div>
-                        <p class="faq-a">大歓迎です！本サイトはリンクフリーですので、許可なくリンクを貼っていただいて構いません。</p>
-                        
-                        <div class="faq-q">サイト内の画像やロゴを使ってもいいですか？</div>
-                        <p class="faq-a">ゲーム内画像の著作権は運営元に帰属します。当サイトオリジナルのロゴや解説文については、無断転載・二次利用をご遠慮いただいております。</p>
+                        <div class="faq-category">生産データについて</div>
+                        <div class="faq-q">生産レシピが表示されません。</div>
+                        <p class="faq-a">ネットワーク状況により読み込みに時間がかかる場合があります。しばらく待っても表示されない場合は、ページのリロードをお試しください。</p>
+
+                        <div class="faq-q">「生産ボタン」が表示されているアイテムとそうでないアイテムがあるのはなぜですか？</div>
+                        <p class="faq-a">そのアイテム自体に生産レシピが存在する場合のみ「生産」ボタンが表示されます。素材としてのみ存在するアイテムには表示されません。</p>
                     </div>
                 </div>
 
@@ -308,6 +276,7 @@
     </div>
 
     <script>
+        /* JavaScript部分は不具合修正を適用した最新版です */
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
@@ -345,7 +314,6 @@
             }, 300);
         }
 
-        /* --- 生産レシピ描画システム --- */
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
@@ -360,12 +328,12 @@
                 const jobsData = jRes.data || [];
                 const getFullJobName = (short) => (jobsData.find(j => j.short_name === short)?.full_name || short);
 
-                const getMethods = (itemName, pId, idx, rName, isMainOutput = false) => {
-                    if (isMainOutput) return { labels: '', details: '' };
+                const getMethods = (itemName, pId, idx) => {
                     const matches = itemsData.filter(item => item.name === itemName);
                     const craftR = recipes.find(r => r.output_item_name === itemName);
-                    const safeName = rName ? rName.replace(/[\s-【】]/g, '_') : 'none';
-                    const baseId = `src-${safeName}-${pId}-${idx}`.replace(/[\s-]/g, '_');
+                    const safeName = itemName.replace(/[\s-【】]/g, '_');
+                    const baseId = `src-${pId}-${idx}-${safeName}`; 
+
                     let labels = '', details = '';
                     const buy = matches.filter(m => m.method === '購入');
                     if (buy.length) {
@@ -391,14 +359,18 @@
                     let rows = '';
                     const mats = [];
                     for(let i=1; i<=4; i++) if(recipe[`material_${i}`] && recipe[`material_${i}`]!=='NULL') mats.push({n: recipe[`material_${i}`], q: recipe[`amount_${i}`]});
+                    
                     mats.forEach((m, idx) => {
                         const isLast = (idx === mats.length - 1);
                         let pre = ''; trace.forEach(last => { pre += last ? '    ' : '│  '; });
                         const mark = isLast ? '┗' : '┣';
-                        const {labels, details} = getMethods(m.n, pId, idx, recipe.recipe_name);
-                        rows += `<tr class="row-sub hidden" data-parent="${pId}"><td><span class="tree-line">${pre}${mark}</span><input type="checkbox" class="cb"><span>${m.n}</span><span style="font-weight:bold;">(×${m.q})</span>${labels}${details}</td></tr>`;
+                        const currentMatId = `${pId}-m${idx}`; 
+                        const {labels, details} = getMethods(m.n, pId, idx);
+                        
+                        rows += `<tr class="row-sub hidden" data-parent="${pId}" data-id="${currentMatId}"><td><span class="tree-line">${pre}${mark}</span><input type="checkbox" class="cb"><span>${m.n}</span><span style="font-weight:bold;">(×${m.q})</span>${labels}${details}</td></tr>`;
+                        
                         const subR = recipes.find(r => r.output_item_name === m.n);
-                        if(subR) rows += renderMaterials(subR, pId, [...trace, isLast]);
+                        if(subR) rows += renderMaterials(subR, currentMatId, [...trace, isLast]);
                     });
                     return rows;
                 };
@@ -422,10 +394,11 @@
                             html += `<tr class="row-recipe hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}', 'btn-${rId}')"><td><span class="tree-line">   ${isLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}">▶</span>【${rName}】</td></tr>`;
                             variants.forEach((v, vIdx) => {
                                 const vIsLast = (vIdx === variants.length - 1);
-                                const {labels, details} = getMethods(v.output_item_name, rId, vIdx, rName, true);
+                                const outMatId = `${rId}-v-${vIdx}`;
+                                const {labels, details} = getMethods(v.output_item_name, rId, vIdx);
                                 const treeBase = isLast ? '      ' : '   │  ';
-                                html += `<tr class="row-output hidden" data-id="${rId}-v-${vIdx}" data-parent="${rId}" onclick="toggleLayer('${rId}-v-${vIdx}', 'btn-${rId}-v-${vIdx}')"><td><span class="tree-line">${treeBase}${vIsLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}-v-${vIdx}">▶</span><input type="checkbox" class="cb"><span style="font-weight:bold;">${v.output_item_name}</span>${labels}${details}</td></tr>`;
-                                html += renderMaterials(v, `${rId}-v-${vIdx}`, [isLast, vIsLast, true]);
+                                html += `<tr class="row-output hidden" data-id="${outMatId}" data-parent="${rId}" onclick="toggleLayer('${outMatId}', 'btn-${outMatId}')"><td><span class="tree-line">${treeBase}${vIsLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${outMatId}">▶</span><input type="checkbox" class="cb"><span style="font-weight:bold;">${v.output_item_name}</span>${labels}${details}</td></tr>`;
+                                html += renderMaterials(v, outMatId, [isLast, vIsLast, true]);
                             });
                         });
                     });
