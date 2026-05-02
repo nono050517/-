@@ -116,9 +116,16 @@
             margin-bottom: 12px;
             font-size: 10px;
         }
-        .fp-section ul { list-style-type: disc; padding-left: 15px; }
+        /* リストのインデントを修正 */
+        .fp-section ul { 
+            list-style-type: disc; 
+            list-style-position: inside; 
+            padding-left: 0; 
+        }
+        .fp-section li {
+            margin-bottom: 4px;
+        }
 
-        /* FAQ専用スタイル */
         .faq-category {
             background-color: #f5e1e1;
             color: #8b5a5a;
@@ -220,8 +227,8 @@
                         <ul>
                             <li>サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。</li>
                             <li>公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み。</li>
+                            <li>禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。</li>
                         </ul>
-                        <p>禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。</p>
 
                         <h3>4. リンクについて</h3>
                         <p>本サイトはリンクフリーです。どのページへリンクしていただいても構いません。ただし、画像ファイル等への直リンクはご遠慮ください。</p>
@@ -307,20 +314,16 @@
         }
 
         function showPage(pageId) {
-            // すべてのメインセクションを隠す
             const sections = ['front-page', 'faq-page', 'production-page'];
             sections.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
-            
-            // 指定されたセクションを表示
             const target = document.getElementById(pageId);
             if (target) {
                 target.classList.remove('hidden');
                 document.getElementById('main-scroll').scrollTop = 0;
             }
-
             if(pageId === 'production-page') loadAllRecipes();
         }
 
