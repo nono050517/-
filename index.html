@@ -12,34 +12,37 @@
             flex-direction: column;
             height: 100vh;
             font-family: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
-            color: #5d4037; /* バナーに合わせた濃いブラウン系 */
-            background-color: #f4eade; /* アンティークペーパー風の背景色 */
+            color: #5d4037;
+            background-color: #f4eade;
         }
 
         .wrapper {
             display: flex;
             flex-direction: column;
-            width: 80%;
+            width: 80%; /* 左右1割ずつの余白[cite: 1] */
             margin: 0 auto;
-            background-color: #fffaf0; /* コンテンツエリアは少し明るいアイボリー */
+            background-color: #fffaf0;
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
             height: 100vh;
         }
 
-        /* ① ヘッダー：バナー画像を表示 */
+        /* ① ヘッダー：バナーの縦を縮める設定 */
         header {
             background-color: #fff;
-            border-bottom: 2px solid #d2b48c; /* タンカラーの境界線 */
-            text-align: center;
+            border-bottom: 2px solid #d2b48c;
+            overflow: hidden; /* はみ出し部分を隠す */
         }
         .header-banner {
             width: 100%;
+            height: 120px; /* ここで縦の長さを指定（お好みで調整してください） */
             display: block;
+            object-fit: cover; /* 画像の比率を保ったまま中央で切り抜き */
+            object-position: center; /* 中央部分を表示 */
         }
-        /* テキストなしのナビバー（枠だけ残して高さを調整） */
+        /* テキストなしの細いバー */
         .nav-bar {
-            background-color: #8b5a5a; /* バナーの装飾に近い色 */
-            height: 12px;
+            background-color: #8b5a5a;
+            height: 8px;
             width: 100%;
         }
 
@@ -49,7 +52,7 @@
             overflow: hidden;
         }
 
-        /* ② 左側：サイドバー */
+        /* ② 左側：サイドバー（文字サイズ11px） */
         nav {
             width: 180px;
             background-color: #fffaf0;
@@ -59,7 +62,7 @@
             font-size: 11px;
         }
         nav h3 {
-            background-color: #f5e1e1; /* くすみピンク */
+            background-color: #f5e1e1;
             border-left: 4px solid #8b5a5a;
             padding: 3px 8px;
             font-size: 12px;
@@ -104,7 +107,7 @@
             border-radius: 2px;
         }
 
-        /* 更新履歴エリア */
+        /* 更新履歴 */
         .history-box {
             background-color: #fdf5f5;
             border: 1px solid #f5e1e1;
@@ -113,7 +116,7 @@
             color: #7d5a5a;
         }
 
-        /* --- 生産ツリー用スタイル（色はバナー調に統一） --- */
+        /* --- 生産ページ用スタイル --- */
         .hidden { display: none; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th { background: #f5e1e1; border: 1px solid #e0d0c0; padding: 4px; text-align: left; color: #8b5a5a; }
@@ -126,7 +129,7 @@
 
     <div class="wrapper">
         <header>
-            <!-- バナー画像を最上部に配置 -->
+            <!-- 拡張子をjpgに修正 & 縦幅を120pxに制限 -->
             <img src="input_file_0.jpg" alt="Ellicia Archives Banner" class="header-banner">
             <div class="nav-bar"></div>
         </header>
@@ -146,7 +149,6 @@
 
             <main>
                 <div id="content-area" class="content-box">
-                    <!-- フロントページ -->
                     <div id="front-page">
                         <h2 class="page-title">FrontPage</h2>
                         <div class="wiki-section">概要</div>
@@ -154,11 +156,10 @@
                         
                         <div class="wiki-section">更新履歴</div>
                         <div class="history-box">
-                            ・2026/05/02：専用バナーを導入し、アーカイブス仕様に全面リニューアル
+                            ・2026/05/02：バナーサイズをスリム化し、よりブラウザで見やすく調整
                         </div>
                     </div>
 
-                    <!-- 生産データページ -->
                     <div id="production-page" class="hidden">
                         <h2 class="page-title">生産データ一覧</h2>
                         <table>
@@ -176,7 +177,6 @@
     </div>
 
     <script>
-        // Supabase設定
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
