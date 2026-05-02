@@ -14,7 +14,7 @@
             font-family: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
             color: #5d4037;
             background-color: #f4eade;
-            font-size: 11px; /* 全体を2pt分小さく設定 */
+            font-size: 11px; /* 全体フォントサイズを小さく調整 */
         }
 
         .wrapper {
@@ -102,7 +102,7 @@
             padding-bottom: 5px;
         }
 
-        /* 更新履歴ボックス (5行程度でスクロール) */
+        /* 更新履歴ボックス (5行分でスクロール) */
         .history-box {
             background-color: #fdf5f5;
             border: 1px solid #f5e1e1;
@@ -114,7 +114,7 @@
             line-height: 1.6;
         }
 
-        /* --- 4. 生産データ一覧（Pink Ver.由来） --- */
+        /* --- 4. 生産データ一覧 --- */
         table { width: 100%; border-collapse: collapse; line-height: 1.4; background-color: #fff; }
         th { border: 1px solid #ffb6c1; padding: 6px; text-align: left; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         td { border: 1px solid #ffdae0; padding: 2px 4px; color: #000; font-size: 9px; }
@@ -206,8 +206,9 @@
 
                         <h3>5. 著作権について</h3>
                         <p style="line-height: 1.6; margin-left: 10px;">
-                            本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元に帰属します。<br>
-                            本サイト内の独自コンテンツの無断転載・再配布は禁止します。
+                            本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
+                            また、一部のデータについては**『エリシアオンラインまとめ Wiki*』**より引用・転載しております。先人の蓄積されたデータに深く感謝いたします。<br>
+                            本サイト内の独自コンテンツ（レイアウト、独自解説文等）の無断転載・再配布は禁止します。
                         </p>
                     </section>
 
@@ -234,6 +235,7 @@
     </div>
 
     <script>
+        // --- 設定値 ---
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
@@ -253,7 +255,7 @@
             }
         }
 
-        // ページ切り替え
+        // ページ切り替えロジック
         function showPage(pageId) {
             document.getElementById('front-page').classList.add('hidden');
             document.getElementById('production-page').classList.add('hidden');
@@ -261,7 +263,7 @@
             if(pageId === 'production-page') loadAllRecipes();
         }
 
-        // --- 生産データ読み込み・制御ロジック ---
+        // --- 生産データ読み込み・ツリー制御ロジック ---
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             try {
@@ -350,6 +352,7 @@
             } catch (e) { tbody.innerHTML = `<tr><td>読み込み失敗: ${e.message}</td></tr>`; }
         }
 
+        // 階層の開閉
         function toggleLayer(id, btnId) {
             const btn = document.getElementById(btnId);
             const isExpanding = btn.textContent === '▶';
