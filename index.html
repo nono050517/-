@@ -14,6 +14,7 @@
             font-family: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
             color: #5d4037;
             background-color: #f4eade;
+            font-size: 11px; /* 全体を2pt分小さく設定 */
         }
 
         .wrapper {
@@ -29,18 +30,18 @@
         header {
             background-color: #fff;
             border-bottom: 2px solid #d2b48c;
-            padding: 20px 30px;
+            padding: 15px 30px;
         }
         .header-title {
             margin: 0;
             color: #8b5a5a;
-            font-size: 24px;
+            font-size: 20px;
             letter-spacing: 1px;
         }
         .header-subtitle {
-            margin: 5px 0 0 0;
+            margin: 2px 0 0 0;
             color: #a08080;
-            font-size: 14px;
+            font-size: 11px;
             font-weight: normal;
         }
         .nav-bar {
@@ -62,13 +63,13 @@
             border-right: 1px solid #e0d0c0;
             padding: 10px;
             overflow-y: auto;
-            font-size: 11px;
+            font-size: 10px;
         }
         nav h3 {
             background-color: #f5e1e1;
             border-left: 4px solid #8b5a5a;
             padding: 3px 8px;
-            font-size: 12px;
+            font-size: 11px;
             margin: 12px 0 4px 0;
             color: #8b5a5a;
         }
@@ -91,48 +92,66 @@
             padding: 15px 25px;
             overflow-y: auto;
             background-color: #fff;
-            font-size: 13px;
+            font-size: 11px;
         }
         h2.page-title {
             color: #8b5a5a;
-            font-size: 18px;
+            font-size: 16px;
             border-bottom: 2px solid #f5e1e1;
             margin: 0 0 10px 0;
             padding-bottom: 5px;
         }
 
-        /* 更新履歴ボックス (5行まで表示・以降スクロール) */
+        /* 更新履歴ボックス (5行程度でスクロール) */
         .history-box {
             background-color: #fdf5f5;
             border: 1px solid #f5e1e1;
             padding: 8px 12px;
-            font-size: 11px;
+            font-size: 10px;
             color: #7d5a5a;
-            max-height: 85px; /* およそ5行分の高さに固定 */
-            overflow-y: auto; /* 超えたらスクロール[cite: 1] */
+            max-height: 85px; 
+            overflow-y: auto;
             line-height: 1.6;
         }
 
-        /* --- 4. 生産データ一覧（スタイルは維持） --- */
+        /* --- 4. 生産データ一覧（Pink Ver.由来） --- */
         table { width: 100%; border-collapse: collapse; line-height: 1.4; background-color: #fff; }
         th { border: 1px solid #ffb6c1; padding: 6px; text-align: left; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; }
-        td { border: 1px solid #ffdae0; padding: 2px 4px; color: #000; font-size: 11px; }
-        .row-job { background: #ffb6c1; color: #fff !important; font-weight: bold; cursor: pointer; height: 26px; }
+        td { border: 1px solid #ffdae0; padding: 2px 4px; color: #000; font-size: 9px; }
+        
+        .row-job { background: #ffb6c1; color: #fff !important; font-weight: bold; cursor: pointer; height: 24px; }
         .row-skill { background: #fff0f5; color: #000; font-weight: bold; cursor: pointer; }
         .row-recipe { color: #000; font-weight: bold; cursor: pointer; }
         .row-output { font-weight: bold; background: #fffafb; }
+        
         .hidden { display: none; }
-        .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 12px; }
+        .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 11px; }
         .toggle-icon { display: inline-block; width: 15px; text-align: center; margin-right: 5px; color: #d02090; }
-        .method-label { display: inline-block; font-size: 9px; padding: 0px 4px; margin-left: 4px; border-radius: 3px; cursor: pointer; border: 1px solid #ccc; background: #fff; }
+
+        .method-label {
+            display: inline-block; font-size: 8px; padding: 0px 3px; margin-left: 4px;
+            border-radius: 3px; cursor: pointer; border: 1px solid #ccc; background: #fff;
+        }
         .label-buy { color: #ff8c00; border-color: #ff8c00; }
         .label-drop { color: #2e8b57; border-color: #2e8b57; }
         .label-craft { color: #0066cc; border-color: #0066cc; }
-        .source-container { font-size: 10px; background: #fffafa; border: 1px solid #ffb6c1; padding: 4px 8px; margin: 3px 0 5px 20px; border-radius: 6px; color: #000; }
+
+        .source-container {
+            font-size: 9px; background: #fffafa; border: 1px solid #ffb6c1;
+            padding: 4px 8px; margin: 3px 0 5px 20px; border-radius: 6px; color: #000;
+        }
         .cb { vertical-align: middle; margin: 0 4px; cursor: pointer; accent-color: #e91e63; }
+        
+        section h3 {
+            border-left: 4px solid #8b5a5a;
+            padding-left: 10px;
+            font-size: 12px;
+            color: #8b5a5a;
+            margin: 15px 0 5px 0;
+        }
     </style>
 </head>
-<body onload="loadUpdates()"> <!-- 起動時に履歴を読み込む[cite: 1] -->
+<body onload="loadUpdates()">
 
     <div class="wrapper">
         <header>
@@ -155,16 +174,50 @@
             </nav>
 
             <main>
+                <!-- 1. FrontPage -->
                 <div id="front-page">
                     <h2 class="page-title">FrontPage</h2>
-                    <p>『エリシアオンライン』の歴史と技術を記したアーカイブスへようこそ。</p>
-                    <div style="background-color: #8b5a5a; color: #fff; padding: 3px 10px; font-weight: bold; font-size: 11px; margin: 15px 0 8px 0;">更新履歴</div>
-                    <!-- 更新履歴エリア -->
+                    
+                    <section style="margin-bottom: 25px;">
+                        <h3>1. 概要</h3>
+                        <p style="line-height: 1.6; margin-left: 10px;">
+                            このサイトは、MMORPG『エリシアオンライン』のアイテムや生産レシピなどの情報をまとめた、個人運営の非公式データベースサイトです。
+                            プレイヤーの皆様の冒険に役立つ情報を、シンプルで見やすい形で記録・蓄積していくことを目的としています。
+                        </p>
+
+                        <h3>2. 利用上の注意点</h3>
+                        <p style="line-height: 1.6; margin-left: 10px;">
+                            本サイトに掲載されている情報は、有志による調査やプレイヤーからの提供に基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
+                            本サイトを利用したことによって生じたいかなる損害についても、管理人は責任を負いかねます。
+                        </p>
+
+                        <h3>3. 禁止行為と措置</h3>
+                        <ul style="line-height: 1.6; margin-left: 10px; padding-left: 15px;">
+                            <li>サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。</li>
+                            <li>公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み。</li>
+                            <li>禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。</li>
+                        </ul>
+
+                        <h3>4. リンクについて</h3>
+                        <p style="line-height: 1.6; margin-left: 10px;">
+                            本サイトはリンクフリーです。どのページへリンクしていただいても構いません。<br>
+                            ただし、画像ファイル等への直リンクはご遠慮ください。
+                        </p>
+
+                        <h3>5. 著作権について</h3>
+                        <p style="line-height: 1.6; margin-left: 10px;">
+                            本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元に帰属します。<br>
+                            本サイト内の独自コンテンツの無断転載・再配布は禁止します。
+                        </p>
+                    </section>
+
+                    <div style="background-color: #8b5a5a; color: #fff; padding: 3px 10px; font-weight: bold; font-size: 10px; margin: 15px 0 8px 0;">更新履歴</div>
                     <div class="history-box" id="update-history">
                         読み込み中...
                     </div>
                 </div>
 
+                <!-- 2. 生産データページ -->
                 <div id="production-page" class="hidden">
                     <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
                     <table>
@@ -185,27 +238,22 @@
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
-        // --- 更新履歴をSupabaseから読み込む ---
+        // 更新履歴の読み込み
         async function loadUpdates() {
             const historyBox = document.getElementById('update-history');
             try {
-                // 'site_updates' という名前のテーブルを作ったと想定
-                const { data, error } = await client
-                    .from('site_updates') 
-                    .select('*')
-                    .order('date', { ascending: false });
-
+                const { data, error } = await client.from('site_updates').select('*').order('date', { ascending: false });
                 if (error || !data || data.length === 0) {
-                    historyBox.innerHTML = "・2026/05/02：履歴管理システムを統合完了[cite: 1]";
+                    historyBox.innerHTML = "・2026/05/02：アーカイブスサイト開設";
                     return;
                 }
-
                 historyBox.innerHTML = data.map(item => `・${item.date}：${item.content}`).join('<br>');
             } catch (e) {
                 historyBox.innerHTML = "履歴の読み込みに失敗しました。";
             }
         }
 
+        // ページ切り替え
         function showPage(pageId) {
             document.getElementById('front-page').classList.add('hidden');
             document.getElementById('production-page').classList.add('hidden');
@@ -213,11 +261,8 @@
             if(pageId === 'production-page') loadAllRecipes();
         }
 
-        // --- 生産データ読み込み・ツリー制御ロジック（中略：前回と同じ） ---
-        // ... (ここに前回のレシピ読み込みJSを配置) ...
-        
+        // --- 生産データ読み込み・制御ロジック ---
         async function loadAllRecipes() {
-            // 前回のコードをそのままお使いください
             const tbody = document.getElementById('recipe-body');
             try {
                 const [rRes, iRes, jRes] = await Promise.all([
@@ -248,7 +293,7 @@
                     if (drop.length) {
                         const id = `${baseId}-drop`;
                         labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${id}')">ドロップ</span>`;
-                        details += `<div id="${id}" class="source-container" style="display:none;">◆ドロップ：${drop.map(m=>`<div>${m.location} (${m.target})</div>`).join('')}</div>`;
+                        details += `<div id="${id}" class="source-container" style="display:none;">${drop.map(m=>`<div>◆ドロップ：${m.location} (${m.target})</div>`).join('')}</div>`;
                     }
                     if (craftR) {
                         const id = `${baseId}-craft`;
