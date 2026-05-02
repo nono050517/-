@@ -56,7 +56,7 @@
             overflow: hidden;
         }
 
-        /* --- 2. サイドバー (動的生成用) --- */
+        /* --- 2. サイドバー --- */
         nav {
             width: 180px;
             background-color: #fffaf0;
@@ -88,7 +88,7 @@
         nav li:last-child a:before { content: "┗"; }
         nav a:hover { background-color: #f5e1e1; color: #8b5a5a; }
 
-        /* --- 3. メインコンテンツ --- */
+        /* --- 3. メインコンテンツ (スタイル統一) --- */
         main {
             flex: 1;
             padding: 15px 35px;
@@ -104,25 +104,30 @@
             padding-bottom: 8px;
         }
 
-        .fp-section { margin-bottom: 30px; }
-        .fp-section h3 {
-            border-left: 4px solid #8b5a5a;
-            padding-left: 12px;
-            font-size: 12px;
-            color: #8b5a5a;
-            margin: 25px 0 10px 0;
-        }
-        .fp-section p { line-height: 1.8; margin-left: 10px; margin-top: 5px; margin-bottom: 15px; }
-
-        /* FAQ */
-        .faq-category {
+        .section-category {
             background-color: #f5e1e1;
             color: #8b5a5a;
             padding: 5px 12px;
             font-weight: bold;
-            margin: 25px 0 15px 0;
+            margin: 25px 0 10px 0;
             border-radius: 4px;
         }
+        .item-title {
+            font-weight: bold;
+            color: #a04040;
+            margin-top: 15px;
+            padding-left: 10px;
+            border-left: 3px solid #8b5a5a;
+        }
+        .item-content {
+            margin-bottom: 20px;
+            margin-left: 10px;
+            padding-left: 10px;
+            line-height: 1.8;
+            position: relative;
+        }
+
+        /* FAQ用のQ/Aスタイル（フロントページでも再利用） */
         .faq-q { font-weight: bold; color: #a04040; margin-top: 15px; position: relative; padding-left: 2.2em; }
         .faq-q:before { content: "Q："; position: absolute; left: 0; color: #8b5a5a; }
         .faq-a { margin-bottom: 20px; border-left: 2px solid #f5e1e1; padding-left: 2.2em; line-height: 1.8; position: relative; }
@@ -141,9 +146,6 @@
         td { border: 1px solid #ffdae0; padding: 4px; color: #000; font-size: 11px; }
         .row-job { background: #ffb6c1; color: #fff !important; font-weight: bold; cursor: pointer; height: 22px; }
         .row-skill { background: #fff0f5; font-weight: bold; cursor: pointer; }
-        .row-recipe { color: #000; font-weight: bold; cursor: pointer; }
-        .row-output { font-weight: bold; background: #fffafb; cursor: pointer; }
-        .row-sub { cursor: pointer; }
         .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 11px; }
         .toggle-icon { display: inline-block; width: 12px; text-align: center; margin-right: 5px; color: #d02090; }
         .method-label { display: inline-block; font-size: 10px; padding: 1px 3px; margin-left: 4px; border-radius: 3px; cursor: pointer; border: 1px solid #ccc; background: #fff; }
@@ -167,62 +169,70 @@
             <nav id="sidebar-nav"></nav>
 
             <main id="main-scroll">
-                <!-- 1. FrontPage (全文復元) -->
+                <!-- 1. FrontPage (FAQスタイルへ修正) -->
                 <div id="front-page">
                     <h2 class="page-title">FrontPage</h2>
-                    <div class="fp-section">
-                        <h3>1. 概要</h3>
-                        <p>このサイトは、MMORPG『エリシアオンライン』のアイテムや生産レシピなどの情報をまとめた、個人運営の非公式データベースサイトです。 プレイヤーの皆様の冒険に役立つ情報を、シンプルで見やすい形で記録・蓄積していくことを目的としています。</p>
-                        
-                        <h3>2. 利用上の注意点</h3>
-                        <p>本サイトに掲載されている情報は、有志による調査やプレイヤーからの提供に基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
-                        本サイトを利用したことによって生じたいかなる損害についても、管理人は責任を負いかねます。</p>
-                        
-                        <h3>3. 禁止行為と措置</h3>
-                        <p>・サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。<br>
-                        ・公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み（※今後コメント欄などを設置した場合）。<br>
-                        ・禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。</p>
-                        
-                        <h3>4. リンクについて</h3>
-                        <p>本サイトはリンクフリーです。どのページへリンクしていただいても構いません。<br>
-                        ただし、画像ファイル等への直リンクはご遠慮ください。</p>
-                        
-                        <h3>5. 著作権について</h3>
-                        <p>本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
-                        本サイト内の独自コンテンツ（レイアウト、独自解説文、ロゴ等）の無断転載・再配布は禁止します。</p>
+                    
+                    <div class="section-category">1. 概要</div>
+                    <div class="item-content">
+                        このサイトは、MMORPG『エリシアオンライン』のアイテムや生産レシピなどの情報をまとめた、個人運営の非公式データベースサイトです。 プレイヤーの皆様の冒険に役立つ情報を、シンプルで見やすい形で記録・蓄積していくことを目的としています。
                     </div>
-                    <div style="background-color: #8b5a5a; color: #fff; padding: 4px 10px; font-weight: bold; font-size: 11px; margin: 30px 0 10px 0;">更新履歴</div>
+
+                    <div class="section-category">2. 利用上の注意点</div>
+                    <div class="item-content">
+                        本サイトに掲載されている情報は、有志による調査やプレイヤーからの提供に基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
+                        本サイトを利用したことによって生じたいかなる損害についても、管理人は責任を負いかねます。
+                    </div>
+
+                    <div class="section-category">3. 禁止行為と措置</div>
+                    <div class="item-content">
+                        ・サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。<br>
+                        ・公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み（※今後コメント欄などを設置した場合）。<br>
+                        ・禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。
+                    </div>
+
+                    <div class="section-category">4. リンクについて</div>
+                    <div class="item-content">
+                        本サイトはリンクフリーです。どのページへリンクしていただいても構いません。<br>
+                        ただし、画像ファイル等への直リンクはご遠慮ください。
+                    </div>
+
+                    <div class="section-category">5. 著作権について</div>
+                    <div class="item-content">
+                        本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
+                        本サイト内の独自コンテンツ（レイアウト、独自解説文、ロゴ等）の無断転載・再配布は禁止します。
+                    </div>
+
+                    <div class="section-category">更新履歴</div>
                     <div class="history-box" id="update-history">読み込み中...</div>
                 </div>
 
-                <!-- 2. FAQページ (全文復元) -->
+                <!-- 2. FAQページ -->
                 <div id="faq-page" class="hidden">
                     <h2 class="page-title">FAQ：よくある質問</h2>
-                    <div class="fp-section">
-                        <div class="faq-category">サイト全般について</div>
-                        <div class="faq-q">このサイトは公式ですか？</div>
-                        <p class="faq-a">いいえ、本サイトは有志による非公式のファンサイトです。運営元のアソビモ株式会社様とは一切関係ありません。</p>
-                        
-                        <div class="faq-q">スマホからでも見られますか？</div>
-                        <p class="faq-a">はい、ブラウザから閲覧可能です。シンプルなレイアウトにしているため、移動中の確認にも適しています。</p>
-                        
-                        <div class="faq-q">データの更新頻度はどれくらいですか？</div>
-                        <p class="faq-a">管理人の空き時間での更新となるため不定期ですが、新イベントやアップデート時にはなるべく早く反映できるよう努めています。</p>
+                    <div class="section-category">サイト全般について</div>
+                    <div class="faq-q">このサイトは公式ですか？</div>
+                    <p class="faq-a">いいえ、本サイトは有志による非公式のファンサイトです。運営元のアソビモ株式会社様とは一切関係ありません。</p>
+                    
+                    <div class="faq-q">スマホからでも見られますか？</div>
+                    <p class="faq-a">はい、ブラウザから閲覧可能です。シンプルなレイアウトにしているため、移動中の確認にも適しています。</p>
+                    
+                    <div class="faq-q">データの更新頻度はどれくらいですか？</div>
+                    <p class="faq-a">管理人の空き時間での更新となるため不定期ですが、新イベントやアップデート時にはなるべく早く反映できるよう努めています。</p>
 
-                        <div class="faq-category">データ・内容について</div>
-                        <div class="faq-q">掲載されている情報が古い（間違っている）のですが？</div>
-                        <p class="faq-a">申し訳ありません。もし間違いを見つけた場合は、今後のアップデート（掲示板設置など）をお待ちいただくか、管理人までお知らせください。</p>
-                        
-                        <div class="faq-q">生産レシピの成功率は掲載されていますか？</div>
-                        <p class="faq-a">現在、基本的なレシピデータを中心に掲載を進めています。成功率などの詳細データも順次追加予定です。</p>
+                    <div class="section-category">データ・内容について</div>
+                    <div class="faq-q">掲載されている情報が古い（間違っている）のですが？</div>
+                    <p class="faq-a">申し訳ありません。もし間違いを見つけた場合は、今後のアップデート（掲示板設置など）をお待ちいただくか、管理人までお知らせください。</p>
+                    
+                    <div class="faq-q">生産レシピの成功率は掲載されていますか？</div>
+                    <p class="faq-a">現在、基本的なレシピデータを中心に掲載を進めています。成功率などの詳細データも順次追加予定です。</p>
 
-                        <div class="faq-category">リンク・利用について</div>
-                        <div class="faq-q">自分のブログやSNSでこのサイトを紹介してもいいですか？</div>
-                        <p class="faq-a">大歓迎です！本サイトはリンクフリーですので、許可なくリンクを貼っていただいて構いません。</p>
-                        
-                        <div class="faq-q">サイト内の画像やロゴを使ってもいいですか？</div>
-                        <p class="faq-a">ゲーム内画像の著作権は運営元に帰属します。当サイトオリジナルのロゴや解説文については、無断転載・二次利用をご遠慮いただいております。</p>
-                    </div>
+                    <div class="section-category">リンク・利用について</div>
+                    <div class="faq-q">自分のブログやSNSでこのサイトを紹介してもいいですか？</div>
+                    <p class="faq-a">大歓迎です！本サイトはリンクフリーですので、許可なくリンクを貼っていただいて構いません。</p>
+                    
+                    <div class="faq-q">サイト内の画像やロゴを使ってもいいですか？</div>
+                    <p class="faq-a">ゲーム内画像の著作権は運営元に帰属します。当サイトオリジナルのロゴや解説文については、無断転載・二次利用をご遠慮いただいております。</p>
                 </div>
 
                 <!-- 3. 生産データページ -->
@@ -305,7 +315,7 @@
             } catch (e) { historyBox.innerHTML = "読み込み失敗"; }
         }
 
-        // 生産レシピ関連の全ロジック
+        // --- 生産レシピ読み込み（省略なし） ---
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
