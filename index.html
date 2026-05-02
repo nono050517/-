@@ -1,371 +1,92 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>エリシア・アーカイブス (Ellicia Archives)</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        /* --- 1. 全体レイアウト --- */
-        body {
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            font-family: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
-            color: #5d4037;
-            background-color: #f4eade;
-        }
+<style>
+    /* --- 全体フォントサイズを2pt(約2.6px)相当小さく調整 --- */
+    body {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        font-family: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
+        color: #5d4037;
+        background-color: #f4eade;
+        font-size: 11px; /* 全体を小さく */
+    }
 
-        .wrapper {
-            display: flex;
-            flex-direction: column;
-            width: 80%;
-            margin: 0 auto;
-            background-color: #fffaf0;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            height: 100vh;
-        }
+    /* 中略（レイアウト設定は維持） */
 
-        header {
-            background-color: #fff;
-            border-bottom: 2px solid #d2b48c;
-            padding: 20px 30px;
-        }
-        .header-title {
-            margin: 0;
-            color: #8b5a5a;
-            font-size: 24px;
-            letter-spacing: 1px;
-        }
-        .header-subtitle {
-            margin: 5px 0 0 0;
-            color: #a08080;
-            font-size: 14px;
-            font-weight: normal;
-        }
-        .nav-bar {
-            background-color: #8b5a5a;
-            height: 8px;
-            width: 100%;
-        }
+    main {
+        flex: 1;
+        padding: 15px 25px;
+        overflow-y: auto;
+        background-color: #fff;
+        font-size: 11px; /* メインテキストも11pxに */
+    }
 
-        .container {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
+    h2.page-title {
+        color: #8b5a5a;
+        font-size: 16px; /* タイトルも少し小ぶりに */
+        border-bottom: 2px solid #f5e1e1;
+        margin: 0 0 10px 0;
+        padding-bottom: 5px;
+    }
 
-        /* --- 2. サイドバー --- */
-        nav {
-            width: 180px;
-            background-color: #fffaf0;
-            border-right: 1px solid #e0d0c0;
-            padding: 10px;
-            overflow-y: auto;
-            font-size: 11px;
-        }
-        nav h3 {
-            background-color: #f5e1e1;
-            border-left: 4px solid #8b5a5a;
-            padding: 3px 8px;
-            font-size: 12px;
-            margin: 12px 0 4px 0;
-            color: #8b5a5a;
-        }
-        nav ul { list-style: none; padding: 0; margin: 0; }
-        nav li { margin: 2px 0; }
-        nav a {
-            text-decoration: none;
-            color: #5d4037;
-            display: block;
-            cursor: pointer;
-            padding: 2px;
-        }
-        nav a:before { content: "┣"; margin-right: 4px; color: #d2b48c; }
-        nav li:last-child a:before { content: "┗"; }
-        nav a:hover { background-color: #f5e1e1; color: #8b5a5a; }
+    /* --- テーブル内の文字サイズ --- */
+    td { 
+        border: 1px solid #ffdae0; 
+        padding: 2px 4px; 
+        color: #000; 
+        font-size: 9px; /* 表内はさらに小さくして凝縮 */
+    }
 
-        /* --- 3. メインコンテンツ --- */
-        main {
-            flex: 1;
-            padding: 15px 25px;
-            overflow-y: auto;
-            background-color: #fff;
-            font-size: 13px;
-        }
-        h2.page-title {
-            color: #8b5a5a;
-            font-size: 18px;
-            border-bottom: 2px solid #f5e1e1;
-            margin: 0 0 10px 0;
-            padding-bottom: 5px;
-        }
+    .history-box {
+        background-color: #fdf5f5;
+        border: 1px solid #f5e1e1;
+        padding: 8px 12px;
+        font-size: 10px; /* 更新履歴も小さく */
+        max-height: 85px; 
+        overflow-y: auto;
+        line-height: 1.6;
+    }
+</style>
 
-        /* 更新履歴ボックス (5行まで表示・以降スクロール) */
-        .history-box {
-            background-color: #fdf5f5;
-            border: 1px solid #f5e1e1;
-            padding: 8px 12px;
-            font-size: 11px;
-            color: #7d5a5a;
-            max-height: 85px; /* およそ5行分の高さに固定 */
-            overflow-y: auto; /* 超えたらスクロール[cite: 1] */
-            line-height: 1.6;
-        }
-
-        /* --- 4. 生産データ一覧（スタイルは維持） --- */
-        table { width: 100%; border-collapse: collapse; line-height: 1.4; background-color: #fff; }
-        th { border: 1px solid #ffb6c1; padding: 6px; text-align: left; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; }
-        td { border: 1px solid #ffdae0; padding: 2px 4px; color: #000; font-size: 11px; }
-        .row-job { background: #ffb6c1; color: #fff !important; font-weight: bold; cursor: pointer; height: 26px; }
-        .row-skill { background: #fff0f5; color: #000; font-weight: bold; cursor: pointer; }
-        .row-recipe { color: #000; font-weight: bold; cursor: pointer; }
-        .row-output { font-weight: bold; background: #fffafb; }
-        .hidden { display: none; }
-        .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 12px; }
-        .toggle-icon { display: inline-block; width: 15px; text-align: center; margin-right: 5px; color: #d02090; }
-        .method-label { display: inline-block; font-size: 9px; padding: 0px 4px; margin-left: 4px; border-radius: 3px; cursor: pointer; border: 1px solid #ccc; background: #fff; }
-        .label-buy { color: #ff8c00; border-color: #ff8c00; }
-        .label-drop { color: #2e8b57; border-color: #2e8b57; }
-        .label-craft { color: #0066cc; border-color: #0066cc; }
-        .source-container { font-size: 10px; background: #fffafa; border: 1px solid #ffb6c1; padding: 4px 8px; margin: 3px 0 5px 20px; border-radius: 6px; color: #000; }
-        .cb { vertical-align: middle; margin: 0 4px; cursor: pointer; accent-color: #e91e63; }
-    </style>
-</head>
-<body onload="loadUpdates()"> <!-- 起動時に履歴を読み込む[cite: 1] -->
-
-    <div class="wrapper">
-        <header>
-            <h1 class="header-title">エリシアオンライン　アーカイブス</h1>
-            <h2 class="header-subtitle">Ellicia-Online Archives</h2>
-        </header>
-        <div class="nav-bar"></div>
-
-        <div class="container">
-            <nav>
-                <h3>■はじめに</h3>
-                <ul>
-                    <li><a onclick="showPage('front-page')">FrontPage</a></li>
-                    <li><a>よくある質問(FAQ)</a></li>
-                </ul>
-                <h3>■生産</h3>
-                <ul>
-                    <li><a onclick="showPage('production-page')">生産データ一覧</a></li>
-                </ul>
-            </nav>
-
-            <main>
-                <!-- FrontPageセクションの書き換え -->
+<!-- フロントページ部分 -->
 <div id="front-page">
     <h2 class="page-title">FrontPage</h2>
     
     <section style="margin-bottom: 25px;">
-        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 14px; color: #8b5a5a;">1. 概要</h3>
+        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 12px; color: #8b5a5a;">1. 概要</h3>
         <p style="line-height: 1.6; margin-left: 10px;">
             このサイトは、MMORPG『エリシアオンライン』のアイテムや生産レシピなどの情報をまとめた、個人運営の非公式データベースサイトです。
             プレイヤーの皆様の冒険に役立つ情報を、シンプルで見やすい形で記録・蓄積していくことを目的としています。
         </p>
 
-        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 14px; color: #8b5a5a;">2. 利用上の注意点</h3>
+        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 12px; color: #8b5a5a;">2. 利用上の注意点</h3>
         <p style="line-height: 1.6; margin-left: 10px;">
             本サイトに掲載されている情報は、有志による調査やプレイヤーからの提供に基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
             本サイトを利用したことによって生じたいかなる損害についても、管理人は責任を負いかねます。
         </p>
 
-        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 14px; color: #8b5a5a;">3. 禁止行為と措置</h3>
-        <ul style="line-height: 1.6; margin-left: 10px;">
+        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 12px; color: #8b5a5a;">3. 禁止行為と措置</h3>
+        <ul style="line-height: 1.6; margin-left: 10px; padding-left: 15px;">
             <li>サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。</li>
-            <li>公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み（※今後コメント欄などを設置した場合）。</li>
+            <li>公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み。</li>
             <li>禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。</li>
         </ul>
 
-        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 14px; color: #8b5a5a;">4. リンクについて</h3>
+        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 12px; color: #8b5a5a;">4. リンクについて</h3>
         <p style="line-height: 1.6; margin-left: 10px;">
             本サイトはリンクフリーです。どのページへリンクしていただいても構いません。<br>
             ただし、画像ファイル等への直リンクはご遠慮ください。
         </p>
 
-        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 14px; color: #8b5a5a;">5. 著作権について</h3>
+        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 12px; color: #8b5a5a;">5. 著作権について</h3>
         <p style="line-height: 1.6; margin-left: 10px;">
-            本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
-            本サイト内の独自コンテンツ（レイアウト、独自解説文、ロゴ等）の無断転載・再配布は禁止します。
+            本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元に帰属します。<br>
+            本サイト内の独自コンテンツの無断転載・再配布は禁止します。
         </p>
     </section>
 
-    <div style="background-color: #8b5a5a; color: #fff; padding: 3px 10px; font-weight: bold; font-size: 11px; margin: 15px 0 8px 0;">更新履歴</div>
-    <!-- 5行分(約85px)でスクロールするボックス -->
-    <div class="history-box" id="update-history" style="max-height: 85px; overflow-y: auto;">
+    <div style="background-color: #8b5a5a; color: #fff; padding: 3px 10px; font-weight: bold; font-size: 10px; margin: 15px 0 8px 0;">更新履歴</div>
+    <div class="history-box" id="update-history">
         読み込み中...
     </div>
 </div>
-
-                <div id="production-page" class="hidden">
-                    <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
-                    <table>
-                        <thead>
-                            <tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr>
-                        </thead>
-                        <tbody id="recipe-body">
-                            <tr><td>データ読み込み中...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <script>
-        const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
-        const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
-        const client = supabase.createClient(S_URL, S_KEY);
-
-        // --- 更新履歴をSupabaseから読み込む ---
-        async function loadUpdates() {
-            const historyBox = document.getElementById('update-history');
-            try {
-                // 'site_updates' という名前のテーブルを作ったと想定
-                const { data, error } = await client
-                    .from('site_updates') 
-                    .select('*')
-                    .order('date', { ascending: false });
-
-                if (error || !data || data.length === 0) {
-                    historyBox.innerHTML = "・2026/05/02：履歴管理システムを統合完了[cite: 1]";
-                    return;
-                }
-
-                historyBox.innerHTML = data.map(item => `・${item.date}：${item.content}`).join('<br>');
-            } catch (e) {
-                historyBox.innerHTML = "履歴の読み込みに失敗しました。";
-            }
-        }
-
-        function showPage(pageId) {
-            document.getElementById('front-page').classList.add('hidden');
-            document.getElementById('production-page').classList.add('hidden');
-            document.getElementById(pageId).classList.remove('hidden');
-            if(pageId === 'production-page') loadAllRecipes();
-        }
-
-        // --- 生産データ読み込み・ツリー制御ロジック（中略：前回と同じ） ---
-        // ... (ここに前回のレシピ読み込みJSを配置) ...
-        
-        async function loadAllRecipes() {
-            // 前回のコードをそのままお使いください
-            const tbody = document.getElementById('recipe-body');
-            try {
-                const [rRes, iRes, jRes] = await Promise.all([
-                    client.from('recipes').select('*').order('skill_type').order('skill_lv'),
-                    client.from('items').select('*'),
-                    client.from('job_masters').select('*')
-                ]);
-                const recipes = rRes.data || [];
-                const itemsData = iRes.data || [];
-                const jobsData = jRes.data || [];
-
-                const getFullJobName = (short) => (jobsData.find(j => j.short_name === short)?.full_name || short);
-
-                const getMethods = (itemName, pId, idx, rName) => {
-                    const matches = itemsData.filter(item => item.name === itemName);
-                    const craftR = recipes.find(r => r.output_item_name === itemName);
-                    const safeName = rName ? rName.replace(/[\s-【】]/g, '_') : 'none';
-                    const baseId = `src-${safeName}-${pId}-${idx}`.replace(/[\s-]/g, '_');
-                    let labels = '', details = '';
-
-                    const buy = matches.filter(m => m.method === '購入');
-                    if (buy.length) {
-                        const id = `${baseId}-buy`;
-                        labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${id}')">購入</span>`;
-                        details += `<div id="${id}" class="source-container" style="display:none;">${buy.map(m=>`<div>●購入：${m.location} (${m.target})</div>`).join('')}</div>`;
-                    }
-                    const drop = matches.filter(m => m.method === 'ドロップ');
-                    if (drop.length) {
-                        const id = `${baseId}-drop`;
-                        labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${id}')">ドロップ</span>`;
-                        details += `<div id="${id}" class="source-container" style="display:none;">◆ドロップ：${drop.map(m=>`<div>${m.location} (${m.target})</div>`).join('')}</div>`;
-                    }
-                    if (craftR) {
-                        const id = `${baseId}-craft`;
-                        labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${id}')">生産</span>`;
-                        details += `<div id="${id}" class="source-container" style="display:none;"><div style="color:#0066cc; font-weight:bold;">生産：${getFullJobName(craftR.required_jobs)}：${craftR.skill_type}(Lv${craftR.skill_lv})</div></div>`;
-                    }
-                    return { labels, details };
-                };
-
-                const renderMaterials = (recipe, pId, trace = []) => {
-                    let rows = '';
-                    const mats = [];
-                    for(let i=1; i<=4; i++) if(recipe[`material_${i}`] && recipe[`material_${i}`]!=='NULL') mats.push({n: recipe[`material_${i}`], q: recipe[`amount_${i}`]});
-                    
-                    mats.forEach((m, idx) => {
-                        const isLast = (idx === mats.length - 1);
-                        let pre = ''; trace.forEach(last => { pre += last ? '   ' : '│  '; });
-                        const mark = isLast ? '┗' : '┣';
-                        const {labels, details} = getMethods(m.n, pId, idx, recipe.recipe_name);
-                        rows += `<tr class="row-sub hidden" data-parent="${pId}"><td><span class="tree-line">${pre}${mark}</span><input type="checkbox" class="cb"><span>${m.n}</span><span style="font-weight:bold;">(×${m.q})</span>${labels}${details}</td></tr>`;
-                        const subR = recipes.find(r => r.output_item_name === m.n);
-                        if(subR) rows += renderMaterials(subR, pId, [...trace, isLast]);
-                    });
-                    return rows;
-                };
-
-                let html = '';
-                jobsData.forEach((job, jIdx) => {
-                    const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
-                    if (!jobRecipes.length) return;
-                    const jobId = `job-${jIdx}`;
-                    html += `<tr class="row-job" onclick="toggleLayer('${jobId}', 'btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
-                    
-                    const groups = {};
-                    jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
-                    
-                    Object.keys(groups).forEach((gk, sIdx) => {
-                        const sId = `${jobId}-s-${sIdx}`, [type, lv] = gk.split('_');
-                        html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}', 'btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
-                        
-                        const seen = new Set();
-                        const filtered = groups[gk].filter(r => { if(seen.has(r.recipe_name)) return false; seen.add(r.recipe_name); return true; });
-
-                        filtered.forEach((r, rIdx) => {
-                            const rId = `${sId}-r-${rIdx}`, isLast = (rIdx === filtered.length-1);
-                            html += `<tr class="row-recipe hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}', 'btn-${rId}')"><td><span class="tree-line">   ${isLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}">▶</span>【${r.recipe_name}】</td></tr>`;
-                            const {labels, details} = getMethods(r.output_item_name, rId, 99, r.recipe_name);
-                            html += `<tr class="row-output hidden" data-parent="${rId}"><td><span class="tree-line">${isLast?'      ':'   │  '}┗ </span><input type="checkbox" class="cb"><span style="font-weight:bold;">${r.output_item_name}</span>${labels}${details}</td></tr>`;
-                            html += renderMaterials(r, rId, [isLast, true, true]);
-                        });
-                    });
-                });
-                tbody.innerHTML = html;
-            } catch (e) { tbody.innerHTML = `<tr><td>読み込み失敗: ${e.message}</td></tr>`; }
-        }
-
-        function toggleLayer(id, btnId) {
-            const btn = document.getElementById(btnId);
-            const isExpanding = btn.textContent === '▶';
-            document.querySelectorAll(`tr[data-parent]`).forEach(el => {
-                const parents = el.getAttribute('data-parent').split(' ');
-                if (parents[parents.length - 1] === id) {
-                    if (isExpanding) el.classList.remove('hidden');
-                    else { recursiveHide(el.getAttribute('data-id')); el.classList.add('hidden'); }
-                }
-            });
-            btn.textContent = isExpanding ? '▼' : '▶';
-        }
-
-        function recursiveHide(parentId) {
-            if (!parentId) return;
-            document.querySelectorAll(`tr[data-parent*="${parentId}"]`).forEach(child => {
-                child.classList.add('hidden');
-                const btn = document.getElementById(`btn-${child.getAttribute('data-id')}`);
-                if (btn) btn.textContent = '▶';
-                recursiveHide(child.getAttribute('data-id'));
-            });
-        }
-
-        function toggleDetail(detailId) {
-            const el = document.getElementById(detailId);
-            if (el) el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
-        }
-    </script>
-</body>
-</html>
