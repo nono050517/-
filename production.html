@@ -5,17 +5,12 @@
     <title>エリシア生産データ一覧（Pink Ver.）</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 全体の背景を薄いピンクに */
         body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #444; font-size: 11px; background-color: #fff0f5; }
         table { width: 100%; border-collapse: collapse; line-height: 1.4; background-color: #fff; }
-        
-        /* ヘッダーを濃いめのピンクに */
         th { border: 1px solid #ffb6c1; padding: 4px 6px; text-align: left; vertical-align: top; background: #ffc0cb; color: #d02090; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         td { border: 1px solid #ffdae0; padding: 2px 4px; text-align: left; vertical-align: top; }
         
-        /* 職業行：ローズピンク */
         .row-job { background: #ffb6c1; color: #fff; font-weight: bold; font-size: 13px; cursor: pointer; height: 26px; }
-        /* スキル行：薄いサクラ色 */
         .row-skill { background: #fff0f5; color: #d02090; font-weight: bold; font-size: 12px; cursor: pointer; }
         .row-recipe { color: #333; font-weight: bold; cursor: pointer; }
         .row-output { font-weight: bold; background: #fffafb; }
@@ -23,7 +18,6 @@
         
         tr.hidden { display: none; }
         
-        /* ラベルの色設定（和田さん指定カラー） */
         .method-label {
             display: inline-block;
             font-size: 9px;
@@ -37,13 +31,11 @@
             vertical-align: middle;
             line-height: 1.2;
         }
-        .label-buy { color: #ff8c00; border-color: #ff8c00; }   /* 購入：オレンジ */
-        .label-drop { color: #2e8b57; border-color: #2e8b57; }  /* ドロップ：緑 */
-        .label-craft { color: #0066cc; border-color: #0066cc; } /* 生産：青 */
-        
+        .label-buy { color: #ff8c00; border-color: #ff8c00; }
+        .label-drop { color: #2e8b57; border-color: #2e8b57; }
+        .label-craft { color: #0066cc; border-color: #0066cc; }
         .method-label:hover { background: #fff5f7; border-width: 1.5px; }
 
-        /* 詳細ボックス：右側に寄せて、背景をクリームピンクに */
         .source-container {
             font-size: 10px;
             background: #fffafa;
@@ -58,19 +50,10 @@
         .source-item:last-child { border-bottom: none; }
         .craft-detail { color: #0066cc; font-weight: bold; }
 
-        .qty-inline { color: #e91e63; font-weight: bold; margin-right: 2px; } /* 数量もピンク系に */
+        .qty-inline { color: #e91e63; font-weight: bold; margin-right: 2px; }
         .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; accent-color: #e91e63; }
         
-        /* ツリーの線：少しピンクがかったグレーに */
-        .tree-line { 
-            font-family: "MS Gothic", monospace; 
-            white-space: pre; 
-            color: #ffc0cb; 
-            display: inline-block;
-            letter-spacing: 0;
-            font-size: 12px;
-        }
-        
+        .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; display: inline-block; letter-spacing: 0; font-size: 12px; }
         .toggle-icon { display: inline-block; width: 15px; text-align: center; margin-right: 5px; color: #d02090; }
     </style>
 </head>
@@ -88,9 +71,9 @@
     </table>
 
     <script>
-        // --- JavaScript部分は前回のロジック（修正済み・最新版）をそのまま維持 ---
+        // API KEYを正しいものに修正しました！
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
-        const S_KEY = 'sb_publishable_ywFWyEJawcabWW8|nHoETtQ_l-JyNOfC';
+        const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
         async function init() { await loadAllRecipes(); }
@@ -128,109 +111,115 @@
 
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
-            const [rRes, iRes, jRes] = await Promise.all([
-                client.from('recipes').select('*').order('skill_type').order('skill_lv'),
-                client.from('items').select('*'),
-                client.from('job_masters').select('*')
-            ]);
+            try {
+                const [rRes, iRes, jRes] = await Promise.all([
+                    client.from('recipes').select('*').order('skill_type').order('skill_lv'),
+                    client.from('items').select('*'),
+                    client.from('job_masters').select('*')
+                ]);
 
-            const recipes = rRes.data || [];
-            const itemsData = iRes.data || [];
-            const jobsData = jRes.data || [];
+                if (rRes.error) throw rRes.error;
 
-            const getFullJobName = (shortName) => {
-                const match = jobsData.find(j => j.short_name === shortName);
-                return match ? match.full_name : shortName;
-            };
+                const recipes = rRes.data || [];
+                const itemsData = iRes.data || [];
+                const jobsData = jRes.data || [];
 
-            const getMethodElements = (itemName, pId, idx, currentRecipeName) => {
-                const matches = itemsData.filter(item => item.name === itemName);
-                const craftR = recipes.find(r => r.output_item_name === itemName);
-                let labels = '';
-                let details = '';
-                const safeRecipeName = currentRecipeName ? currentRecipeName.replace(/[\s-【】]/g, '_') : 'none';
-                const baseId = `src-${safeRecipeName}-${pId.replace(/[\s-]/g, '_')}-${idx}`;
+                const getFullJobName = (shortName) => {
+                    const match = jobsData.find(j => j.short_name === shortName);
+                    return match ? match.full_name : shortName;
+                };
 
-                const buySites = matches.filter(m => m.method === '購入');
-                if (buySites.length > 0) {
-                    const id = `${baseId}-buy`;
-                    labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${id}')">購入</span>`;
-                    details += `<div id="${id}" class="source-container" style="display:none;">`;
-                    buySites.forEach(m => { details += `<div class="source-item">●購入：${m.location} (${m.target})</div>`; });
-                    details += `</div>`;
-                }
+                const getMethodElements = (itemName, pId, idx, currentRecipeName) => {
+                    const matches = itemsData.filter(item => item.name === itemName);
+                    const craftR = recipes.find(r => r.output_item_name === itemName);
+                    let labels = '';
+                    let details = '';
+                    const safeRecipeName = currentRecipeName ? currentRecipeName.replace(/[\s-【】]/g, '_') : 'none';
+                    const baseId = `src-${safeRecipeName}-${pId.replace(/[\s-]/g, '_')}-${idx}`;
 
-                const dropSites = matches.filter(m => m.method === 'ドロップ');
-                if (dropSites.length > 0) {
-                    const id = `${baseId}-drop`;
-                    labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${id}')">ドロップ</span>`;
-                    details += `<div id="${id}" class="source-container" style="display:none;">`;
-                    dropSites.forEach(m => { details += `<div class="source-item">◆ドロップ：${m.location} (${m.target})</div>`; });
-                    details += `</div>`;
-                }
-
-                if (craftR) {
-                    const id = `${baseId}-craft`;
-                    const fullJob = getFullJobName(craftR.required_jobs);
-                    labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${id}')">生産</span>`;
-                    details += `<div id="${id}" class="source-container" style="display:none;"><div class="craft-detail">生産：${fullJob}：${craftR.skill_type}(Lv${craftR.skill_lv})</div></div>`;
-                }
-                return { labels, details };
-            };
-
-            const renderMaterials = (recipe, pId, parentTrace = []) => {
-                let rows = '';
-                const materials = [];
-                for (let i = 1; i <= 4; i++) {
-                    if (recipe[`material_${i}`] && recipe[`material_${i}`] !== 'NULL') {
-                        materials.push({ name: recipe[`material_${i}`], qty: recipe[`amount_${i}`] });
+                    const buySites = matches.filter(m => m.method === '購入');
+                    if (buySites.length > 0) {
+                        const id = `${baseId}-buy`;
+                        labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${id}')">購入</span>`;
+                        details += `<div id="${id}" class="source-container" style="display:none;">`;
+                        buySites.forEach(m => { details += `<div class="source-item">●購入：${m.location} (${m.target})</div>`; });
+                        details += `</div>`;
                     }
-                }
-                materials.forEach((m, idx) => {
-                    const isLast = (idx === materials.length - 1);
-                    let prefix = '';
-                    parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
-                    const mark = isLast ? '┗' : '┣';
-                    const { labels, details } = getMethodElements(m.name, pId, idx, recipe.recipe_name);
-                    rows += `<tr class="row-sub hidden" data-parent="${pId}"><td><span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb"><span>${m.name}</span><span class="qty-inline">(×${m.qty || 0})</span>${labels}${details}</td></tr>`;
-                    const subR = recipes.find(r => r.output_item_name === m.name);
-                    if (subR) rows += renderMaterials(subR, pId, [...parentTrace, isLast]);
-                });
-                return rows;
-            };
 
-            let html = '';
-            jobsData.forEach((job, jIdx) => {
-                const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
-                if (jobRecipes.length === 0) return;
-                const jobId = `job-${jIdx}`;
-                html += `<tr class="row-job" data-id="${jobId}" onclick="toggleLayer('${jobId}', 'btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
-                const skillGroup = {};
-                jobRecipes.forEach(r => {
-                    const sKey = `${r.skill_type}_${r.skill_lv}`;
-                    if (!skillGroup[sKey]) skillGroup[sKey] = [];
-                    skillGroup[sKey].push(r);
-                });
-                Object.keys(skillGroup).forEach((skillKey, sIdx) => {
-                    const skillId = `${jobId}-skill-${sIdx}`;
-                    const [sType, sLv] = skillKey.split('_');
-                    const filteredRecipes = [];
-                    const seen = new Set();
-                    skillGroup[skillKey].forEach(r => { if (!seen.has(r.recipe_name)) { seen.add(r.recipe_name); filteredRecipes.push(r); } });
-                    html += `<tr class="row-skill hidden" data-id="${skillId}" data-parent="${jobId}" onclick="toggleLayer('${skillId}', 'btn-${skillId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${skillId}">▶</span>${sType} (Lv${sLv})</td></tr>`;
-                    filteredRecipes.forEach((r, rIdx) => {
-                        const recipeId = `${skillId}-rec-${rIdx}`;
-                        const isLastRec = (rIdx === filteredRecipes.length - 1);
-                        const rMark = isLastRec ? '┗' : '┣';
-                        html += `<tr class="row-recipe row-sub hidden" data-id="${recipeId}" data-parent="${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')"><td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▶</span>【${r.recipe_name}】</td></tr>`;
-                        const outPre = isLastRec ? '      ' : '   │  ';
-                        const outMethods = getMethodElements(r.output_item_name, recipeId, 99, r.recipe_name);
-                        html += `<tr class="row-output row-sub hidden" data-parent="${recipeId}"><td><span class="tree-line">${outPre}┗ </span><input type="checkbox" class="cb"><span>${r.output_item_name}</span>${outMethods.labels}${outMethods.details}</td></tr>`;
-                        html += renderMaterials(r, recipeId, [isLastRec, true, true]);
+                    const dropSites = matches.filter(m => m.method === 'ドロップ');
+                    if (dropSites.length > 0) {
+                        const id = `${baseId}-drop`;
+                        labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${id}')">ドロップ</span>`;
+                        details += `<div id="${id}" class="source-container" style="display:none;">`;
+                        dropSites.forEach(m => { details += `<div class="source-item">◆ドロップ：${m.location} (${m.target})</div>`; });
+                        details += `</div>`;
+                    }
+
+                    if (craftR) {
+                        const id = `${baseId}-craft`;
+                        const fullJob = getFullJobName(craftR.required_jobs);
+                        labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${id}')">生産</span>`;
+                        details += `<div id="${id}" class="source-container" style="display:none;"><div class="craft-detail">生産：${fullJob}：${craftR.skill_type}(Lv${craftR.skill_lv})</div></div>`;
+                    }
+                    return { labels, details };
+                };
+
+                const renderMaterials = (recipe, pId, parentTrace = []) => {
+                    let rows = '';
+                    const materials = [];
+                    for (let i = 1; i <= 4; i++) {
+                        if (recipe[`material_${i}`] && recipe[`material_${i}`] !== 'NULL') {
+                            materials.push({ name: recipe[`material_${i}`], qty: recipe[`amount_${i}`] });
+                        }
+                    }
+                    materials.forEach((m, idx) => {
+                        const isLast = (idx === materials.length - 1);
+                        let prefix = '';
+                        parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
+                        const mark = isLast ? '┗' : '┣';
+                        const { labels, details } = getMethodElements(m.name, pId, idx, recipe.recipe_name);
+                        rows += `<tr class="row-sub hidden" data-parent="${pId}"><td><span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb"><span>${m.name}</span><span class="qty-inline">(×${m.qty || 0})</span>${labels}${details}</td></tr>`;
+                        const subR = recipes.find(r => r.output_item_name === m.name);
+                        if (subR) rows += renderMaterials(subR, pId, [...parentTrace, isLast]);
+                    });
+                    return rows;
+                };
+
+                let html = '';
+                jobsData.forEach((job, jIdx) => {
+                    const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
+                    if (jobRecipes.length === 0) return;
+                    const jobId = `job-${jIdx}`;
+                    html += `<tr class="row-job" data-id="${jobId}" onclick="toggleLayer('${jobId}', 'btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
+                    const skillGroup = {};
+                    jobRecipes.forEach(r => {
+                        const sKey = `${r.skill_type}_${r.skill_lv}`;
+                        if (!skillGroup[sKey]) skillGroup[sKey] = [];
+                        skillGroup[sKey].push(r);
+                    });
+                    Object.keys(skillGroup).forEach((skillKey, sIdx) => {
+                        const skillId = `${jobId}-skill-${sIdx}`;
+                        const [sType, sLv] = skillKey.split('_');
+                        const filteredRecipes = [];
+                        const seen = new Set();
+                        skillGroup[skillKey].forEach(r => { if (!seen.has(r.recipe_name)) { seen.add(r.recipe_name); filteredRecipes.push(r); } });
+                        html += `<tr class="row-skill hidden" data-id="${skillId}" data-parent="${jobId}" onclick="toggleLayer('${skillId}', 'btn-${skillId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${skillId}">▶</span>${sType} (Lv${sLv})</td></tr>`;
+                        filteredRecipes.forEach((r, rIdx) => {
+                            const recipeId = `${skillId}-rec-${rIdx}`;
+                            const isLastRec = (rIdx === filteredRecipes.length - 1);
+                            const rMark = isLastRec ? '┗' : '┣';
+                            html += `<tr class="row-recipe row-sub hidden" data-id="${recipeId}" data-parent="${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')"><td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▶</span>【${r.recipe_name}】</td></tr>`;
+                            const outPre = isLastRec ? '      ' : '   │  ';
+                            const outMethods = getMethodElements(r.output_item_name, recipeId, 99, r.recipe_name);
+                            html += `<tr class="row-output row-sub hidden" data-parent="${recipeId}"><td><span class="tree-line">${outPre}┗ </span><input type="checkbox" class="cb"><span>${r.output_item_name}</span>${outMethods.labels}${outMethods.details}</td></tr>`;
+                            html += renderMaterials(r, recipeId, [isLastRec, true, true]);
+                        });
                     });
                 });
-            });
-            tbody.innerHTML = html;
+                tbody.innerHTML = html;
+            } catch (err) {
+                tbody.innerHTML = `<tr><td>エラーが発生しました: ${err.message}</td></tr>`;
+            }
         }
         init();
     </script>
