@@ -165,7 +165,7 @@
         .row-skill { background: #fff0f5; color: #000; font-weight: bold; cursor: pointer; }
         .row-recipe { color: #000; font-weight: bold; cursor: pointer; }
         .row-output { font-weight: bold; background: #fffafb; cursor: pointer; }
-        .row-sub { cursor: pointer; } /* 最下層もクリック可能に */
+        .row-sub { cursor: pointer; }
         
         .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 10px; }
         .toggle-icon { display: inline-block; width: 12px; text-align: center; margin-right: 5px; color: #d02090; }
@@ -224,11 +224,11 @@
                         <h3>2. 掲載データについて</h3>
                         <p>現在は「生産データ」を中心に公開しております。その他のアイテムデータや装備品データについても、順次整備を進めていく予定です。</p>
                         <h3>3. 使い方</h3>
-                        <p>左側のメニューから閲覧したいカテゴリを選択してください。</p>
+                        <p>左側のメニューから閲覧したいカテゴリを選択してください。スマートフォンで閲覧される場合は、メニューが隠れている場合があります。</p>
                         <h3>4. 謝辞</h3>
                         <p>本サイトの構築にあたり、長年にわたり情報を蓄積してくださった『エリシアオンラインまとめ Wiki*』の有志の皆様、およびプレイヤーの皆様に深く感謝申し上げます。</p>
                         <h3>5. 著作権について</h3>
-                        <p>本サイトで使用されている画像、シナリオ、キャラクター、システム等の知的財産権は、すべて株式会社アソビモ（ASOBIMO,Inc.）に帰属します。</p>
+                        <p>本サイトで使用されている画像、シナリオ、キャラクター、システム等の知的財産権は、すべて株式会社アソビモ（ASOBIMO,Inc.）に帰属します。また、引用・転載しているデータの著作権は、それぞれの権利者に帰属します。</p>
                     </div>
                     <div style="background-color: #8b5a5a; color: #fff; padding: 4px 10px; font-weight: bold; font-size: 10px; margin: 30px 0 10px 0;">更新履歴</div>
                     <div class="history-box" id="update-history">読み込み中...</div>
@@ -246,7 +246,7 @@
                         <div class="faq-q">生産レシピが表示されません。</div>
                         <p class="faq-a">ネットワーク状況により読み込みに時間がかかる場合があります。しばらく待っても表示されない場合は、ページのリロードをお試しください。</p>
                         <div class="faq-q">「生産ボタン」が表示されているアイテムとそうでないアイテムがあるのはなぜですか？</div>
-                        <p class="faq-a">そのアイテム自体に生産レシピが存在する場合のみ「生産」ボタンが表示されます。</p>
+                        <p class="faq-a">そのアイテム自体に生産レシピが存在する場合のみ「生産」ボタンが表示されます。素材としてのみ存在するアイテムには表示されません。</p>
                     </div>
                 </div>
 
@@ -339,8 +339,9 @@
                     }
                     if (craftR) {
                         const id = `${baseId}-craft`;
-                        labels += `<span class="method-label label-craft">生産</span>`; // ラベルのみ。クリックは行で行う
-                        details += `<div id="${id}" class="source-container" style="display:none;"><div style="color:#0066cc; font-weight:bold;">生産：${getFullJobName(craftR.required_jobs)}：${craftR.skill_type}(Lv${craftR.skill_lv})</div></div>`;
+                        // 修正点：生産ラベルをクリックした時に詳細が出るようにonclickを復活
+                        labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${id}')">生産</span>`;
+                        details += `<div id="${id}" class="source-container" style="display:none;"><div style="color:#0066cc; font-weight:bold;">生産：${getFullJobName(craftR.required_jobs)}：${craftR.skill_type}(Lv${craftR.skill_lv})「${craftR.recipe_name}」</div></div>`;
                     }
                     return { labels, details };
                 };
@@ -358,7 +359,6 @@
                         const {labels, details} = getMethods(m.n, pId, idx);
                         const subR = recipes.find(r => r.output_item_name === m.n);
                         
-                        // 子レシピがある場合はクリックイベントを追加
                         const onclick = subR ? `onclick="toggleLayer('${currentMatId}', 'btn-${currentMatId}')"` : '';
                         const icon = subR ? `<span class="toggle-icon" id="btn-${currentMatId}">▶</span>` : '';
 
@@ -405,20 +405,16 @@
         function toggleLayer(id, btnId) {
             const btn = document.getElementById(btnId);
             const isExpanding = btn ? btn.textContent === '▶' : true; 
-
-            // 指定されたIDを親(data-parent)に持つ要素をすべて探す
             const children = document.querySelectorAll(`tr[data-parent="${id}"]`);
-            
             children.forEach(el => {
                 if (isExpanding) {
                     el.classList.remove('hidden');
                 } else {
                     el.classList.add('hidden');
                     const childId = el.getAttribute('data-id');
-                    recursiveHide(childId); // 子の下も全部閉じる
+                    recursiveHide(childId); 
                 }
             });
-
             if(btn) btn.textContent = isExpanding ? '▼' : '▶';
         }
 
