@@ -291,7 +291,6 @@
 
                 const getFullJobName = (short) => (jobsData.find(j => j.short_name === short)?.full_name || short);
 
-                // getMethods の修正：完成品（isMainOutput=true）の場合はラベルを非表示
                 const getMethods = (itemName, pId, idx, rName, isMainOutput = false) => {
                     if (isMainOutput) return { labels: '', details: '' };
 
@@ -352,21 +351,31 @@
                         const sId = `${jobId}-s-${sIdx}`, [type, lv] = gk.split('_');
                         html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}', 'btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
                         
-                        const seen = new Set();
-                        // 判定キーを「レシピ名 ＋ 完成品名」にして重複を排除（バレットレシピ対策）
-                        const filtered = groups[gk].filter(r => { 
-                            const key = `${r.recipe_name}_${r.output_item_name}`;
-                            if(seen.has(key)) return false; 
-                            seen.add(key); 
-                            return true; 
+                        // レシピ名でグループ化する処理
+                        const recipeGroups = {};
+                        groups[gk].forEach(r => {
+                            if (!recipeGroups[r.recipe_name]) recipeGroups[r.recipe_name] = [];
+                            recipeGroups[r.recipe_name].push(r);
                         });
 
-                        filtered.forEach((r, rIdx) => {
-                            const rId = `${sId}-r-${rIdx}`, isLast = (rIdx === filtered.length-1);
-                            html += `<tr class="row-recipe hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}', 'btn-${rId}')"><td><span class="tree-line">   ${isLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}">▶</span>【${r.recipe_name}】</td></tr>`;
-                            const {labels, details} = getMethods(r.output_item_name, rId, 99, r.recipe_name, true);
-                            html += `<tr class="row-output hidden" data-parent="${rId}"><td><span class="tree-line">${isLast?'      ':'   │  '}┗ </span><input type="checkbox" class="cb"><span style="font-weight:bold;">${r.output_item_name}</span>${labels}${details}</td></tr>`;
-                            html += renderMaterials(r, rId, [isLast, true, true]);
+                        const recipeNames = Object.keys(recipeGroups);
+                        recipeNames.forEach((rName, rIdx) => {
+                            const rId = `${sId}-r-${rIdx}`, isLast = (rIdx === recipeNames.length-1);
+                            const variants = recipeGroups[rName];
+
+                            html += `<tr class="row-recipe hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}', 'btn-${rId}')"><td><span class="tree-line">   ${isLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}">▶</span>【${rName}】</td></tr>`;
+                            
+                            variants.forEach((v, vIdx) => {
+                                const vIsLast = (vIdx === variants.length - 1);
+                                const {labels, details} = getMethods(v.output_item_name, rId, vIdx, rName, true);
+                                
+                                // バレットが複数ある場合、それらを並列で表示
+                                const treeBase = isLast ? '      ' : '   │  ';
+                                html += `<tr class="row-output hidden" data-id="${rId}-v-${vIdx}" data-parent="${rId}" onclick="toggleLayer('${rId}-v-${vIdx}', 'btn-${rId}-v-${vIdx}')"><td><span class="tree-line">${treeBase}${vIsLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}-v-${vIdx}">▶</span><input type="checkbox" class="cb"><span style="font-weight:bold;">${v.output_item_name}</span>${labels}${details}</td></tr>`;
+                                
+                                // 材料の表示
+                                html += renderMaterials(v, `${rId}-v-${vIdx}`, [isLast, vIsLast, true]);
+                            });
                         });
                     });
                 });
