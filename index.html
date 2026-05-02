@@ -155,15 +155,49 @@
             </nav>
 
             <main>
-                <div id="front-page">
-                    <h2 class="page-title">FrontPage</h2>
-                    <p>『エリシアオンライン』の歴史と技術を記したアーカイブスへようこそ。</p>
-                    <div style="background-color: #8b5a5a; color: #fff; padding: 3px 10px; font-weight: bold; font-size: 11px; margin: 15px 0 8px 0;">更新履歴</div>
-                    <!-- 更新履歴エリア -->
-                    <div class="history-box" id="update-history">
-                        読み込み中...
-                    </div>
-                </div>
+                <!-- FrontPageセクションの書き換え -->
+<div id="front-page">
+    <h2 class="page-title">FrontPage</h2>
+    
+    <section style="margin-bottom: 25px;">
+        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 14px; color: #8b5a5a;">1. 概要</h3>
+        <p style="line-height: 1.6; margin-left: 10px;">
+            このサイトは、MMORPG『エリシアオンライン』のアイテムや生産レシピなどの情報をまとめた、個人運営の非公式データベースサイトです。
+            プレイヤーの皆様の冒険に役立つ情報を、シンプルで見やすい形で記録・蓄積していくことを目的としています。
+        </p>
+
+        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 14px; color: #8b5a5a;">2. 利用上の注意点</h3>
+        <p style="line-height: 1.6; margin-left: 10px;">
+            本サイトに掲載されている情報は、有志による調査やプレイヤーからの提供に基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
+            本サイトを利用したことによって生じたいかなる損害についても、管理人は責任を負いかねます。
+        </p>
+
+        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 14px; color: #8b5a5a;">3. 禁止行為と措置</h3>
+        <ul style="line-height: 1.6; margin-left: 10px;">
+            <li>サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。</li>
+            <li>公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み（※今後コメント欄などを設置した場合）。</li>
+            <li>禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。</li>
+        </ul>
+
+        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 14px; color: #8b5a5a;">4. リンクについて</h3>
+        <p style="line-height: 1.6; margin-left: 10px;">
+            本サイトはリンクフリーです。どのページへリンクしていただいても構いません。<br>
+            ただし、画像ファイル等への直リンクはご遠慮ください。
+        </p>
+
+        <h3 style="border-left: 4px solid #8b5a5a; padding-left: 10px; font-size: 14px; color: #8b5a5a;">5. 著作権について</h3>
+        <p style="line-height: 1.6; margin-left: 10px;">
+            本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
+            本サイト内の独自コンテンツ（レイアウト、独自解説文、ロゴ等）の無断転載・再配布は禁止します。
+        </p>
+    </section>
+
+    <div style="background-color: #8b5a5a; color: #fff; padding: 3px 10px; font-weight: bold; font-size: 11px; margin: 15px 0 8px 0;">更新履歴</div>
+    <!-- 5行分(約85px)でスクロールするボックス -->
+    <div class="history-box" id="update-history" style="max-height: 85px; overflow-y: auto;">
+        読み込み中...
+    </div>
+</div>
 
                 <div id="production-page" class="hidden">
                     <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
