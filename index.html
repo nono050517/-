@@ -119,25 +119,10 @@
             margin-bottom: 15px;
         }
 
-        /* 箇条書きのデザイン：liに対して「・」を付与 */
-        .fp-section ul {
-            list-style: none;
-            padding: 0;
-            margin: 10px 0 15px 25px;
-        }
-        .fp-section li {
-            position: relative;
-            padding-left: 1.5em;
-            line-height: 1.8;
-            margin-bottom: 8px;
-        }
-        .fp-section li::before {
-            content: "・";
-            position: absolute;
-            left: 0;
-            color: #8b5a5a;
-            font-weight: bold;
-        }
+        /* 箇条書きデザイン（今回は Wada さんが li を消した想定で設定は残しますが干渉しません） */
+        .fp-section ul { list-style: none; padding: 0; margin: 10px 0 15px 25px; }
+        .fp-section li { position: relative; padding-left: 1.5em; line-height: 1.8; margin-bottom: 8px; }
+        .fp-section li::before { content: "・"; position: absolute; left: 0; color: #8b5a5a; font-weight: bold; }
 
         /* --- FAQ設定 --- */
         .faq-category {
@@ -245,11 +230,11 @@
                         </p>
 
                         <h3>3. 禁止行為と措置</h3>
-                        <!-- ここを確実に ul > li 構造に書き換えました -->
+                        <!-- Wadaさんが調整した li なしの形式 -->
                         <p>
-                            サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。<br>
-                            公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み。<br>
-                            禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。
+                            ・サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。<br>
+                            ・公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み。<br>
+                            ・禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。
                         </p>
 
                         <h3>4. リンクについて</h3>
@@ -272,23 +257,29 @@
                     <div class="history-box" id="update-history">読み込み中...</div>
                 </div>
 
-                <!-- 他のページ（FAQ, 生産データ）は変更なしのため省略せずそのまま含めています -->
+                <!-- 2. FAQページ -->
                 <div id="faq-page" class="hidden">
                     <h2 class="page-title">よくある質問(FAQ)</h2>
                     <div class="fp-section">
                         <div class="faq-category">サイト全般について</div>
                         <div class="faq-q">このサイトは公式ですか？</div>
-                        <p class="faq-a">いいえ、本サイトは有志による非公式のファンサイトです。<br>運営元のアソビモ株式会社様とは一切関係ありません。</p>
-                        <div class="faq-q">スマホからでも見られますか？</div>
-                        <p class="faq-a">はい、ブラウザから閲覧可能です。</p>
+                        <p class="faq-a">
+                            いいえ、本サイトは有志による非公式のファンサイトです。<br>
+                            運営元のアソビモ株式会社様とは一切関係ありません。
+                        </p>
                     </div>
                 </div>
 
+                <!-- 3. 生産データページ -->
                 <div id="production-page" class="hidden">
                     <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
                     <table>
-                        <thead><tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr></thead>
-                        <tbody id="recipe-body"><tr><td>データ読み込み中...</td></tr></tbody>
+                        <thead>
+                            <tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr>
+                        </thead>
+                        <tbody id="recipe-body">
+                            <tr><td>データ読み込み中...</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </main>
@@ -319,6 +310,21 @@
             if(pageId === 'production-page') loadAllRecipes();
         }
 
+        async function jumpToJob(jobName) {
+            showPage('production-page');
+            setTimeout(() => {
+                const rows = document.querySelectorAll('.row-job');
+                rows.forEach(row => {
+                    if (row.textContent.toLowerCase().includes(jobName.toLowerCase())) {
+                        const btn = row.querySelector('.toggle-icon');
+                        if (btn && btn.textContent === '▶') row.click();
+                        row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            }, 300);
+        }
+
+        /* --- レシピ描画ロジック：ここを復活させました --- */
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
@@ -331,11 +337,110 @@
                 const recipes = rRes.data || [];
                 const itemsData = iRes.data || [];
                 const jobsData = jRes.data || [];
-                
-                // ... (レシピ描画ロジックは前回同様のため維持) ...
-                tbody.innerHTML = "<tr><td>データを表示しました。</td></tr>"; // 実際は全ロジックが入ります
+                const getFullJobName = (short) => (jobsData.find(j => j.short_name === short)?.full_name || short);
+
+                const getMethods = (itemName, pId, idx, rName, isMainOutput = false) => {
+                    if (isMainOutput) return { labels: '', details: '' };
+                    const matches = itemsData.filter(item => item.name === itemName);
+                    const craftR = recipes.find(r => r.output_item_name === itemName);
+                    const safeName = rName ? rName.replace(/[\s-【】]/g, '_') : 'none';
+                    const baseId = `src-${safeName}-${pId}-${idx}`.replace(/[\s-]/g, '_');
+                    let labels = '', details = '';
+                    const buy = matches.filter(m => m.method === '購入');
+                    if (buy.length) {
+                        const id = `${baseId}-buy`;
+                        labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${id}')">購入</span>`;
+                        details += `<div id="${id}" class="source-container" style="display:none;">${buy.map(m=>`<div>●購入：${m.location} (${m.target})</div>`).join('')}</div>`;
+                    }
+                    const drop = matches.filter(m => m.method === 'ドロップ');
+                    if (drop.length) {
+                        const id = `${baseId}-drop`;
+                        labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${id}')">ドロップ</span>`;
+                        details += `<div id="${id}" class="source-container" style="display:none;">${drop.map(m=>`<div>◆ドロップ：${m.location} (${m.target})</div>`).join('')}</div>`;
+                    }
+                    if (craftR) {
+                        const id = `${baseId}-craft`;
+                        labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${id}')">生産</span>`;
+                        details += `<div id="${id}" class="source-container" style="display:none;"><div style="color:#0066cc; font-weight:bold;">生産：${getFullJobName(craftR.required_jobs)}：${craftR.skill_type}(Lv${craftR.skill_lv})</div></div>`;
+                    }
+                    return { labels, details };
+                };
+
+                const renderMaterials = (recipe, pId, trace = []) => {
+                    let rows = '';
+                    const mats = [];
+                    for(let i=1; i<=4; i++) if(recipe[`material_${i}`] && recipe[`material_${i}`]!=='NULL') mats.push({n: recipe[`material_${i}`], q: recipe[`amount_${i}`]});
+                    mats.forEach((m, idx) => {
+                        const isLast = (idx === mats.length - 1);
+                        let pre = ''; trace.forEach(last => { pre += last ? '    ' : '│  '; });
+                        const mark = isLast ? '┗' : '┣';
+                        const {labels, details} = getMethods(m.n, pId, idx, recipe.recipe_name);
+                        rows += `<tr class="row-sub hidden" data-parent="${pId}"><td><span class="tree-line">${pre}${mark}</span><input type="checkbox" class="cb"><span>${m.n}</span><span style="font-weight:bold;">(×${m.q})</span>${labels}${details}</td></tr>`;
+                        const subR = recipes.find(r => r.output_item_name === m.n);
+                        if(subR) rows += renderMaterials(subR, pId, [...trace, isLast]);
+                    });
+                    return rows;
+                };
+
+                let html = '';
+                jobsData.forEach((job, jIdx) => {
+                    const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
+                    if (!jobRecipes.length) return;
+                    const jobId = `job-node-${jIdx}`; 
+                    html += `<tr class="row-job" id="${jobId}" data-id="${jobId}" onclick="toggleLayer('${jobId}', 'btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
+                    const groups = {};
+                    jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
+                    Object.keys(groups).forEach((gk, sIdx) => {
+                        const sId = `${jobId}-s-${sIdx}`, [type, lv] = gk.split('_');
+                        html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}', 'btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
+                        const recipeGroups = {};
+                        groups[gk].forEach(r => { if (!recipeGroups[r.recipe_name]) recipeGroups[r.recipe_name] = []; recipeGroups[r.recipe_name].push(r); });
+                        Object.keys(recipeGroups).forEach((rName, rIdx) => {
+                            const rId = `${sId}-r-${rIdx}`, isLast = (rIdx === Object.keys(recipeGroups).length-1);
+                            const variants = recipeGroups[rName];
+                            html += `<tr class="row-recipe hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}', 'btn-${rId}')"><td><span class="tree-line">   ${isLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}">▶</span>【${rName}】</td></tr>`;
+                            variants.forEach((v, vIdx) => {
+                                const vIsLast = (vIdx === variants.length - 1);
+                                const {labels, details} = getMethods(v.output_item_name, rId, vIdx, rName, true);
+                                const treeBase = isLast ? '      ' : '   │  ';
+                                html += `<tr class="row-output hidden" data-id="${rId}-v-${vIdx}" data-parent="${rId}" onclick="toggleLayer('${rId}-v-${vIdx}', 'btn-${rId}-v-${vIdx}')"><td><span class="tree-line">${treeBase}${vIsLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}-v-${vIdx}">▶</span><input type="checkbox" class="cb"><span style="font-weight:bold;">${v.output_item_name}</span>${labels}${details}</td></tr>`;
+                                html += renderMaterials(v, `${rId}-v-${vIdx}`, [isLast, vIsLast, true]);
+                            });
+                        });
+                    });
+                });
+                tbody.innerHTML = html;
                 tbody.setAttribute('data-loaded', 'true');
             } catch (e) { tbody.innerHTML = `<tr><td>読み込み失敗: ${e.message}</td></tr>`; }
+        }
+
+        function toggleLayer(id, btnId) {
+            const btn = document.getElementById(btnId);
+            if(!btn) return;
+            const isExpanding = btn.textContent === '▶';
+            document.querySelectorAll(`tr[data-parent]`).forEach(el => {
+                const parents = el.getAttribute('data-parent').split(' ');
+                if (parents[parents.length - 1] === id) {
+                    if (isExpanding) el.classList.remove('hidden');
+                    else { recursiveHide(el.getAttribute('data-id')); el.classList.add('hidden'); }
+                }
+            });
+            btn.textContent = isExpanding ? '▼' : '▶';
+        }
+
+        function recursiveHide(parentId) {
+            if (!parentId) return;
+            document.querySelectorAll(`tr[data-parent*="${parentId}"]`).forEach(child => {
+                child.classList.add('hidden');
+                const btn = document.getElementById(`btn-${child.getAttribute('data-id')}`);
+                if (btn) btn.textContent = '▶';
+                recursiveHide(child.getAttribute('data-id'));
+            });
+        }
+
+        function toggleDetail(detailId) {
+            const el = document.getElementById(detailId);
+            if (el) el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
         }
     </script>
 </body>
