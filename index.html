@@ -26,17 +26,23 @@
             height: 100vh;
         }
 
+        /* 画像をなくし、テキストタイトルに変更 */
         header {
             background-color: #fff;
             border-bottom: 2px solid #d2b48c;
-            overflow: hidden;
+            padding: 20px 30px;
         }
-        .header-banner {
-            width: 100%;
-            height: 120px;
-            display: block;
-            object-fit: cover;
-            object-position: center;
+        .header-title {
+            margin: 0;
+            color: #8b5a5a;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+        .header-subtitle {
+            margin: 5px 0 0 0;
+            color: #a08080;
+            font-size: 14px;
+            font-weight: normal;
         }
         .nav-bar {
             background-color: #8b5a5a;
@@ -96,7 +102,7 @@
             padding-bottom: 5px;
         }
 
-        /* --- 4. 生産データ一覧 (Pink Ver.由来) --- */
+        /* --- 4. 生産データ一覧 --- */
         table { width: 100%; border-collapse: collapse; line-height: 1.4; background-color: #fff; }
         th { border: 1px solid #ffb6c1; padding: 6px; text-align: left; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         td { border: 1px solid #ffdae0; padding: 2px 4px; color: #000; font-size: 11px; }
@@ -106,7 +112,7 @@
         .row-recipe { color: #000; font-weight: bold; cursor: pointer; }
         .row-output { font-weight: bold; background: #fffafb; }
         
-        .hidden { display: none; } /* これでセクションごと隠します */
+        .hidden { display: none; }
         .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 12px; }
         .toggle-icon { display: inline-block; width: 15px; text-align: center; margin-right: 5px; color: #d02090; }
 
@@ -134,9 +140,10 @@
 
     <div class="wrapper">
         <header>
-            <img src="input_file_0.jpg" alt="Archives Banner" class="header-banner">
-            <div class="nav-bar"></div>
+            <h1 class="header-title">エリシアオンライン　アーカイブス</h1>
+            <h2 class="header-subtitle">Ellicia-Online Archives</h2>
         </header>
+        <div class="nav-bar"></div>
 
         <div class="container">
             <nav>
@@ -158,7 +165,8 @@
                     <p>『エリシアオンライン』の歴史と技術を記したアーカイブスへようこそ。</p>
                     <div style="background-color: #8b5a5a; color: #fff; padding: 3px 10px; font-weight: bold; font-size: 11px; margin: 15px 0 8px 0;">更新履歴</div>
                     <div class="history-box">
-                        ・2026/05/02：Pink Ver.のツリー探索ロジックを統合し、サイドバーから呼び出し可能に
+                        ・2026/05/02：テキストタイトルへのデザイン変更[cite: 1]
+                        <br>・2026/05/02：Pink Ver.のツリー探索ロジックを統合完了[cite: 1]
                     </div>
                 </div>
 
@@ -183,16 +191,10 @@
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
-        // ページ切り替えのコア機能
         function showPage(pageId) {
-            // すべてのコンテンツエリアを一旦隠す
             document.getElementById('front-page').classList.add('hidden');
             document.getElementById('production-page').classList.add('hidden');
-            
-            // 指定されたIDのエリアだけを表示する
             document.getElementById(pageId).classList.remove('hidden');
-            
-            // 生産ページを開いた時だけデータをロードする
             if(pageId === 'production-page') loadAllRecipes();
         }
 
