@@ -169,8 +169,8 @@
                 <h3>■生産</h3>
                 <ul>
                     <li><a onclick="showPage('production-page')">生産データ一覧</a></li>
-                    <li><a onclick="showPage('production-page'); scrollToJob('job-alchemist-i')">alchemist I</a></li>
-                    <li><a onclick="showPage('production-page'); scrollToJob('job-alchemist-ii')">alchemist II</a></li>
+                    <li><a onclick="jumpToJob('alchemist i')">alchemist I</a></li>
+                    <li><a onclick="jumpToJob('alchemist ii')">alchemist II</a></li>
                 </ul>
                 <h3>■アイテム</h3>
                 <ul>
@@ -179,7 +179,7 @@
                 </ul>
             </nav>
 
-            <main>
+            <main id="main-scroll">
                 <!-- 1. FrontPage -->
                 <div id="front-page">
                     <h2 class="page-title">FrontPage</h2>
@@ -263,19 +263,37 @@
             document.getElementById('front-page').classList.add('hidden');
             document.getElementById('production-page').classList.add('hidden');
             document.getElementById(pageId).classList.remove('hidden');
-            if(pageId === 'production-page') loadAllRecipes();
+            if(pageId === 'production-page') return loadAllRecipes(); // Promiseを返す
         }
 
-        // サイドバーからの特定項目スクロール用（必要に応じて）
-        function scrollToJob(jobId) {
+        // サイドバーから特定の職業へジャンプ
+        async function jumpToJob(jobName) {
+            // まず生産ページを表示し、データの読み込みを待つ
+            await showPage('production-page');
+            
+            // 少し待ってからDOM（テーブル）を探す
             setTimeout(() => {
-                const el = document.getElementById(jobId);
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }, 500);
+                const rows = document.querySelectorAll('.row-job');
+                rows.forEach(row => {
+                    // 職業名が含まれている行を探す
+                    if (row.textContent.toLowerCase().includes(jobName.toLowerCase())) {
+                        // 閉じていたら開く
+                        const btn = row.querySelector('.toggle-icon');
+                        if (btn && btn.textContent === '▶') {
+                            row.click();
+                        }
+                        // その場所までスクロール
+                        row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            }, 300);
         }
 
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
+            // すでに読み込み済みならスキップ
+            if (tbody.getAttribute('data-loaded') === 'true') return;
+
             try {
                 const [rRes, iRes, jRes] = await Promise.all([
                     client.from('recipes').select('*').order('skill_type').order('skill_lv'),
@@ -336,9 +354,8 @@
                 jobsData.forEach((job, jIdx) => {
                     const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
                     if (!jobRecipes.length) return;
-                    // IDをサイドバーのリンクと合わせる
-                    const jobId = `job-${job.short_name.toLowerCase().replace(/\s/g, '-')}`; 
-                    html += `<tr class="row-job" id="${jobId}" onclick="toggleLayer('${jobId}', 'btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
+                    const jobId = `job-node-${jIdx}`; 
+                    html += `<tr class="row-job" id="${jobId}" data-id="${jobId}" onclick="toggleLayer('${jobId}', 'btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
                     
                     const groups = {};
                     jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
@@ -360,11 +377,13 @@
                     });
                 });
                 tbody.innerHTML = html;
+                tbody.setAttribute('data-loaded', 'true');
             } catch (e) { tbody.innerHTML = `<tr><td>読み込み失敗: ${e.message}</td></tr>`; }
         }
 
         function toggleLayer(id, btnId) {
             const btn = document.getElementById(btnId);
+            if(!btn) return;
             const isExpanding = btn.textContent === '▶';
             document.querySelectorAll(`tr[data-parent]`).forEach(el => {
                 const parents = el.getAttribute('data-parent').split(' ');
