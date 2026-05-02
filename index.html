@@ -14,7 +14,7 @@
             font-family: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
             color: #5d4037;
             background-color: #f4eade;
-            font-size: 11px; /* 全体フォントサイズを小さく調整 */
+            font-size: 11px;
         }
 
         .wrapper {
@@ -102,7 +102,6 @@
             padding-bottom: 5px;
         }
 
-        /* 更新履歴ボックス (5行分でスクロール) */
         .history-box {
             background-color: #fdf5f5;
             border: 1px solid #f5e1e1;
@@ -114,7 +113,7 @@
             line-height: 1.6;
         }
 
-        /* --- 4. 生産データ一覧 --- */
+        /* --- 4. 生産データ一覧テーブル --- */
         table { width: 100%; border-collapse: collapse; line-height: 1.4; background-color: #fff; }
         th { border: 1px solid #ffb6c1; padding: 6px; text-align: left; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         td { border: 1px solid #ffdae0; padding: 2px 4px; color: #000; font-size: 9px; }
@@ -170,6 +169,13 @@
                 <h3>■生産</h3>
                 <ul>
                     <li><a onclick="showPage('production-page')">生産データ一覧</a></li>
+                    <li><a onclick="showPage('production-page'); scrollToJob('job-alchemist-i')">alchemist I</a></li>
+                    <li><a onclick="showPage('production-page'); scrollToJob('job-alchemist-ii')">alchemist II</a></li>
+                </ul>
+                <h3>■アイテム</h3>
+                <ul>
+                    <li><a>装備品</a></li>
+                    <li><a>消費アイテム</a></li>
                 </ul>
             </nav>
 
@@ -235,12 +241,10 @@
     </div>
 
     <script>
-        // --- 設定値 ---
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
-        // 更新履歴の読み込み
         async function loadUpdates() {
             const historyBox = document.getElementById('update-history');
             try {
@@ -255,7 +259,6 @@
             }
         }
 
-        // ページ切り替えロジック
         function showPage(pageId) {
             document.getElementById('front-page').classList.add('hidden');
             document.getElementById('production-page').classList.add('hidden');
@@ -263,7 +266,14 @@
             if(pageId === 'production-page') loadAllRecipes();
         }
 
-        // --- 生産データ読み込み・ツリー制御ロジック ---
+        // サイドバーからの特定項目スクロール用（必要に応じて）
+        function scrollToJob(jobId) {
+            setTimeout(() => {
+                const el = document.getElementById(jobId);
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        }
+
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             try {
@@ -326,8 +336,9 @@
                 jobsData.forEach((job, jIdx) => {
                     const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
                     if (!jobRecipes.length) return;
-                    const jobId = `job-${jIdx}`;
-                    html += `<tr class="row-job" onclick="toggleLayer('${jobId}', 'btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
+                    // IDをサイドバーのリンクと合わせる
+                    const jobId = `job-${job.short_name.toLowerCase().replace(/\s/g, '-')}`; 
+                    html += `<tr class="row-job" id="${jobId}" onclick="toggleLayer('${jobId}', 'btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
                     
                     const groups = {};
                     jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
@@ -352,7 +363,6 @@
             } catch (e) { tbody.innerHTML = `<tr><td>読み込み失敗: ${e.message}</td></tr>`; }
         }
 
-        // 階層の開閉
         function toggleLayer(id, btnId) {
             const btn = document.getElementById(btnId);
             const isExpanding = btn.textContent === '▶';
