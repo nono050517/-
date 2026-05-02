@@ -119,6 +119,7 @@
             margin-bottom: 15px;
         }
 
+        /* --- FAQ設定（2行目以降もピシッと揃う版） --- */
         .faq-category {
             background-color: #f5e1e1;
             color: #8b5a5a;
@@ -143,6 +144,7 @@
             font-weight: bold; color: #8b5a5a; 
         }
 
+        /* 更新履歴 */
         .history-box {
             background-color: #fdf5f5;
             border: 1px solid #f5e1e1;
@@ -215,6 +217,7 @@
             </nav>
 
             <main id="main-scroll">
+                <!-- 1. FrontPage -->
                 <div id="front-page">
                     <h2 class="page-title">FrontPage</h2>
                     <div class="fp-section">
@@ -242,18 +245,37 @@
                     <div class="history-box" id="update-history">読み込み中...</div>
                 </div>
 
+                <!-- 2. FAQページ（修正版） -->
                 <div id="faq-page" class="hidden">
-                    <h2 class="page-title">よくある質問(FAQ)</h2>
+                    <h2 class="page-title">FAQ：よくある質問</h2>
                     <div class="fp-section">
                         <div class="faq-category">サイト全般について</div>
                         <div class="faq-q">このサイトは公式ですか？</div>
-                        <p class="faq-a">いいえ、本サイトは有志による非公式のファンサイトです。運営元とは一切関係ありません。</p>
-                        <div class="faq-category">生産データについて</div>
-                        <div class="faq-q">生産レシピが表示されません。</div>
-                        <p class="faq-a">ネットワーク状況により読み込みに時間がかかる場合があります。しばらく待っても表示されない場合は、ページのリロードをお試しください。</p>
+                        <p class="faq-a">いいえ、本サイトは有志による非公式のファンサイトです。運営元のアソビモ株式会社様とは一切関係ありません。</p>
+                        
+                        <div class="faq-q">スマホからでも見られますか？</div>
+                        <p class="faq-a">はい、ブラウザから閲覧可能です。シンプルなレイアウトにしているため、移動中の確認にも適しています。</p>
+                        
+                        <div class="faq-q">データの更新頻度はどれくらいですか？</div>
+                        <p class="faq-a">管理人の空き時間での更新となるため不定期ですが、新イベントやアップデート時にはなるべく早く反映できるよう努めています。</p>
+
+                        <div class="faq-category">データ・内容について</div>
+                        <div class="faq-q">掲載されている情報が古い（間違っている）のですが。</div>
+                        <p class="faq-a">申し訳ありません。ゲームのアップデートにより仕様が変更される場合があります。もし間違いを見つけた場合は、今後のアップデート（掲示板設置など）をお待ちいただくか、管理人までお知らせください。</p>
+                        
+                        <div class="faq-q">生産レシピの成功率は掲載されていますか？</div>
+                        <p class="faq-a">現在、基本的なレシピデータを中心に掲載を進めています。成功率などの詳細データも順次追加予定です。</p>
+
+                        <div class="faq-category">リンク・利用について</div>
+                        <div class="faq-q">自分のブログやSNSでこのサイトを紹介してもいいですか？</div>
+                        <p class="faq-a">大歓迎です！本サイトはリンクフリーですので、許可なくリンクを貼っていただいて構いません。</p>
+                        
+                        <div class="faq-q">サイト内の画像やロゴを使ってもいいですか？</div>
+                        <p class="faq-a">ゲーム内画像の著作権は運営元に帰属します。当サイトオリジナルのロゴや解説文については、無断転載・二次利用をご遠慮いただいております。</p>
                     </div>
                 </div>
 
+                <!-- 3. 生産データページ -->
                 <div id="production-page" class="hidden">
                     <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
                     <table>
@@ -307,6 +329,7 @@
             }, 300);
         }
 
+        /* --- 生産レシピ描画システム --- */
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
