@@ -26,7 +26,6 @@
             height: 100vh;
         }
 
-        /* 画像をなくし、テキストタイトルに変更 */
         header {
             background-color: #fff;
             border-bottom: 2px solid #d2b48c;
@@ -102,41 +101,38 @@
             padding-bottom: 5px;
         }
 
-        /* --- 4. 生産データ一覧 --- */
+        /* 更新履歴ボックス (5行まで表示・以降スクロール) */
+        .history-box {
+            background-color: #fdf5f5;
+            border: 1px solid #f5e1e1;
+            padding: 8px 12px;
+            font-size: 11px;
+            color: #7d5a5a;
+            max-height: 85px; /* およそ5行分の高さに固定 */
+            overflow-y: auto; /* 超えたらスクロール[cite: 1] */
+            line-height: 1.6;
+        }
+
+        /* --- 4. 生産データ一覧（スタイルは維持） --- */
         table { width: 100%; border-collapse: collapse; line-height: 1.4; background-color: #fff; }
         th { border: 1px solid #ffb6c1; padding: 6px; text-align: left; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         td { border: 1px solid #ffdae0; padding: 2px 4px; color: #000; font-size: 11px; }
-        
         .row-job { background: #ffb6c1; color: #fff !important; font-weight: bold; cursor: pointer; height: 26px; }
         .row-skill { background: #fff0f5; color: #000; font-weight: bold; cursor: pointer; }
         .row-recipe { color: #000; font-weight: bold; cursor: pointer; }
         .row-output { font-weight: bold; background: #fffafb; }
-        
         .hidden { display: none; }
         .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 12px; }
         .toggle-icon { display: inline-block; width: 15px; text-align: center; margin-right: 5px; color: #d02090; }
-
-        .method-label {
-            display: inline-block; font-size: 9px; padding: 0px 4px; margin-left: 4px;
-            border-radius: 3px; cursor: pointer; border: 1px solid #ccc; background: #fff;
-        }
+        .method-label { display: inline-block; font-size: 9px; padding: 0px 4px; margin-left: 4px; border-radius: 3px; cursor: pointer; border: 1px solid #ccc; background: #fff; }
         .label-buy { color: #ff8c00; border-color: #ff8c00; }
         .label-drop { color: #2e8b57; border-color: #2e8b57; }
         .label-craft { color: #0066cc; border-color: #0066cc; }
-
-        .source-container {
-            font-size: 10px; background: #fffafa; border: 1px solid #ffb6c1;
-            padding: 4px 8px; margin: 3px 0 5px 20px; border-radius: 6px; color: #000;
-        }
+        .source-container { font-size: 10px; background: #fffafa; border: 1px solid #ffb6c1; padding: 4px 8px; margin: 3px 0 5px 20px; border-radius: 6px; color: #000; }
         .cb { vertical-align: middle; margin: 0 4px; cursor: pointer; accent-color: #e91e63; }
-        
-        .history-box {
-            background-color: #fdf5f5; border: 1px solid #f5e1e1;
-            padding: 8px 12px; font-size: 11px; color: #7d5a5a;
-        }
     </style>
 </head>
-<body>
+<body onload="loadUpdates()"> <!-- 起動時に履歴を読み込む[cite: 1] -->
 
     <div class="wrapper">
         <header>
@@ -159,18 +155,16 @@
             </nav>
 
             <main>
-                <!-- 1. FrontPage (初期状態: 表示) -->
                 <div id="front-page">
                     <h2 class="page-title">FrontPage</h2>
                     <p>『エリシアオンライン』の歴史と技術を記したアーカイブスへようこそ。</p>
                     <div style="background-color: #8b5a5a; color: #fff; padding: 3px 10px; font-weight: bold; font-size: 11px; margin: 15px 0 8px 0;">更新履歴</div>
-                    <div class="history-box">
-                        ・2026/05/02：テキストタイトルへのデザイン変更[cite: 1]
-                        <br>・2026/05/02：Pink Ver.のツリー探索ロジックを統合完了[cite: 1]
+                    <!-- 更新履歴エリア -->
+                    <div class="history-box" id="update-history">
+                        読み込み中...
                     </div>
                 </div>
 
-                <!-- 2. 生産データページ (初期状態: 非表示) -->
                 <div id="production-page" class="hidden">
                     <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
                     <table>
@@ -191,6 +185,27 @@
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
+        // --- 更新履歴をSupabaseから読み込む ---
+        async function loadUpdates() {
+            const historyBox = document.getElementById('update-history');
+            try {
+                // 'site_updates' という名前のテーブルを作ったと想定
+                const { data, error } = await client
+                    .from('site_updates') 
+                    .select('*')
+                    .order('date', { ascending: false });
+
+                if (error || !data || data.length === 0) {
+                    historyBox.innerHTML = "・2026/05/02：履歴管理システムを統合完了[cite: 1]";
+                    return;
+                }
+
+                historyBox.innerHTML = data.map(item => `・${item.date}：${item.content}`).join('<br>');
+            } catch (e) {
+                historyBox.innerHTML = "履歴の読み込みに失敗しました。";
+            }
+        }
+
         function showPage(pageId) {
             document.getElementById('front-page').classList.add('hidden');
             document.getElementById('production-page').classList.add('hidden');
@@ -198,36 +213,11 @@
             if(pageId === 'production-page') loadAllRecipes();
         }
 
-        // --- 階層制御ロジック ---
-        function toggleLayer(id, btnId) {
-            const btn = document.getElementById(btnId);
-            const isExpanding = btn.textContent === '▶';
-            document.querySelectorAll(`tr[data-parent]`).forEach(el => {
-                const parents = el.getAttribute('data-parent').split(' ');
-                if (parents[parents.length - 1] === id) {
-                    if (isExpanding) el.classList.remove('hidden');
-                    else { recursiveHide(el.getAttribute('data-id')); el.classList.add('hidden'); }
-                }
-            });
-            btn.textContent = isExpanding ? '▼' : '▶';
-        }
-
-        function recursiveHide(parentId) {
-            if (!parentId) return;
-            document.querySelectorAll(`tr[data-parent*="${parentId}"]`).forEach(child => {
-                child.classList.add('hidden');
-                const btn = document.getElementById(`btn-${child.getAttribute('data-id')}`);
-                if (btn) btn.textContent = '▶';
-                recursiveHide(child.getAttribute('data-id'));
-            });
-        }
-
-        function toggleDetail(detailId) {
-            const el = document.getElementById(detailId);
-            if (el) el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
-        }
-
+        // --- 生産データ読み込み・ツリー制御ロジック（中略：前回と同じ） ---
+        // ... (ここに前回のレシピ読み込みJSを配置) ...
+        
         async function loadAllRecipes() {
+            // 前回のコードをそのままお使いください
             const tbody = document.getElementById('recipe-body');
             try {
                 const [rRes, iRes, jRes] = await Promise.all([
@@ -258,7 +248,7 @@
                     if (drop.length) {
                         const id = `${baseId}-drop`;
                         labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${id}')">ドロップ</span>`;
-                        details += `<div id="${id}" class="source-container" style="display:none;">${drop.map(m=>`<div>◆ドロップ：${m.location} (${m.target})</div>`).join('')}</div>`;
+                        details += `<div id="${id}" class="source-container" style="display:none;">◆ドロップ：${drop.map(m=>`<div>${m.location} (${m.target})</div>`).join('')}</div>`;
                     }
                     if (craftR) {
                         const id = `${baseId}-craft`;
@@ -313,6 +303,34 @@
                 });
                 tbody.innerHTML = html;
             } catch (e) { tbody.innerHTML = `<tr><td>読み込み失敗: ${e.message}</td></tr>`; }
+        }
+
+        function toggleLayer(id, btnId) {
+            const btn = document.getElementById(btnId);
+            const isExpanding = btn.textContent === '▶';
+            document.querySelectorAll(`tr[data-parent]`).forEach(el => {
+                const parents = el.getAttribute('data-parent').split(' ');
+                if (parents[parents.length - 1] === id) {
+                    if (isExpanding) el.classList.remove('hidden');
+                    else { recursiveHide(el.getAttribute('data-id')); el.classList.add('hidden'); }
+                }
+            });
+            btn.textContent = isExpanding ? '▼' : '▶';
+        }
+
+        function recursiveHide(parentId) {
+            if (!parentId) return;
+            document.querySelectorAll(`tr[data-parent*="${parentId}"]`).forEach(child => {
+                child.classList.add('hidden');
+                const btn = document.getElementById(`btn-${child.getAttribute('data-id')}`);
+                if (btn) btn.textContent = '▶';
+                recursiveHide(child.getAttribute('data-id'));
+            });
+        }
+
+        function toggleDetail(detailId) {
+            const el = document.getElementById(detailId);
+            if (el) el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
         }
     </script>
 </body>
