@@ -2,96 +2,494 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>エリシア生産データ一覧（Pink Ver.）</title>
+    <title>エリシア・アーカイブス (Ellicia Archives)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 文字色を黒に統一 */
-        body { font-family: "Meiryo", sans-serif; margin: 0; padding: 5px; color: #000; font-size: 11px; background-color: #fff0f5; }
-        table { width: 100%; border-collapse: collapse; line-height: 1.4; background-color: #fff; }
-        
-        /* 見出しの文字も黒に */
-        th { border: 1px solid #ffb6c1; padding: 4px 6px; text-align: left; vertical-align: top; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; }
-        td { border: 1px solid #ffdae0; padding: 2px 4px; text-align: left; vertical-align: top; color: #000; }
-        
-        /* 職業行：文字は白の方が見やすいので維持（もし黒がよければ #000 に変えます！） */
-        .row-job { background: #ffb6c1; color: #fff; font-weight: bold; font-size: 13px; cursor: pointer; height: 26px; }
-        
-        /* スキル・レシピ・素材：すべて黒文字 */
-        .row-skill { background: #fff0f5; color: #000; font-weight: bold; font-size: 12px; cursor: pointer; }
-        .row-recipe { color: #000; font-weight: bold; cursor: pointer; }
-        .row-output { font-weight: bold; background: #fffafb; color: #000; }
-        .row-sub { color: #000; }
-        
-        tr.hidden { display: none; }
-        
-        .method-label {
-            display: inline-block;
+        /* --- 1. 全体レイアウト --- */
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            font-family: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
+            color: #5d4037;
+            background-color: #f4eade;
+            font-size: 10px;
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            margin: 0 auto;
+            background-color: #fffaf0;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            height: 100vh;
+        }
+
+        header {
+            background-color: #fff;
+            border-bottom: 2px solid #d2b48c;
+            padding: 15px 30px;
+        }
+        .header-title {
+            margin: 0;
+            color: #8b5a5a;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+        .header-subtitle {
+            margin: 2px 0 0 0;
+            color: #a08080;
+            font-size: 10px;
+            font-weight: normal;
+        }
+        .nav-bar {
+            background-color: #8b5a5a;
+            height: 8px;
+            width: 100%;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- 2. サイドバー --- */
+        nav {
+            width: 160px;
+            background-color: #fffaf0;
+            border-right: 1px solid #e0d0c0;
+            padding: 10px;
+            overflow-y: auto;
             font-size: 9px;
-            padding: 0px 4px;
-            margin-left: 4px;
-            border-radius: 3px;
+        }
+        nav h3 {
+            background-color: #f5e1e1;
+            border-left: 4px solid #8b5a5a;
+            padding: 3px 8px;
+            font-size: 10px;
+            margin: 12px 0 4px 0;
+            color: #8b5a5a;
+        }
+        nav ul { list-style: none; padding: 0; margin: 0; }
+        nav li { margin: 2px 0; }
+        nav a {
+            text-decoration: none;
+            color: #5d4037;
+            display: block;
             cursor: pointer;
-            user-select: none;
-            border: 1px solid #ccc;
-            background: #fff;
-            vertical-align: middle;
-            line-height: 1.2;
+            padding: 2px;
+        }
+        nav a:before { content: "┣"; margin-right: 4px; color: #d2b48c; }
+        nav li:last-child a:before { content: "┗"; }
+        nav a:hover { background-color: #f5e1e1; color: #8b5a5a; }
+
+        /* --- 3. メインコンテンツ --- */
+        main {
+            flex: 1;
+            padding: 15px 35px;
+            overflow-y: auto;
+            background-color: #fff;
+            font-size: 11px;
+        }
+        h2.page-title {
+            color: #8b5a5a;
+            font-size: 16px;
+            border-bottom: 2px solid #f5e1e1;
+            margin: 0 0 20px 0;
+            padding-bottom: 8px;
+        }
+
+        .fp-section {
+            margin-bottom: 30px;
+        }
+        .fp-section h3 {
+            border-left: 4px solid #8b5a5a;
+            padding-left: 12px;
+            font-size: 12px;
+            color: #8b5a5a;
+            margin: 25px 0 10px 0;
+        }
+        .fp-section p {
+            line-height: 1.8;
+            margin-left: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        /* 箇条書きのデザイン固定 */
+        .fp-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 15px 25px;
+        }
+        .fp-section li {
+            position: relative;
+            padding-left: 1.5em;
+            line-height: 1.8;
+            margin-bottom: 8px;
+        }
+        /* ここで「・」を自動生成しているため、HTML側には「・」を書かない */
+        .fp-section li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: #8b5a5a;
+            font-weight: bold;
+        }
+
+        /* --- FAQ設定 --- */
+        .faq-category {
+            background-color: #f5e1e1;
+            color: #8b5a5a;
+            padding: 5px 12px;
+            font-weight: bold;
+            margin: 25px 0 15px 0;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .faq-q { font-weight: bold; color: #a04040; margin-top: 15px; font-size: 11px; }
+        .faq-q:before { content: "Q："; color: #8b5a5a; }
+        .faq-a { margin-bottom: 20px; border-left: 2px solid #f5e1e1; padding-left: 12px; line-height: 1.8; }
+        .faq-a:before { content: "A："; font-weight: bold; color: #8b5a5a; }
+
+        /* 更新履歴 */
+        .history-box {
+            background-color: #fdf5f5;
+            border: 1px solid #f5e1e1;
+            padding: 10px 15px;
+            font-size: 10px;
+            color: #7d5a5a;
+            max-height: 100px; 
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- 4. 生産データ一覧テーブル --- */
+        table { width: 100%; border-collapse: collapse; line-height: 1.3; background-color: #fff; }
+        th { border: 1px solid #ffb6c1; padding: 4px; text-align: left; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; font-size: 10px; }
+        td { border: 1px solid #ffdae0; padding: 2px 4px; color: #000; font-size: 9px; }
+        
+        .row-job { background: #ffb6c1; color: #fff !important; font-weight: bold; cursor: pointer; height: 22px; }
+        .row-skill { background: #fff0f5; color: #000; font-weight: bold; cursor: pointer; }
+        .row-recipe { color: #000; font-weight: bold; cursor: pointer; }
+        .row-output { font-weight: bold; background: #fffafb; }
+        
+        .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 10px; }
+        .toggle-icon { display: inline-block; width: 12px; text-align: center; margin-right: 5px; color: #d02090; }
+
+        .method-label {
+            display: inline-block; font-size: 8px; padding: 0px 2px; margin-left: 4px;
+            border-radius: 3px; cursor: pointer; border: 1px solid #ccc; background: #fff;
         }
         .label-buy { color: #ff8c00; border-color: #ff8c00; }
         .label-drop { color: #2e8b57; border-color: #2e8b57; }
         .label-craft { color: #0066cc; border-color: #0066cc; }
 
         .source-container {
-            font-size: 10px;
-            background: #fffafa;
-            border: 1px solid #ffb6c1;
-            padding: 4px 8px;
-            margin: 3px 0 5px 120px;
-            border-radius: 6px;
-            box-shadow: 2px 2px 5px rgba(255, 182, 193, 0.3);
-            width: fit-content;
-            color: #000;
+            font-size: 8px; background: #fffafa; border: 1px solid #ffb6c1;
+            padding: 3px 6px; margin: 2px 0 4px 20px; border-radius: 4px; color: #000;
         }
-        .source-item { margin-bottom: 2px; border-bottom: 1px dotted #ffdae0; }
-        .source-item:last-child { border-bottom: none; }
-        .craft-detail { color: #0066cc; font-weight: bold; }
-
-        /* 数量（×1など）も黒にして、太字で強調 */
-        .qty-inline { color: #000; font-weight: bold; margin-right: 2px; }
-        .cb { vertical-align: middle; margin: 0 6px 0 2px; cursor: pointer; accent-color: #e91e63; }
-        
-        .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; display: inline-block; letter-spacing: 0; font-size: 12px; }
-        .toggle-icon { display: inline-block; width: 15px; text-align: center; margin-right: 5px; color: #d02090; }
+        .cb { vertical-align: middle; margin: 0 3px; cursor: pointer; accent-color: #e91e63; transform: scale(0.8); }
     </style>
 </head>
-<body>
-    <table>
-        <thead>
-            <tr>
-                <th>🌸 生産レシピ・チェックリスト 🌸</th>
-            </tr>
-        </thead>
-        <tbody id="recipe-body">
-            <tr><td>データ読み込み中...</td></tr>
-        </tbody>
-    </table>
+<body onload="initApp()">
+
+    <div class="wrapper">
+        <header>
+            <h1 class="header-title">エリシアオンライン　アーカイブス</h1>
+            <h2 class="header-subtitle">Ellicia-Online Archives</h2>
+        </header>
+        <div class="nav-bar"></div>
+
+        <div class="container">
+            <nav id="sidebar-nav">
+                <h3>■はじめに</h3>
+                <ul>
+                    <li><a onclick="showPage('front-page')">FrontPage</a></li>
+                    <li><a onclick="showPage('faq-page')">よくある質問(FAQ)</a></li>
+                </ul>
+                <h3>■生産</h3>
+                <ul>
+                    <li><a onclick="showPage('production-page')">生産データ一覧</a></li>
+                    <li><a onclick="jumpToJob('alchemist i')">alchemist I</a></li>
+                    <li><a onclick="jumpToJob('alchemist ii')">alchemist II</a></li>
+                </ul>
+                <h3>■アイテム</h3>
+                <ul>
+                    <li><a>装備品</a></li>
+                    <li><a>消費アイテム</a></li>
+                </ul>
+            </nav>
+
+            <main id="main-scroll">
+                <!-- 1. FrontPage -->
+                <div id="front-page">
+                    <h2 class="page-title">FrontPage</h2>
+                    
+                    <div class="fp-section">
+                        <h3>1. 概要</h3>
+                        <p>
+                            このサイトは、MMORPG『エリシアオンライン』のアイテムや生産レシピなどの情報をまとめた、個人運営の非公式データベースサイトです。<br>
+                            プレイヤーの皆様の冒険に役立つ情報を、シンプルで見やすい形で記録・蓄積していくことを目的としています。
+                        </p>
+
+                        <h3>2. 利用上の注意点</h3>
+                        <p>
+                            本サイトに掲載されている情報は、有志による調査やプレイヤーからの提供に基づいています。<br>
+                            情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
+                            本サイトを利用したことによって生じたいかなる損害についても、管理人は責任を負いかねます。
+                        </p>
+
+                        <h3>3. 禁止行為と措置</h3>
+                        <ul>
+                            <!-- 文章の頭にあった「・」を削除しました。CSSが自動で付けてくれます -->
+                            <li>サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。</li>
+                            <li>公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み。</li>
+                            <li>禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。</li>
+                        </ul>
+
+                        <h3>4. リンクについて</h3>
+                        <p>
+                            本サイトはリンクフリーです。<br>
+                            どのページへリンクしていただいても構いません。<br>
+                            ただし、画像ファイル等への直リンクはご遠慮ください。
+                        </p>
+
+                        <h3>5. 著作権について</h3>
+                        <p>
+                            本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
+                            また、一部のデータについては<b>『エリシアオンラインまとめ Wiki*』</b>より引用・転載しております。<br>
+                            先人の蓄積されたデータに深く感謝いたします。<br>
+                            本サイト内の独自コンテンツ（レイアウト、独自解説文等）の無断転載・再配布は禁止します。
+                        </p>
+                    </div>
+
+                    <div style="background-color: #8b5a5a; color: #fff; padding: 4px 10px; font-weight: bold; font-size: 10px; margin: 30px 0 10px 0;">更新履歴</div>
+                    <div class="history-box" id="update-history">読み込み中...</div>
+                </div>
+
+                <!-- 2. FAQページ -->
+                <div id="faq-page" class="hidden">
+                    <h2 class="page-title">よくある質問(FAQ)</h2>
+                    <div class="fp-section">
+                        <div class="faq-category">サイト全般について</div>
+                        <div class="faq-q">このサイトは公式ですか？</div>
+                        <p class="faq-a">
+                            いいえ、本サイトは有志による非公式のファンサイトです。<br>
+                            運営元のアソビモ株式会社様とは一切関係ありません。
+                        </p>
+                        
+                        <div class="faq-q">スマホからでも見られますか？</div>
+                        <p class="faq-a">
+                            はい、ブラウザから閲覧可能です。<br>
+                            シンプルなレイアウトにしているため、移動中の確認にも適しています。
+                        </p>
+                        
+                        <div class="faq-q">データの更新頻度はどれくらいですか？</div>
+                        <p class="faq-a">
+                            管理人の空き時間での更新となるため不定期ですが、新イベントやアップデート時にはなるべく早く反映できるよう努めています。
+                        </p>
+
+                        <div class="faq-category">データ・内容について</div>
+                        <div class="faq-q">掲載されている情報が古い（間違っている）のですが？</div>
+                        <p class="faq-a">
+                            申し訳ありません。<br>
+                            ゲームのアップデートにより仕様が変更される場合があります。<br>
+                            もし間違いを見つけた場合は、今後のアップデートをお待ちいただくか、管理人まで直接お知らせください。
+                        </p>
+                        
+                        <div class="faq-q">生産レシピの成功率は掲載されていますか？</div>
+                        <p class="faq-a">
+                            現在、基本的なレシピデータを中心に掲載を進めています。<br>
+                            成功率などの詳細データも順次追加予定です。
+                        </p>
+
+                        <div class="faq-category">リンク・利用について</div>
+                        <div class="faq-q">自分のブログやSNSでこのサイトを紹介してもいいですか？</div>
+                        <p class="faq-a">
+                            大歓迎です！<br>
+                            本サイトはリンクフリーですので、許可なくリンクを貼っていただいて構いません。
+                        </p>
+                        
+                        <div class="faq-q">サイト内の画像やロゴを使ってもいいですか？</div>
+                        <p class="faq-a">
+                            ゲーム内画像の著作権は運営元に帰属します。<br>
+                            当サイトオリジナルのロゴや解説文については、無断転載・二次利用をご遠慮いただいております。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 3. 生産データページ -->
+                <div id="production-page" class="hidden">
+                    <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
+                    <table>
+                        <thead>
+                            <tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr>
+                        </thead>
+                        <tbody id="recipe-body">
+                            <tr><td>データ読み込み中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
 
     <script>
         const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
         const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
         const client = supabase.createClient(S_URL, S_KEY);
 
-        async function init() { await loadAllRecipes(); }
+        function initApp() {
+            loadUpdates();
+            showPage('front-page');
+        }
+
+        async function loadUpdates() {
+            const historyBox = document.getElementById('update-history');
+            try {
+                const { data, error } = await client.from('site_updates').select('*').order('date', { ascending: false });
+                if (error || !data || data.length === 0) {
+                    historyBox.innerHTML = "・2026/05/02：アーカイブスサイト開設";
+                    return;
+                }
+                historyBox.innerHTML = data.map(item => `・${item.date}：${item.content}`).join('<br>');
+            } catch (e) {
+                historyBox.innerHTML = "履歴の読み込みに失敗しました。";
+            }
+        }
+
+        function showPage(pageId) {
+            const sections = ['front-page', 'faq-page', 'production-page'];
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(pageId);
+            if (target) {
+                target.classList.remove('hidden');
+                document.getElementById('main-scroll').scrollTop = 0;
+            }
+            if(pageId === 'production-page') loadAllRecipes();
+        }
+
+        async function jumpToJob(jobName) {
+            showPage('production-page');
+            setTimeout(() => {
+                const rows = document.querySelectorAll('.row-job');
+                rows.forEach(row => {
+                    if (row.textContent.toLowerCase().includes(jobName.toLowerCase())) {
+                        const btn = row.querySelector('.toggle-icon');
+                        if (btn && btn.textContent === '▶') row.click();
+                        row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            }, 300);
+        }
+
+        async function loadAllRecipes() {
+            const tbody = document.getElementById('recipe-body');
+            if (tbody.getAttribute('data-loaded') === 'true') return;
+            try {
+                const [rRes, iRes, jRes] = await Promise.all([
+                    client.from('recipes').select('*').order('skill_type').order('skill_lv'),
+                    client.from('items').select('*'),
+                    client.from('job_masters').select('*')
+                ]);
+                const recipes = rRes.data || [];
+                const itemsData = iRes.data || [];
+                const jobsData = jRes.data || [];
+                const getFullJobName = (short) => (jobsData.find(j => j.short_name === short)?.full_name || short);
+
+                const getMethods = (itemName, pId, idx, rName, isMainOutput = false) => {
+                    if (isMainOutput) return { labels: '', details: '' };
+                    const matches = itemsData.filter(item => item.name === itemName);
+                    const craftR = recipes.find(r => r.output_item_name === itemName);
+                    const safeName = rName ? rName.replace(/[\s-【】]/g, '_') : 'none';
+                    const baseId = `src-${safeName}-${pId}-${idx}`.replace(/[\s-]/g, '_');
+                    let labels = '', details = '';
+                    const buy = matches.filter(m => m.method === '購入');
+                    if (buy.length) {
+                        const id = `${baseId}-buy`;
+                        labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${id}')">購入</span>`;
+                        details += `<div id="${id}" class="source-container" style="display:none;">${buy.map(m=>`<div>●購入：${m.location} (${m.target})</div>`).join('')}</div>`;
+                    }
+                    const drop = matches.filter(m => m.method === 'ドロップ');
+                    if (drop.length) {
+                        const id = `${baseId}-drop`;
+                        labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${id}')">ドロップ</span>`;
+                        details += `<div id="${id}" class="source-container" style="display:none;">${drop.map(m=>`<div>◆ドロップ：${m.location} (${m.target})</div>`).join('')}</div>`;
+                    }
+                    if (craftR) {
+                        const id = `${baseId}-craft`;
+                        labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${id}')">生産</span>`;
+                        details += `<div id="${id}" class="source-container" style="display:none;"><div style="color:#0066cc; font-weight:bold;">生産：${getFullJobName(craftR.required_jobs)}：${craftR.skill_type}(Lv${craftR.skill_lv})</div></div>`;
+                    }
+                    return { labels, details };
+                };
+
+                const renderMaterials = (recipe, pId, trace = []) => {
+                    let rows = '';
+                    const mats = [];
+                    for(let i=1; i<=4; i++) if(recipe[`material_${i}`] && recipe[`material_${i}`]!=='NULL') mats.push({n: recipe[`material_${i}`], q: recipe[`amount_${i}`]});
+                    mats.forEach((m, idx) => {
+                        const isLast = (idx === mats.length - 1);
+                        let pre = ''; trace.forEach(last => { pre += last ? '    ' : '│  '; });
+                        const mark = isLast ? '┗' : '┣';
+                        const {labels, details} = getMethods(m.n, pId, idx, recipe.recipe_name);
+                        rows += `<tr class="row-sub hidden" data-parent="${pId}"><td><span class="tree-line">${pre}${mark}</span><input type="checkbox" class="cb"><span>${m.n}</span><span style="font-weight:bold;">(×${m.q})</span>${labels}${details}</td></tr>`;
+                        const subR = recipes.find(r => r.output_item_name === m.n);
+                        if(subR) rows += renderMaterials(subR, pId, [...trace, isLast]);
+                    });
+                    return rows;
+                };
+
+                let html = '';
+                jobsData.forEach((job, jIdx) => {
+                    const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
+                    if (!jobRecipes.length) return;
+                    const jobId = `job-node-${jIdx}`; 
+                    html += `<tr class="row-job" id="${jobId}" data-id="${jobId}" onclick="toggleLayer('${jobId}', 'btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
+                    const groups = {};
+                    jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
+                    Object.keys(groups).forEach((gk, sIdx) => {
+                        const sId = `${jobId}-s-${sIdx}`, [type, lv] = gk.split('_');
+                        html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}', 'btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
+                        const recipeGroups = {};
+                        groups[gk].forEach(r => { if (!recipeGroups[r.recipe_name]) recipeGroups[r.recipe_name] = []; recipeGroups[r.recipe_name].push(r); });
+                        const recipeNames = Object.keys(recipeGroups);
+                        recipeNames.forEach((rName, rIdx) => {
+                            const rId = `${sId}-r-${rIdx}`, isLast = (rIdx === recipeNames.length-1);
+                            const variants = recipeGroups[rName];
+                            html += `<tr class="row-recipe hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}', 'btn-${rId}')"><td><span class="tree-line">   ${isLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}">▶</span>【${rName}】</td></tr>`;
+                            variants.forEach((v, vIdx) => {
+                                const vIsLast = (vIdx === variants.length - 1);
+                                const {labels, details} = getMethods(v.output_item_name, rId, vIdx, rName, true);
+                                const treeBase = isLast ? '      ' : '   │  ';
+                                html += `<tr class="row-output hidden" data-id="${rId}-v-${vIdx}" data-parent="${rId}" onclick="toggleLayer('${rId}-v-${vIdx}', 'btn-${rId}-v-${vIdx}')"><td><span class="tree-line">${treeBase}${vIsLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}-v-${vIdx}">▶</span><input type="checkbox" class="cb"><span style="font-weight:bold;">${v.output_item_name}</span>${labels}${details}</td></tr>`;
+                                html += renderMaterials(v, `${rId}-v-${vIdx}`, [isLast, vIsLast, true]);
+                            });
+                        });
+                    });
+                });
+                tbody.innerHTML = html;
+                tbody.setAttribute('data-loaded', 'true');
+            } catch (e) { tbody.innerHTML = `<tr><td>読み込み失敗: ${e.message}</td></tr>`; }
+        }
 
         function toggleLayer(id, btnId) {
             const btn = document.getElementById(btnId);
+            if(!btn) return;
             const isExpanding = btn.textContent === '▶';
-            const elements = document.querySelectorAll(`tr[data-parent]`);
-            elements.forEach(el => {
+            document.querySelectorAll(`tr[data-parent]`).forEach(el => {
                 const parents = el.getAttribute('data-parent').split(' ');
-                const immediateParent = parents[parents.length - 1];
-                if (immediateParent === id) {
-                    if (isExpanding) { el.classList.remove('hidden'); } 
+                if (parents[parents.length - 1] === id) {
+                    if (isExpanding) el.classList.remove('hidden');
                     else { recursiveHide(el.getAttribute('data-id')); el.classList.add('hidden'); }
                 }
             });
@@ -100,127 +498,18 @@
 
         function recursiveHide(parentId) {
             if (!parentId) return;
-            const children = document.querySelectorAll(`tr[data-parent*="${parentId}"]`);
-            children.forEach(child => {
+            document.querySelectorAll(`tr[data-parent*="${parentId}"]`).forEach(child => {
                 child.classList.add('hidden');
-                const childBtn = document.getElementById(`btn-${child.getAttribute('data-id')}`);
-                if (childBtn) childBtn.textContent = '▶';
+                const btn = document.getElementById(`btn-${child.getAttribute('data-id')}`);
+                if (btn) btn.textContent = '▶';
                 recursiveHide(child.getAttribute('data-id'));
             });
         }
 
         function toggleDetail(detailId) {
             const el = document.getElementById(detailId);
-            if (el) { el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none'; }
+            if (el) el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
         }
-
-        async function loadAllRecipes() {
-            const tbody = document.getElementById('recipe-body');
-            try {
-                const [rRes, iRes, jRes] = await Promise.all([
-                    client.from('recipes').select('*').order('skill_type').order('skill_lv'),
-                    client.from('items').select('*'),
-                    client.from('job_masters').select('*')
-                ]);
-                if (rRes.error) throw rRes.error;
-                const recipes = rRes.data || [];
-                const itemsData = iRes.data || [];
-                const jobsData = jRes.data || [];
-
-                const getFullJobName = (shortName) => {
-                    const match = jobsData.find(j => j.short_name === shortName);
-                    return match ? match.full_name : shortName;
-                };
-
-                const getMethodElements = (itemName, pId, idx, currentRecipeName) => {
-                    const matches = itemsData.filter(item => item.name === itemName);
-                    const craftR = recipes.find(r => r.output_item_name === itemName);
-                    let labels = '';
-                    let details = '';
-                    const safeRecipeName = currentRecipeName ? currentRecipeName.replace(/[\s-【】]/g, '_') : 'none';
-                    const baseId = `src-${safeRecipeName}-${pId.replace(/[\s-]/g, '_')}-${idx}`;
-
-                    const buySites = matches.filter(m => m.method === '購入');
-                    if (buySites.length > 0) {
-                        const id = `${baseId}-buy`;
-                        labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${id}')">購入</span>`;
-                        details += `<div id="${id}" class="source-container" style="display:none;">`;
-                        buySites.forEach(m => { details += `<div class="source-item">●購入：${m.location} (${m.target})</div>`; });
-                        details += `</div>`;
-                    }
-                    const dropSites = matches.filter(m => m.method === 'ドロップ');
-                    if (dropSites.length > 0) {
-                        const id = `${baseId}-drop`;
-                        labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${id}')">ドロップ</span>`;
-                        details += `<div id="${id}" class="source-container" style="display:none;">`;
-                        dropSites.forEach(m => { details += `<div class="source-item">◆ドロップ：${m.location} (${m.target})</div>`; });
-                        details += `</div>`;
-                    }
-                    if (craftR) {
-                        const id = `${baseId}-craft`;
-                        const fullJob = getFullJobName(craftR.required_jobs);
-                        labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${id}')">生産</span>`;
-                        details += `<div id="${id}" class="source-container" style="display:none;"><div class="craft-detail">生産：${fullJob}：${craftR.skill_type}(Lv${craftR.skill_lv})</div></div>`;
-                    }
-                    return { labels, details };
-                };
-
-                const renderMaterials = (recipe, pId, parentTrace = []) => {
-                    let rows = '';
-                    const materials = [];
-                    for (let i = 1; i <= 4; i++) {
-                        if (recipe[`material_${i}`] && recipe[`material_${i}`] !== 'NULL') {
-                            materials.push({ name: recipe[`material_${i}`], qty: recipe[`amount_${i}`] });
-                        }
-                    }
-                    materials.forEach((m, idx) => {
-                        const isLast = (idx === materials.length - 1);
-                        let prefix = '';
-                        parentTrace.forEach(isParentLast => { prefix += isParentLast ? '   ' : '│  '; });
-                        const mark = isLast ? '┗' : '┣';
-                        const { labels, details } = getMethodElements(m.name, pId, idx, recipe.recipe_name);
-                        rows += `<tr class="row-sub hidden" data-parent="${pId}"><td><span class="tree-line">${prefix}${mark}</span><input type="checkbox" class="cb"><span>${m.name}</span><span class="qty-inline">(×${m.qty || 0})</span>${labels}${details}</td></tr>`;
-                        const subR = recipes.find(r => r.output_item_name === m.name);
-                        if (subR) rows += renderMaterials(subR, pId, [...parentTrace, isLast]);
-                    });
-                    return rows;
-                };
-
-                let html = '';
-                jobsData.forEach((job, jIdx) => {
-                    const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
-                    if (jobRecipes.length === 0) return;
-                    const jobId = `job-${jIdx}`;
-                    html += `<tr class="row-job" data-id="${jobId}" onclick="toggleLayer('${jobId}', 'btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
-                    const skillGroup = {};
-                    jobRecipes.forEach(r => {
-                        const sKey = `${r.skill_type}_${r.skill_lv}`;
-                        if (!skillGroup[sKey]) skillGroup[sKey] = [];
-                        skillGroup[sKey].push(r);
-                    });
-                    Object.keys(skillGroup).forEach((skillKey, sIdx) => {
-                        const skillId = `${jobId}-skill-${sIdx}`;
-                        const [sType, sLv] = skillKey.split('_');
-                        const filteredRecipes = [];
-                        const seen = new Set();
-                        skillGroup[skillKey].forEach(r => { if (!seen.has(r.recipe_name)) { seen.add(r.recipe_name); filteredRecipes.push(r); } });
-                        html += `<tr class="row-skill hidden" data-id="${skillId}" data-parent="${jobId}" onclick="toggleLayer('${skillId}', 'btn-${skillId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${skillId}">▶</span>${sType} (Lv${sLv})</td></tr>`;
-                        filteredRecipes.forEach((r, rIdx) => {
-                            const recipeId = `${skillId}-rec-${rIdx}`;
-                            const isLastRec = (rIdx === filteredRecipes.length - 1);
-                            const rMark = isLastRec ? '┗' : '┣';
-                            html += `<tr class="row-recipe row-sub hidden" data-id="${recipeId}" data-parent="${skillId}" onclick="toggleLayer('${recipeId}', 'btn-${recipeId}')"><td><span class="tree-line">   ${rMark} </span><span class="toggle-icon" id="btn-${recipeId}">▶</span>【${r.recipe_name}】</td></tr>`;
-                            const outPre = isLastRec ? '      ' : '   │  ';
-                            const outMethods = getMethodElements(r.output_item_name, recipeId, 99, r.recipe_name);
-                            html += `<tr class="row-output row-sub hidden" data-parent="${recipeId}"><td><span class="tree-line">${outPre}┗ </span><input type="checkbox" class="cb"><span>${r.output_item_name}</span>${outMethods.labels}${outMethods.details}</td></tr>`;
-                            html += renderMaterials(r, recipeId, [isLastRec, true, true]);
-                        });
-                    });
-                });
-                tbody.innerHTML = html;
-            } catch (err) { tbody.innerHTML = `<tr><td>エラー: ${err.message}</td></tr>`; }
-        }
-        init();
     </script>
 </body>
 </html>
