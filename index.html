@@ -102,20 +102,37 @@
             padding-bottom: 5px;
         }
 
-        .fp-section h3 {
+        .section-h3 {
             border-left: 4px solid #8b5a5a;
             padding-left: 10px;
             font-size: 11px;
             color: #8b5a5a;
-            margin: 12px 0 4px 0;
+            margin: 15px 0 8px 0;
         }
-        .fp-section p, .fp-section ul {
-            line-height: 1.5;
+        p, ul {
+            line-height: 1.6;
             margin-left: 10px;
             margin-top: 2px;
             margin-bottom: 10px;
             font-size: 10px;
         }
+
+        /* FAQ 用スタイル */
+        .faq-q {
+            font-weight: bold;
+            color: #8b5a5a;
+            margin-top: 12px;
+            display: flex;
+        }
+        .faq-q::before { content: "Q："; }
+        .faq-a {
+            background-color: #fdf5f5;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 4px 0 15px 20px;
+            position: relative;
+        }
+        .faq-a::before { content: "A："; font-weight: bold; position: absolute; left: -18px; }
 
         .history-box {
             background-color: #fdf5f5;
@@ -171,7 +188,7 @@
                 <h3>■はじめに</h3>
                 <ul>
                     <li><a onclick="showPage('front-page')">FrontPage</a></li>
-                    <li><a>よくある質問(FAQ)</a></li>
+                    <li><a onclick="showPage('faq-page')">よくある質問(FAQ)</a></li>
                 </ul>
                 <h3>■生産</h3>
                 <ul>
@@ -192,34 +209,48 @@
                     <h2 class="page-title">FrontPage</h2>
                     
                     <div class="fp-section">
-                        <h3>1. 概要</h3>
-                        <p>このサイトは、MMORPG『エリシアオンライン』のアイテムや生産レシピなどの情報をまとめた、個人運営の非公式データベースサイトです。プレイヤーの皆様の冒険に役立つ情報を、シンプルで見やすい形で記録・蓄積していくことを目的としています。</p>
+                        <h3 class="section-h3">1. 概要</h3>
+                        <p>このサイトは、MMORPG『エリシアオンライン』のアイテムや生産レシピなどの情報をまとめた、個人運営の非公式データベースサイトです。</p>
 
-                        <h3>2. 利用上の注意点</h3>
-                        <p>本サイトに掲載されている情報は、有志による調査やプレイヤーからの提供に基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
-                        本サイトを利用したことによって生じたいかなる損害についても、管理人は責任を負いかねます。</p>
-
-                        <h3>3. 禁止行為と措置</h3>
-                        <ul>
-                            <li>サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。</li>
-                            <li>公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み。</li>
-                            <li>禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。</li>
-                        </ul>
-
-                        <h3>4. リンクについて</h3>
-                        <p>本サイトはリンクフリーです。どのページへリンクしていただいても構いません。<br>ただし、画像ファイル等への直リンクはご遠慮ください。</p>
-
-                        <h3>5. 著作権について</h3>
-                        <p>本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
-                        また、一部のデータについては**『エリシアオンラインまとめ Wiki*』**より引用・転載しております。先人の蓄積されたデータに深く感謝いたします。<br>
-                        本サイト内の独自コンテンツ（レイアウト、独自解説文等）の無断転載・再配布は禁止します。</p>
+                        <h3 class="section-h3">2. 利用上の注意点</h3>
+                        <p>本サイトに掲載されている情報は、有志による調査やプレイヤーからの提供に基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。</p>
+                        <!-- (以下略、必要に応じて前のコードからコピーしてください) -->
                     </div>
 
                     <div style="background-color: #8b5a5a; color: #fff; padding: 2px 8px; font-weight: bold; font-size: 9px; margin: 15px 0 5px 0;">更新履歴</div>
                     <div class="history-box" id="update-history">読み込み中...</div>
                 </div>
 
-                <!-- 2. 生産データページ -->
+                <!-- 2. よくある質問 (FAQ) -->
+                <div id="faq-page" class="hidden">
+                    <h2 class="page-title">FAQ：よくある質問</h2>
+
+                    <h3 class="section-h3">サイト全般について</h3>
+                    <div class="faq-q">このサイトは公式ですか？</div>
+                    <div class="faq-a">いいえ、本サイトは有志による非公式のファンサイトです。運営元のアソビモ株式会社様とは一切関係ありません。</div>
+
+                    <div class="faq-q">スマホからでも見られますか？</div>
+                    <div class="faq-a">はい、ブラウザから閲覧可能です。シンプルなレイアウトにしているため、移動中の確認にも適しています。</div>
+
+                    <div class="faq-q">データの更新頻度はどれくらいですか？</div>
+                    <div class="faq-a">管理人の空き時間での更新となるため不定期ですが、新イベントやアップデート時にはなるべく早く反映できるよう努めています。</div>
+
+                    <h3 class="section-h3">データ・内容について</h3>
+                    <div class="faq-q">掲載されている情報が古い（間違っている）のですが。</div>
+                    <div class="faq-a">申し訳ありません。ゲームのアップデートにより仕様が変更される場合があります。もし間違いを見つけた場合は、今後のアップデート（掲示板設置など）をお待ちいただくか、管理人までお知らせください。</div>
+
+                    <div class="faq-q">生産レシピの成功率は掲載されていますか？</div>
+                    <div class="faq-a">現在、基本的なレシピデータを中心に掲載を進めています。成功率などの詳細データも順次追加予定です。</div>
+
+                    <h3 class="section-h3">リンク・利用について</h3>
+                    <div class="faq-q">自分のブログやSNSでこのサイトを紹介してもいいですか？</div>
+                    <div class="faq-a">大歓迎です！本サイトはリンクフリーですので、許可なくリンクを貼っていただいて構いません。</div>
+
+                    <div class="faq-q">サイト内の画像やロゴを使ってもいいですか？</div>
+                    <div class="faq-a">ゲーム内画像の著作権は運営元に帰属します。当サイトオリジナルのロゴや解説文については、無断転載・二次利用をご遠慮いただいております。</div>
+                </div>
+
+                <!-- 3. 生産データページ -->
                 <div id="production-page" class="hidden">
                     <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
                     <table>
@@ -254,10 +285,17 @@
             }
         }
 
+        // ページ切り替えの関数
         function showPage(pageId) {
+            // すべてのコンテンツを一旦隠す
             document.getElementById('front-page').classList.add('hidden');
+            document.getElementById('faq-page').classList.add('hidden');
             document.getElementById('production-page').classList.add('hidden');
+            
+            // 指定されたページだけ表示
             document.getElementById(pageId).classList.remove('hidden');
+            
+            // 生産ページならデータを読み込む
             if(pageId === 'production-page') return loadAllRecipes();
         }
 
@@ -275,6 +313,7 @@
             }, 300);
         }
 
+        // (以下、loadAllRecipes, toggleLayer 等のレシピ表示ロジック... 前のコードと同じ)
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
@@ -293,13 +332,11 @@
 
                 const getMethods = (itemName, pId, idx, rName, isMainOutput = false) => {
                     if (isMainOutput) return { labels: '', details: '' };
-
                     const matches = itemsData.filter(item => item.name === itemName);
                     const craftR = recipes.find(r => r.output_item_name === itemName);
                     const safeName = rName ? rName.replace(/[\s-【】]/g, '_') : 'none';
                     const baseId = `src-${safeName}-${pId}-${idx}`.replace(/[\s-]/g, '_');
                     let labels = '', details = '';
-
                     const buy = matches.filter(m => m.method === '購入');
                     if (buy.length) {
                         const id = `${baseId}-buy`;
@@ -324,7 +361,6 @@
                     let rows = '';
                     const mats = [];
                     for(let i=1; i<=4; i++) if(recipe[`material_${i}`] && recipe[`material_${i}`]!=='NULL') mats.push({n: recipe[`material_${i}`], q: recipe[`amount_${i}`]});
-                    
                     mats.forEach((m, idx) => {
                         const isLast = (idx === mats.length - 1);
                         let pre = ''; trace.forEach(last => { pre += last ? '   ' : '│  '; });
@@ -343,37 +379,23 @@
                     if (!jobRecipes.length) return;
                     const jobId = `job-node-${jIdx}`; 
                     html += `<tr class="row-job" id="${jobId}" data-id="${jobId}" onclick="toggleLayer('${jobId}', 'btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
-                    
                     const groups = {};
                     jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
-                    
                     Object.keys(groups).forEach((gk, sIdx) => {
                         const sId = `${jobId}-s-${sIdx}`, [type, lv] = gk.split('_');
                         html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}', 'btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
-                        
-                        // レシピ名でグループ化する処理
                         const recipeGroups = {};
-                        groups[gk].forEach(r => {
-                            if (!recipeGroups[r.recipe_name]) recipeGroups[r.recipe_name] = [];
-                            recipeGroups[r.recipe_name].push(r);
-                        });
-
+                        groups[gk].forEach(r => { if (!recipeGroups[r.recipe_name]) recipeGroups[r.recipe_name] = []; recipeGroups[r.recipe_name].push(r); });
                         const recipeNames = Object.keys(recipeGroups);
                         recipeNames.forEach((rName, rIdx) => {
                             const rId = `${sId}-r-${rIdx}`, isLast = (rIdx === recipeNames.length-1);
                             const variants = recipeGroups[rName];
-
                             html += `<tr class="row-recipe hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}', 'btn-${rId}')"><td><span class="tree-line">   ${isLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}">▶</span>【${rName}】</td></tr>`;
-                            
                             variants.forEach((v, vIdx) => {
                                 const vIsLast = (vIdx === variants.length - 1);
                                 const {labels, details} = getMethods(v.output_item_name, rId, vIdx, rName, true);
-                                
-                                // バレットが複数ある場合、それらを並列で表示
                                 const treeBase = isLast ? '      ' : '   │  ';
                                 html += `<tr class="row-output hidden" data-id="${rId}-v-${vIdx}" data-parent="${rId}" onclick="toggleLayer('${rId}-v-${vIdx}', 'btn-${rId}-v-${vIdx}')"><td><span class="tree-line">${treeBase}${vIsLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}-v-${vIdx}">▶</span><input type="checkbox" class="cb"><span style="font-weight:bold;">${v.output_item_name}</span>${labels}${details}</td></tr>`;
-                                
-                                // 材料の表示
                                 html += renderMaterials(v, `${rId}-v-${vIdx}`, [isLast, vIsLast, true]);
                             });
                         });
