@@ -14,7 +14,7 @@
             font-family: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
             color: #5d4037;
             background-color: #f4eade;
-            font-size: 11px;
+            font-size: 10px; /* 全体をさらに1ptダウン */
         }
 
         .wrapper {
@@ -35,13 +35,13 @@
         .header-title {
             margin: 0;
             color: #8b5a5a;
-            font-size: 20px;
+            font-size: 18px; /* 少し小さく */
             letter-spacing: 1px;
         }
         .header-subtitle {
             margin: 2px 0 0 0;
             color: #a08080;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: normal;
         }
         .nav-bar {
@@ -58,18 +58,18 @@
 
         /* --- 2. サイドバー --- */
         nav {
-            width: 180px;
+            width: 160px; /* 少し幅を狭く */
             background-color: #fffaf0;
             border-right: 1px solid #e0d0c0;
             padding: 10px;
             overflow-y: auto;
-            font-size: 10px;
+            font-size: 9px;
         }
         nav h3 {
             background-color: #f5e1e1;
             border-left: 4px solid #8b5a5a;
             padding: 3px 8px;
-            font-size: 11px;
+            font-size: 10px;
             margin: 12px 0 4px 0;
             color: #8b5a5a;
         }
@@ -86,49 +86,64 @@
         nav li:last-child a:before { content: "┗"; }
         nav a:hover { background-color: #f5e1e1; color: #8b5a5a; }
 
-        /* --- 3. メインコンテンツ --- */
+        /* --- 3. メインコンテンツ (ここを重点的に縮小) --- */
         main {
             flex: 1;
             padding: 15px 25px;
             overflow-y: auto;
             background-color: #fff;
-            font-size: 11px;
+            font-size: 10px; /* 本文サイズを極小に */
         }
         h2.page-title {
             color: #8b5a5a;
-            font-size: 16px;
+            font-size: 14px; /* タイトルも凝縮 */
             border-bottom: 2px solid #f5e1e1;
             margin: 0 0 10px 0;
             padding-bottom: 5px;
         }
 
+        .fp-section h3 {
+            border-left: 4px solid #8b5a5a;
+            padding-left: 10px;
+            font-size: 11px; /* セクション見出し */
+            color: #8b5a5a;
+            margin: 12px 0 4px 0;
+        }
+        .fp-section p, .fp-section ul {
+            line-height: 1.5;
+            margin-left: 10px;
+            margin-top: 2px;
+            margin-bottom: 10px;
+            font-size: 10px; /* テキストを小さく */
+        }
+
         .history-box {
             background-color: #fdf5f5;
             border: 1px solid #f5e1e1;
-            padding: 8px 12px;
-            font-size: 10px;
+            padding: 6px 10px;
+            font-size: 9px;
             color: #7d5a5a;
-            max-height: 85px; 
+            max-height: 80px; 
             overflow-y: auto;
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
-        /* --- 4. 生産データ一覧テーブル --- */
-        table { width: 100%; border-collapse: collapse; line-height: 1.4; background-color: #fff; }
-        th { border: 1px solid #ffb6c1; padding: 6px; text-align: left; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+        /* --- 4. 生産データ一覧 --- */
+        table { width: 100%; border-collapse: collapse; line-height: 1.3; background-color: #fff; }
+        th { border: 1px solid #ffb6c1; padding: 4px; text-align: left; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; font-size: 10px; }
         td { border: 1px solid #ffdae0; padding: 2px 4px; color: #000; font-size: 9px; }
         
-        .row-job { background: #ffb6c1; color: #fff !important; font-weight: bold; cursor: pointer; height: 24px; }
+        .row-job { background: #ffb6c1; color: #fff !important; font-weight: bold; cursor: pointer; height: 22px; }
         .row-skill { background: #fff0f5; color: #000; font-weight: bold; cursor: pointer; }
         .row-recipe { color: #000; font-weight: bold; cursor: pointer; }
         .row-output { font-weight: bold; background: #fffafb; }
         
         .hidden { display: none; }
-        .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 11px; }
-        .toggle-icon { display: inline-block; width: 15px; text-align: center; margin-right: 5px; color: #d02090; }
+        .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 10px; }
+        .toggle-icon { display: inline-block; width: 12px; text-align: center; margin-right: 5px; color: #d02090; }
 
         .method-label {
-            display: inline-block; font-size: 8px; padding: 0px 3px; margin-left: 4px;
+            display: inline-block; font-size: 8px; padding: 0px 2px; margin-left: 4px;
             border-radius: 3px; cursor: pointer; border: 1px solid #ccc; background: #fff;
         }
         .label-buy { color: #ff8c00; border-color: #ff8c00; }
@@ -136,18 +151,10 @@
         .label-craft { color: #0066cc; border-color: #0066cc; }
 
         .source-container {
-            font-size: 9px; background: #fffafa; border: 1px solid #ffb6c1;
-            padding: 4px 8px; margin: 3px 0 5px 20px; border-radius: 6px; color: #000;
+            font-size: 8px; background: #fffafa; border: 1px solid #ffb6c1;
+            padding: 3px 6px; margin: 2px 0 4px 20px; border-radius: 4px; color: #000;
         }
-        .cb { vertical-align: middle; margin: 0 4px; cursor: pointer; accent-color: #e91e63; }
-        
-        section h3 {
-            border-left: 4px solid #8b5a5a;
-            padding-left: 10px;
-            font-size: 12px;
-            color: #8b5a5a;
-            margin: 15px 0 5px 0;
-        }
+        .cb { vertical-align: middle; margin: 0 3px; cursor: pointer; accent-color: #e91e63; transform: scale(0.8); }
     </style>
 </head>
 <body onload="loadUpdates()">
@@ -184,41 +191,41 @@
                 <div id="front-page">
                     <h2 class="page-title">FrontPage</h2>
                     
-                    <section style="margin-bottom: 25px;">
+                    <div class="fp-section">
                         <h3>1. 概要</h3>
-                        <p style="line-height: 1.6; margin-left: 10px;">
+                        <p>
                             このサイトは、MMORPG『エリシアオンライン』のアイテムや生産レシピなどの情報をまとめた、個人運営の非公式データベースサイトです。
                             プレイヤーの皆様の冒険に役立つ情報を、シンプルで見やすい形で記録・蓄積していくことを目的としています。
                         </p>
 
                         <h3>2. 利用上の注意点</h3>
-                        <p style="line-height: 1.6; margin-left: 10px;">
+                        <p>
                             本サイトに掲載されている情報は、有志による調査やプレイヤーからの提供に基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
                             本サイトを利用したことによって生じたいかなる損害についても、管理人は責任を負いかねます。
                         </p>
 
                         <h3>3. 禁止行為と措置</h3>
-                        <ul style="line-height: 1.6; margin-left: 10px; padding-left: 15px;">
+                        <ul>
                             <li>サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。</li>
                             <li>公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み。</li>
                             <li>禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。</li>
                         </ul>
 
                         <h3>4. リンクについて</h3>
-                        <p style="line-height: 1.6; margin-left: 10px;">
+                        <p>
                             本サイトはリンクフリーです。どのページへリンクしていただいても構いません。<br>
                             ただし、画像ファイル等への直リンクはご遠慮ください。
                         </p>
 
                         <h3>5. 著作権について</h3>
-                        <p style="line-height: 1.6; margin-left: 10px;">
+                        <p>
                             本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
                             また、一部のデータについては**『エリシアオンラインまとめ Wiki*』**より引用・転載しております。先人の蓄積されたデータに深く感謝いたします。<br>
                             本サイト内の独自コンテンツ（レイアウト、独自解説文等）の無断転載・再配布は禁止します。
                         </p>
-                    </section>
+                    </div>
 
-                    <div style="background-color: #8b5a5a; color: #fff; padding: 3px 10px; font-weight: bold; font-size: 10px; margin: 15px 0 8px 0;">更新履歴</div>
+                    <div style="background-color: #8b5a5a; color: #fff; padding: 2px 8px; font-weight: bold; font-size: 9px; margin: 15px 0 5px 0;">更新履歴</div>
                     <div class="history-box" id="update-history">
                         読み込み中...
                     </div>
@@ -263,26 +270,17 @@
             document.getElementById('front-page').classList.add('hidden');
             document.getElementById('production-page').classList.add('hidden');
             document.getElementById(pageId).classList.remove('hidden');
-            if(pageId === 'production-page') return loadAllRecipes(); // Promiseを返す
+            if(pageId === 'production-page') return loadAllRecipes();
         }
 
-        // サイドバーから特定の職業へジャンプ
         async function jumpToJob(jobName) {
-            // まず生産ページを表示し、データの読み込みを待つ
             await showPage('production-page');
-            
-            // 少し待ってからDOM（テーブル）を探す
             setTimeout(() => {
                 const rows = document.querySelectorAll('.row-job');
                 rows.forEach(row => {
-                    // 職業名が含まれている行を探す
                     if (row.textContent.toLowerCase().includes(jobName.toLowerCase())) {
-                        // 閉じていたら開く
                         const btn = row.querySelector('.toggle-icon');
-                        if (btn && btn.textContent === '▶') {
-                            row.click();
-                        }
-                        // その場所までスクロール
+                        if (btn && btn.textContent === '▶') row.click();
                         row.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                 });
@@ -291,7 +289,6 @@
 
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
-            // すでに読み込み済みならスキップ
             if (tbody.getAttribute('data-loaded') === 'true') return;
 
             try {
