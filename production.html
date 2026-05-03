@@ -6,31 +6,51 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .hidden { display: none !important; }
-        /* タイトル行を最前面に固定するための調整 */
+        /* JSが付ける「非表示(hidden)」をHTML側で「表示」に上書きします */
+        .hidden { display: table-row !important; }
+
+        /* タイトル行を最前面に固定（database版の指定を維持） */
         th { 
             position: sticky; 
             top: 0; 
             z-index: 100; 
+            background: #ffc0cb; 
             box-shadow: 0 2px 2px rgba(0,0,0,0.1);
         }
+
+        /* スクロール時にタイトルが隙間なく吸着するように調整 */
+        main { padding-top: 0 !important; }
+        
+        /* 元のdatabase.htmlにあった必要なスタイル[cite: 4] */
+        .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; }
+        .toggle-icon { display: inline-block; width: 12px; text-align: center; margin-right: 5px; color: #d02090; }
+        .row-job { background: #ffb6c1; color: #fff !important; font-weight: bold; cursor: pointer; }
+        .row-skill { background: #fff0f5; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <div class="container">
             <nav id="sidebar-nav"></nav>
-            <main>
-                <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
-                <table>
-                    <thead><tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr></thead>
-                    <tbody id="recipe-body"></tbody>
-                </table>
+            <main id="main-scroll">
+                <div id="production-page">
+                    <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
+                    <table>
+                        <thead>
+                            <tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr>
+                        </thead>
+                        <tbody id="recipe-body">
+                            <!-- ここにJSがデータを流し込みます -->
+                        </tbody>
+                    </table>
+                </div>
             </main>
         </div>
     </div>
+
     <script src="common.js"></script>
     <script>
+        /* あなたが提示した、正常に動いていた時のJSコード */
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
@@ -90,7 +110,6 @@
                 const groups = {};
                 jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
                 
-                // スキル名(アルケミーI等)でソートし、次にLvでソートするようにキーを整理
                 const sortedKeys = Object.keys(groups).sort((a, b) => {
                     const [typeA, lvA] = a.split('_');
                     const [typeB, lvB] = b.split('_');
