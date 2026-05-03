@@ -12,89 +12,41 @@ async function loadSidebar() {
 
     try {
         const { data } = await client.from('nav_menus').select('*').eq('is_active', true).order('display_order');
-        
+        if (!data) return;
+
         let html = '';
-        const categories = {};
-        data.forEach(item => {
-            if (!categories[item.category]) categories[item.category] = [];
-            categories[item.category].push(item);
-        });
+        let currentCat = '';
 
-        Object.keys(categories).forEach((cat, i) => {
-            html += `<div class="nav-category-title">${cat}</div><ul class="nav-list">`;
-            
-            let subMenuHtml = ''; // 一次職などの中身を一時的に貯める場所
-            let currentSubTitle = ''; // 「一次職」などのタイトルを保持
-            let currentSubId = '';
-
-            categories[cat].forEach((item, j) => {
-                const isJobGroup = item.display_name.includes("次職");
-                
-                // リンク先の設定
-                let link = 'index.html'; 
-                if (item.page_id === 'production-page') link = 'production.html';
-                if (item.page_id === 'faq-page') link = 'faq.html';
-
-                // 表示名の整形
-                let name = item.display_name.trim();
-
-                if (isJobGroup) {
-                    // もし前のサブメニューが開いていたら、一旦書き出す
-                    if (currentSubTitle) {
-                        html += renderSubMenu(currentSubId, currentSubTitle, subMenuHtml);
-                        subMenuHtml = '';
-                    }
-                    currentSubTitle = name.replace(/[┣┗]/g, '').trim();
-                    currentSubId = `sub-${i}-${j}`;
-                } else {
-                    // 普通の項目
-                    const line = (name.startsWith('┣') || name.startsWith('┗')) ? '' : '┣ ';
-                    const row = `<li><a href="${link}">${line}${name}</a></li>`;
-                    
-                    if (currentSubTitle) {
-                        subMenuHtml += row; // サブメニューの中身として貯める
-                    } else {
-                        html += row; // 直接リストに出す
-                    }
-                }
-            });
-
-            // 最後に残ったサブメニューを書き出す
-            if (currentSubTitle) {
-                html += renderSubMenu(currentSubId, currentSubTitle, subMenuHtml);
+        data.forEach((item) => {
+            // カテゴリが変わったら見出しを作る
+            if (currentCat !== item.category) {
+                if (currentCat !== '') html += `</ul>`; // 前のリストを閉じる
+                currentCat = item.category;
+                html += `<div class="nav-category-title">${currentCat}</div><ul class="nav-list">`;
             }
 
-            html += `</ul>`;
+            // リンク先判定
+            let link = 'index.html';
+            if (item.page_id === 'production-page') link = 'production.html';
+            if (item.page_id === 'faq-page') link = 'faq.html';
+
+            const name = item.display_name.trim();
+
+            // 「次職」が含まれる場合は、少し目立つ特別な行にする
+            if (name.includes("次職")) {
+                html += `<li style="list-style:none; margin-top:5px; font-weight:bold; color:#a04040;">▼ ${name.replace(/[┣┗]/g, '')}</li>`;
+            } else {
+                // それ以外は普通の枝付きリンク
+                const symbol = (name.startsWith('┣') || name.startsWith('┗')) ? '' : '┣ ';
+                html += `<li><a href="${link}">${symbol}${name}</a></li>`;
+            }
         });
-        
+
+        html += `</ul>`;
         navEl.innerHTML = html;
-    } catch (e) { 
-        console.error("Sidebar error:", e); 
-    }
-}
 
-// サブメニュー（折りたたみ）を組み立てる補助関数
-function renderSubMenu(id, title, content) {
-    return `
-        <li class="sub-category">
-            <div class="sub-title" onclick="toggleSubMenu('${id}')" style="cursor:pointer; font-weight:bold;">
-                <span id="icon-${id}">▶</span> ${title}
-            </div>
-            <ul id="${id}" class="sub-menu" style="display:none; padding-left:15px; list-style:none;">
-                ${content}
-            </ul>
-        </li>`;
-}
-
-function toggleSubMenu(id) {
-    const target = document.getElementById(id);
-    const icon = document.getElementById(`icon-${id}`);
-    if (target.style.display === 'none') {
-        target.style.display = 'block';
-        icon.innerText = '▼';
-    } else {
-        target.style.display = 'none';
-        icon.innerText = '▶';
+    } catch (e) {
+        console.error(e);
     }
 }
 
