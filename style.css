@@ -35,7 +35,7 @@ main { flex: 1; padding: 15px 35px; overflow-y: auto; background-color: #fff; }
 
 /* --- 生産データ専用 --- */
 table { width: 100%; border-collapse: collapse; background-color: #fff; }
-th { border: 1px solid #ffb6c1; padding: 4px; background: #ffc0cb; font-weight: bold; }
+th { border: 1px solid #ffb6c1; padding: 4px; background: #ffc0cb; font-weight: bold; position: sticky; top: 0; z-index: 10; }
 td { border: 1px solid #ffdae0; padding: 4px; color: #000; }
 .row-job { background: #ffb6c1; color: #fff !important; font-weight: bold; cursor: pointer; }
 .row-skill { background: #fff0f5; font-weight: bold; cursor: pointer; }
@@ -48,53 +48,3 @@ td { border: 1px solid #ffdae0; padding: 4px; color: #000; }
 .source-container { font-size: 10px; background: #fffafa; border: 1px solid #ffb6c1; padding: 3px 6px; margin: 2px 0 4px 20px; border-radius: 4px; }
 .cb { vertical-align: middle; margin: 0 3px; cursor: pointer; accent-color: #e91e63; }
 .history-box { background-color: #fdf5f5; border: 1px solid #f5e1e1; padding: 10px; max-height: 100px; overflow-y: auto; }
-/* サブメニュー（一次職など）の見た目 */
-.sub-title {
-    cursor: pointer;
-    padding: 5px 10px;
-    color: #8b4513;
-    font-weight: bold;
-}
-.sub-title:hover {
-    background-color: #f5f5dc;
-}
-.sub-menu {
-    list-style: none;
-    padding-left: 15px; /* 中身を少し右にずらす */
-}
-.sub-menu li a {
-    font-size: 0.9em;
-    padding: 3px 10px;
-}
-/* --- サイドバーメニューの文字を見えるようにする修正 --- */
-#sidebar-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-#sidebar-nav li {
-    margin-bottom: 2px;
-}
-
-#sidebar-nav a {
-    display: block;
-    padding: 6px 12px;
-    color: #5d4037 !important; /* 文字を濃い茶色に固定 */
-    text-decoration: none;
-    font-size: 0.9em;
-}
-
-#sidebar-nav a:hover {
-    background-color: #e0c8c8;
-}
-
-/* カテゴリ（■はじめに 等）の見出し */
-.sidebar-category {
-    font-weight: bold;
-    background: #8b5a5a;
-    color: white !important;
-    padding: 8px 10px;
-    margin-top: 10px;
-    display: block;
-}
