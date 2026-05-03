@@ -102,12 +102,64 @@
                     これらを合わせることで、最大2.25倍の経験値取得が可能になります。
                 </div>
 
-                <h3 id="section4">■ 転職条件一覧</h3>
-                <div class="highlight-box">
-                    <strong>・一次職への転職条件：</strong>BaseLv 30以上、かつ JobLv 25以上。<br>
-                    <strong>・二次職への転職条件：</strong>BaseLv 50以上、かつ 対応JobLv 40以上。<br>
-                    <strong>・三次職への転生条件：</strong>BaseLv 70以上、かつ 対応JobLv 70以上。<br>
-                </div>
+<h3 id="section4">■ 転職条件一覧</h3>
+<div class="highlight-box">
+    <style>
+        .job-list { list-style: none; padding: 0; margin: 5px 0; font-size: 11px; color: #666; }
+        .job-pair { display: flex; align-items: center; margin-bottom: 3px; }
+        .job-main { font-weight: bold; color: #8b5a5a; width: 90px; flex-shrink: 0; } /* 転職後の職 */
+        .job-sub-wrap { display: flex; align-items: center; flex-grow: 1; }
+        .job-sub { width: 85px; text-align: left; } /* 前提職1 */
+        .job-plus { width: 25px; text-align: center; color: #ffb6c1; font-weight: bold; } /* ＋ */
+        .job-sub2 { flex-grow: 1; } /* 前提職2 */
+
+        /* 二次職の2カラム表示用 */
+        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: x 10px; }
+        @media (max-width: 600px) { .grid-container { grid-template-columns: 1fr; } }
+    </style>
+
+    <div style="margin-bottom: 15px;">
+        <strong>・一次職への転職条件</strong><br>
+        <span style="font-size: 11px; color: #666;">BaseLv 30以上 / JobLv 25以上</span>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+        <strong>・二次職への転職条件（各JobLv 40以上）</strong>
+        <div class="grid-container">
+            <ul class="job-list">
+                <li class="job-pair"><span class="job-main">【ウォリアー】</span><div class="job-sub-wrap"><span class="job-sub">ソードマン</span><span class="job-plus">＋</span><span class="job-sub2">ローグ</span></div></li>
+                <li class="job-pair"><span class="job-main">【セージ】</span><div class="job-sub-wrap"><span class="job-sub">プリースト</span><span class="job-plus">＋</span><span class="job-sub2">ウィザード</span></div></li>
+                <li class="job-pair"><span class="job-main">【グレネディア】</span><div class="job-sub-wrap"><span class="job-sub">アーチャー</span><span class="job-plus">＋</span><span class="job-sub2">ウィザード</span></div></li>
+                <li class="job-pair"><span class="job-main">【アルケミスト】</span><div class="job-sub-wrap"><span class="job-sub">シェフ</span><span class="job-plus">＋</span><span class="job-sub2">ファーマシスト</span></div></li>
+                <li class="job-pair"><span class="job-main">【忍者】</span><div class="job-sub-wrap"><span class="job-sub">武士</span><span class="job-plus">＋</span><span class="job-sub2">ローグ</span></div></li>
+                <li class="job-pair"><span class="job-main">【シードランサー】</span><div class="job-sub-wrap"><span class="job-sub">ソードマン</span><span class="job-plus">＋</span><span class="job-sub2">武士</span></div></li>
+                <li class="job-pair"><span class="job-main">【バトルスミス】</span><div class="job-sub-wrap"><span class="job-sub">ソードマン</span><span class="job-plus">＋</span><span class="job-sub2">ブラックスミス</span></div></li>
+            </ul>
+            <ul class="job-list">
+                <li class="job-pair"><span class="job-main">【テンプレ】</span><div class="job-sub-wrap"><span class="job-sub">ソードマン</span><span class="job-plus">＋</span><span class="job-sub2">プリースト</span></div></li>
+                <li class="job-pair"><span class="job-main">【レンジャー】</span><div class="job-sub-wrap"><span class="job-sub">ローグ</span><span class="job-plus">＋</span><span class="job-sub2">アーチャー</span></div></li>
+                <li class="job-pair"><span class="job-main">【マイスター】</span><div class="job-sub-wrap"><span class="job-sub">ブラックスミス</span><span class="job-plus">＋</span><span class="job-sub2">ファーマシスト</span></div></li>
+                <li class="job-pair"><span class="job-main">【マスケ】</span><div class="job-sub-wrap"><span class="job-sub">アーチャー</span><span class="job-plus">＋</span><span class="job-sub2">ブラックスミス</span></div></li>
+                <li class="job-pair"><span class="job-main">【ストライカー】</span><div class="job-sub-wrap"><span class="job-sub">ウィザード</span><span class="job-plus">＋</span><span class="job-sub2">ローグ</span></div></li>
+                <li class="job-pair"><span class="job-main">【フェンサー】</span><div class="job-sub-wrap"><span class="job-sub">アーチャー</span><span class="job-plus">＋</span><span class="job-sub2">ソードマン</span></div></li>
+                <li class="job-pair"><span class="job-main">【ビショップ】</span><div class="job-sub-wrap"><span class="job-sub">プリースト</span><span class="job-plus">＋</span><span class="job-sub2">ファーマシスト</span></div></li>
+            </ul>
+        </div>
+    </div>
+
+    <div>
+        <strong>・三次職への転生条件（各JobLv 70以上）</strong>
+        <ul class="job-list">
+            <li class="job-pair"><span class="job-main" style="width: 100px;">【ベルセルク】</span><div class="job-sub-wrap"><span class="job-sub" style="width: 110px;">ウォリアー</span><span class="job-plus">＋</span><span class="job-sub2">シードランサー</span></div></li>
+            <li class="job-pair"><span class="job-main" style="width: 100px;">【ロイヤルG】</span><div class="job-sub-wrap"><span class="job-sub" style="width: 110px;">テンプレシオン</span><span class="job-plus">＋</span><span class="job-sub2">バトルスミス</span></div></li>
+            <li class="job-pair"><span class="job-main" style="width: 100px;">【アークメイジ】</span><div class="job-sub-wrap"><span class="job-sub" style="width: 110px;">セージ</span><span class="job-plus">＋</span><span class="job-sub2">ビショップ</span></div></li>
+            <li class="job-pair"><span class="job-main" style="width: 100px;">【匠】</span><div class="job-sub-wrap"><span class="job-sub" style="width: 110px;">マイスター</span><span class="job-plus">＋</span><span class="job-sub2">アルケミスト</span></div></li>
+            <li class="job-pair"><span class="job-main" style="width: 100px;">【アサシン】</span><div class="job-sub-wrap"><span class="job-sub" style="width: 110px;">忍者</span><span class="job-plus">＋</span><span class="job-sub2">ストライカー</span></div></li>
+            <li class="job-pair"><span class="job-main" style="width: 100px;">【ガンスリ】</span><div class="job-sub-wrap"><span class="job-sub" style="width: 110px;">グレネディア</span><span class="job-plus">＋</span><span class="job-sub2">マスケッティア</span></div></li>
+            <li class="job-pair"><span class="job-main" style="width: 100px;">【ペネトレイタ】</span><div class="job-sub-wrap"><span class="job-sub" style="width: 110px;">レンジャー</span><span class="job-plus">＋</span><span class="job-sub2">シードフェンサー</span></div></li>
+        </ul>
+    </div>
+</div>
 
                 <h3 id="section5">■ 転職試験の流れ（一次・二次共通）</h3>
                 <div class="highlight-box">
