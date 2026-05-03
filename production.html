@@ -6,8 +6,14 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* CSS側でも念押しで非表示を定義します */
         .hidden { display: none !important; }
+        /* タイトル行を最前面に固定するための調整 */
+        th { 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -68,8 +74,6 @@
                     const isLast = (idx === mats.length - 1);
                     let pre = ''; trace.forEach(l => { pre += l ? '    ' : '│  '; });
                     const mId = `${pId}-m${idx}`, {labels, details} = getMethods(m.n, pId, idx), subR = recipes.find(r => r.output_item_name === m.n);
-                    
-                    // 材料行：初期状態は必ず非表示
                     rows += `<tr class="hidden" data-id="${mId}" data-parent="${pId}" onclick="toggleLayer('${mId}','btn-${mId}')"><td><span class="tree-line">${pre}${isLast?'┗':'┣'}</span>${subR?`<span class="toggle-icon" id="btn-${mId}">▶</span>`:''}<input type="checkbox" class="cb">${m.n}(×${m.q})${labels}${details}</td></tr>`;
                     if(subR) rows += renderMaterials(subR, mId, [...trace, isLast]);
                 });
@@ -81,21 +85,24 @@
                 const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
                 if (!jobRecipes.length) return;
                 const jobId = `job-${jIdx}`;
-                
-                // 職業行：これだけが最初に見える状態
                 html += `<tr class="row-job" onclick="toggleLayer('${jobId}','btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
                 
                 const groups = {};
                 jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
                 
-                Object.keys(groups).forEach((gk, sIdx) => {
+                // スキル名(アルケミーI等)でソートし、次にLvでソートするようにキーを整理
+                const sortedKeys = Object.keys(groups).sort((a, b) => {
+                    const [typeA, lvA] = a.split('_');
+                    const [typeB, lvB] = b.split('_');
+                    if (typeA !== typeB) return typeA.localeCompare(typeB, 'ja');
+                    return parseInt(lvA) - parseInt(lvB);
+                });
+
+                sortedKeys.forEach((gk, sIdx) => {
                     const sId = `${jobId}-s${sIdx}`, [type, lv] = gk.split('_');
-                    // スキル行：初期状態は非表示[cite: 1]
                     html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}','btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
-                    
                     groups[gk].forEach((r, rIdx) => {
                         const rId = `${sId}-r${rIdx}`, {labels, details} = getMethods(r.output_item_name, rId, 0);
-                        // レシピ行：初期状態は非表示[cite: 1]
                         html += `<tr class="hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}','btn-${rId}')"><td><span class="tree-line">   ┗ </span><span class="toggle-icon" id="btn-${rId}">▶</span><input type="checkbox" class="cb"><b>${r.output_item_name}</b>【${r.recipe_name}】${labels}${details}</td></tr>`;
                         html += renderMaterials(r, rId, [true, true]);
                     });
@@ -108,35 +115,21 @@
         function toggleLayer(id, btnId) {
             const btn = document.getElementById(btnId);
             if (!btn) return;
-
-            const isExpanding = (btn.innerText === '▶');
-            
-            // 直下の子供だけを操作対象にする
-            const children = document.querySelectorAll(`tr[data-parent="${id}"]`);
-            
-            children.forEach(el => {
-                if (isExpanding) {
-                    el.classList.remove('hidden');
-                } else {
-                    el.classList.add('hidden');
-                    // 閉じる時は、その下の階層も再帰的に全て閉じる[cite: 1]
-                    recursiveHide(el.getAttribute('data-id'));
-                }
+            const isEx = btn.innerText === '▶';
+            document.querySelectorAll(`tr[data-parent="${id}"]`).forEach(el => {
+                if (isEx) el.classList.remove('hidden');
+                else { el.classList.add('hidden'); recursiveHide(el.getAttribute('data-id')); }
             });
-
-            btn.innerText = isExpanding ? '▼' : '▶';
-            // イベントの伝播を止める（念のため）
+            btn.innerText = isEx ? '▼' : '▶';
             if(window.event) window.event.stopPropagation();
         }
 
         function recursiveHide(pId) {
-            const children = document.querySelectorAll(`tr[data-parent="${pId}"]`);
-            children.forEach(el => {
+            document.querySelectorAll(`tr[data-parent="${pId}"]`).forEach(el => {
                 el.classList.add('hidden');
-                const childId = el.getAttribute('data-id');
-                const b = document.getElementById(`btn-${childId}`);
+                const b = document.getElementById(`btn-${el.getAttribute('data-id')}`);
                 if(b) b.innerText = '▶';
-                recursiveHide(childId);
+                recursiveHide(el.getAttribute('data-id'));
             });
         }
 
