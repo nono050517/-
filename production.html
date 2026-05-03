@@ -7,12 +7,27 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .hidden { display: none !important; }
-        /* タイトル行を最前面に固定するための調整 */
-        th { 
-            position: sticky; 
-            top: 0; 
-            z-index: 100; 
-            box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+
+        /* タイトル行固定の決定版 */
+        table {
+            border-collapse: separate; /* stickyを効かせるために重要 */
+            border-spacing: 0;
+            width: 100%;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: #ffc0cb; /* タイトル行の背景色 */
+            border-bottom: 2px solid #e91e63;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            padding: 10px;
+        }
+
+        /* 職業行も少し目立たせて固定の邪魔をしないように調整 */
+        .row-job {
+            background-color: #ffc0cb !important;
         }
     </style>
 </head>
@@ -90,7 +105,6 @@
                 const groups = {};
                 jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
                 
-                // スキル名(アルケミーI等)でソートし、次にLvでソートするようにキーを整理
                 const sortedKeys = Object.keys(groups).sort((a, b) => {
                     const [typeA, lvA] = a.split('_');
                     const [typeB, lvB] = b.split('_');
