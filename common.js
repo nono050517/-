@@ -23,40 +23,47 @@ async function loadSidebar() {
         Object.keys(categories).forEach((cat, i) => {
             html += `<div class="nav-category-title">${cat}</div><ul class="nav-list">`;
             
-            let isSubMenuOpen = false; 
+            let subMenuHtml = ''; // 一次職などの中身を一時的に貯める場所
+            let currentSubTitle = ''; // 「一次職」などのタイトルを保持
+            let currentSubId = '';
 
             categories[cat].forEach((item, j) => {
                 const isJobGroup = item.display_name.includes("次職");
-                const uniqueId = `sub-${i}-${j}`;
+                
+                // リンク先の設定
+                let link = 'index.html'; 
+                if (item.page_id === 'production-page') link = 'production.html';
+                if (item.page_id === 'faq-page') link = 'faq.html';
+
+                // 表示名の整形
+                let name = item.display_name.trim();
 
                 if (isJobGroup) {
-                    // もし別の「次職」が開いていたら、それを閉じてから次を作る
-                    if (isSubMenuOpen) html += `</ul></li>`;
-                    
-                    html += `<li class="sub-category">
-                                <div class="sub-title" onclick="toggleSubMenu('${uniqueId}')">
-                                    <span id="icon-${uniqueId}">▶</span> ${item.display_name.replace(/[┣┗]/g, '').trim()}
-                                </div>
-                                <ul id="${uniqueId}" class="sub-menu" style="display:none;">`;
-                    isSubMenuOpen = true;
-                } else {
-                    // 「次職」ではない普通のリンクの場合
-                    let link = 'index.html'; 
-                    if (item.page_id === 'production-page') link = 'production.html';
-                    if (item.page_id === 'faq-page') link = 'faq.html';
-
-                    // 二重の記号（┣ ┣ など）を防止
-                    let displayName = item.display_name.trim();
-                    if (!displayName.startsWith('┣') && !displayName.startsWith('┗')) {
-                        displayName = `┣ ${displayName}`;
+                    // もし前のサブメニューが開いていたら、一旦書き出す
+                    if (currentSubTitle) {
+                        html += renderSubMenu(currentSubId, currentSubTitle, subMenuHtml);
+                        subMenuHtml = '';
                     }
-
-                    html += `<li><a href="${link}">${displayName}</a></li>`;
+                    currentSubTitle = name.replace(/[┣┗]/g, '').trim();
+                    currentSubId = `sub-${i}-${j}`;
+                } else {
+                    // 普通の項目
+                    const line = (name.startsWith('┣') || name.startsWith('┗')) ? '' : '┣ ';
+                    const row = `<li><a href="${link}">${line}${name}</a></li>`;
+                    
+                    if (currentSubTitle) {
+                        subMenuHtml += row; // サブメニューの中身として貯める
+                    } else {
+                        html += row; // 直接リストに出す
+                    }
                 }
             });
 
-            // カテゴリの最後で開いている箱があれば全部閉じる
-            if (isSubMenuOpen) html += `</ul></li>`;
+            // 最後に残ったサブメニューを書き出す
+            if (currentSubTitle) {
+                html += renderSubMenu(currentSubId, currentSubTitle, subMenuHtml);
+            }
+
             html += `</ul>`;
         });
         
@@ -64,6 +71,19 @@ async function loadSidebar() {
     } catch (e) { 
         console.error("Sidebar error:", e); 
     }
+}
+
+// サブメニュー（折りたたみ）を組み立てる補助関数
+function renderSubMenu(id, title, content) {
+    return `
+        <li class="sub-category">
+            <div class="sub-title" onclick="toggleSubMenu('${id}')" style="cursor:pointer; font-weight:bold;">
+                <span id="icon-${id}">▶</span> ${title}
+            </div>
+            <ul id="${id}" class="sub-menu" style="display:none; padding-left:15px; list-style:none;">
+                ${content}
+            </ul>
+        </li>`;
 }
 
 function toggleSubMenu(id) {
