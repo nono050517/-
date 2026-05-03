@@ -1,5 +1,5 @@
 const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
-const S_KEY = 'sb_publishable_ywfWyEJawcabWW8nHoETtQ_l-JyNOfC';
+const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
 const client = supabase.createClient(S_URL, S_KEY);
 
 async function initCommon() {
