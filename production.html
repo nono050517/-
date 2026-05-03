@@ -2,463 +2,123 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>エリシア・アーカイブス (Ellicia Archives)</title>
+    <title>生産データ - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        /* --- 1. 全体レイアウト --- */
-        body {
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            font-family: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
-            color: #5d4037;
-            background-color: #f4eade;
-            font-size: 11px;
-        }
-
-        .wrapper {
-            display: flex;
-            flex-direction: column;
-            width: 80%;
-            margin: 0 auto;
-            background-color: #fffaf0;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            height: 100vh;
-        }
-
-        header {
-            background-color: #fff;
-            border-bottom: 2px solid #d2b48c;
-            padding: 15px 30px;
-        }
-        .header-title {
-            margin: 0;
-            color: #8b5a5a;
-            font-size: 18px;
-            letter-spacing: 1px;
-        }
-        .header-subtitle {
-            margin: 2px 0 0 0;
-            color: #a08080;
-            font-size: 11px;
-            font-weight: normal;
-        }
-        .nav-bar {
-            background-color: #8b5a5a;
-            height: 8px;
-            width: 100%;
-        }
-
-        .container {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        /* --- 2. サイドバー (アコーディオン改修) --- */
-        nav {
-            width: 180px;
-            background-color: #fffaf0;
-            border-right: 1px solid #e0d0c0;
-            padding: 10px;
-            overflow-y: auto;
-            font-size: 11px;
-        }
-        .nav-category-title {
-            background-color: #f5e1e1;
-            border-left: 4px solid #8b5a5a;
-            padding: 4px 8px;
-            font-size: 11px;
-            margin: 8px 0 2px 0;
-            color: #8b5a5a;
-            font-weight: bold;
-            cursor: pointer; /* クリック可能に */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .nav-category-title:hover {
-            background-color: #eedada;
-        }
-        .nav-category-title.has-items:after {
-            content: "▶";
-            font-size: 8px;
-            transition: transform 0.2s;
-        }
-        .nav-category-title.active:after {
-            transform: rotate(90deg);
-        }
-
-        nav ul { 
-            list-style: none; 
-            padding: 0; 
-            margin: 0; 
-            display: none; /* 初期状態は非表示 */
-        }
-        nav ul.show {
-            display: block;
-        }
-        nav li { margin: 2px 0; }
-        nav a {
-            text-decoration: none;
-            color: #5d4037;
-            display: block;
-            cursor: pointer;
-            padding: 2px 4px 2px 10px;
-            font-size: 11px;
-        }
-        nav a:before { content: "┣"; margin-right: 4px; color: #d2b48c; }
-        nav li:last-child a:before { content: "┗"; }
-        nav a:hover { background-color: #f5e1e1; color: #8b5a5a; }
-
-        /* --- 3. メインコンテンツ --- */
-        main {
-            flex: 1;
-            padding: 15px 35px;
-            overflow-y: auto;
-            background-color: #fff;
-            font-size: 11px;
-        }
-        h2.page-title {
-            color: #8b5a5a;
-            font-size: 16px;
-            border-bottom: 2px solid #f5e1e1;
-            margin: 0 0 20px 0;
-            padding-bottom: 8px;
-        }
-
-        .section-category {
-            background-color: #f5e1e1;
-            color: #8b5a5a;
-            padding: 6px 12px;
-            font-weight: bold;
-            margin: 25px 0 10px 0;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-        }
-        .section-category:before { content: "■"; margin-right: 8px; font-size: 10px; }
-        .item-content { margin-bottom: 20px; margin-left: 5px; padding: 5px 15px; line-height: 1.8; color: #5d4037; }
-        .sub-item-title { font-weight: bold; color: #a04040; margin: 15px 0 5px 0; display: block; }
-
-        .faq-q { font-weight: bold; color: #a04040; margin-top: 15px; position: relative; padding-left: 2.2em; }
-        .faq-q:before { content: "Q："; position: absolute; left: 0; color: #8b5a5a; }
-        .faq-a { margin-bottom: 20px; border-left: 2px solid #f5e1e1; padding-left: 2.2em; line-height: 1.8; position: relative; }
-        .faq-a:before { content: "A："; position: absolute; left: 0.5em; font-weight: bold; color: #8b5a5a; }
-
-        .history-box { background-color: #fdf5f5; border: 1px solid #f5e1e1; padding: 10px 15px; color: #7d5a5a; max-height: 100px; overflow-y: auto; line-height: 1.6; }
-
-        .hidden { display: none !important; }
-
-        /* --- 4. 生産データテーブル --- */
-        table { width: 100%; border-collapse: collapse; line-height: 1.3; background-color: #fff; }
-        th { border: 1px solid #ffb6c1; padding: 4px; text-align: left; background: #ffc0cb; color: #000; font-weight: bold; position: sticky; top: 0; z-index: 10; font-size: 11px; }
-        td { border: 1px solid #ffdae0; padding: 4px; color: #000; font-size: 11px; }
-        .row-job { background: #ffb6c1; color: #fff !important; font-weight: bold; cursor: pointer; height: 22px; }
-        .row-skill { background: #fff0f5; font-weight: bold; cursor: pointer; }
-        .tree-line { font-family: "MS Gothic", monospace; white-space: pre; color: #ffc0cb; font-size: 11px; }
-        .toggle-icon { display: inline-block; width: 12px; text-align: center; margin-right: 5px; color: #d02090; }
-        .method-label { display: inline-block; font-size: 10px; padding: 1px 3px; margin-left: 4px; border-radius: 3px; cursor: pointer; border: 1px solid #ccc; background: #fff; }
-        .label-buy { color: #ff8c00; border-color: #ff8c00; }
-        .label-drop { color: #2e8b57; border-color: #2e8b57; }
-        .label-craft { color: #0066cc; border-color: #0066cc; }
-        .source-container { font-size: 10px; background: #fffafa; border: 1px solid #ffb6c1; padding: 3px 6px; margin: 2px 0 4px 20px; border-radius: 4px; }
-        .cb { vertical-align: middle; margin: 0 3px; cursor: pointer; accent-color: #e91e63; }
-    </style>
 </head>
-<body onload="initApp()">
-
+<body>
     <div class="wrapper">
-        <header>
-            <h1 class="header-title">エリシアオンライン　アーカイブス</h1>
-            <h2 class="header-subtitle">Ellicia-Online Archives</h2>
-        </header>
-        <div class="nav-bar"></div>
-
         <div class="container">
             <nav id="sidebar-nav"></nav>
-
-            <main id="main-scroll">
-                <!-- 1. FrontPage -->
-                <div id="front-page">
-                    <h2 class="page-title">エリシア・アーカイブスへようこそ</h2>
-                    
-                    <div class="section-category">1. 概要</div>
-                    <div class="item-content">
-                        本サイト『エリシア・アーカイブス（Ellicia Archives）』は、MMORPG『エリシアオンライン』のアイテム、生産レシピ、装備等の情報をまとめた個人運営の非公式データベースサイトです。<br>
-                        情報の蓄積にあたっては、「エリシアオンラインまとめ Wiki*」をはじめとする有志による既存の蓄積データを一部引用・参考にさせていただいております。 先人の皆様の多大なる調査と記録に深く感謝し、その遺産を次代の冒険者へ繋げることを目的としています。
-                    </div>
-
-                    <div class="section-category">2. 利用上の注意点</div>
-                    <div class="item-content">
-                        本サイトに掲載されている情報は、有志による調査や既存Wikiのデータに基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
-                        本サイトを利用したことによって生じたいかなる損害についても、管理人は一切の責任を負いかねます。情報の利用は自己責任でお願いいたします。
-                    </div>
-
-                    <div class="section-category">3. 禁止行為と措置</div>
-                    <div class="item-content">
-                        ・サーバーに過度な負荷をかける行為（自動巡回ソフトやスクレイピングツールによる過度なアクセス等）。<br>
-                        ・公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み（今後コメント欄等を設置した場合）。<br>
-                        ・その他、サイトの運営を妨げるあらゆる行為。<br>
-                        禁止行為が確認された場合、予告なくアクセス制限等の措置を取る場合があります。
-                    </div>
-
-                    <div class="section-category">4. リンクについて</div>
-                    <div class="item-content">
-                        本サイトはリンクフリーです。トップページ、各データページなど、どのページへリンクしていただいても構いません。<br>
-                        ただし、画像ファイル等への直接リンク（直リンク）はサーバー負荷の原因となるためご遠慮ください。
-                    </div>
-
-                    <div class="section-category">5. 著作権と情報の取り扱いについて</div>
-                    <div class="item-content">
-                        <span class="sub-item-title">ゲームデータの帰属</span>
-                        本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
-                        権利を有しない者がこれらの権利を放棄することはできません。本サイトの記載内容であっても、アソビモ株式会社やその他の権利者の知的財産権に属する場合があります。
-
-                        <span class="sub-item-title">情報の権利と放棄</span>
-                        当Wiki（本サイト）への書き込みや編集行為、情報提供は、著作権その他の知的財産権を放棄してなされるものとします。これは、寄せられた情報を共有財産として永続的に活用するためです。
-
-                        <span class="sub-item-title">転載について</span>
-                        本サイトの記載内容を他のサイト、Wiki、SNS等に転載する場合は、必ず『<b>エリシア・アーカイブス からの転載</b>』である旨を表記してください。<br>
-                        引用元データが「エリシアオンラインまとめ Wiki*」等の外部サイトである場合は、それぞれの元サイトの規約に従った表記をお願いいたします。
-                    </div>
-
-                    <div class="section-category">更新履歴</div>
-                    <div class="history-box" id="update-history">読み込み中...</div>
-                </div>
-
-                <!-- 2. FAQページ -->
-                <div id="faq-page" class="hidden">
-                    <h2 class="page-title">FAQ：よくある質問</h2>
-                    <div class="section-category">サイト全般について</div>
-                    <div class="faq-q">このサイトは公式ですか？</div>
-                    <p class="faq-a">いいえ、本サイトは有志によるファンサイトです。運営元のアソビモ株式会社様とは一切関係ありません。</p>
-                    <div class="faq-q">スマホからでも見られますか？</div>
-                    <p class="faq-a">はい、ブラウザから閲覧可能です。</p>
-                </div>
-
-                <!-- 3. 生産データページ -->
-                <div id="production-page" class="hidden">
-                    <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
-                    <table>
-                        <thead>
-                            <tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr>
-                        </thead>
-                        <tbody id="recipe-body">
-                            <tr><td>データ読み込み中...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- 4. 汎用ページ -->
-                <div id="generic-page" class="hidden">
-                    <h2 class="page-title" id="generic-title"></h2>
-                    <p>このページの内容は現在準備中です。</p>
-                </div>
+            <main>
+                <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
+                <table>
+                    <thead><tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr></thead>
+                    <tbody id="recipe-body"></tbody>
+                </table>
             </main>
         </div>
     </div>
-
+    <script src="common.js"></script>
     <script>
-        const S_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co'; 
-        const S_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
-        const client = supabase.createClient(S_URL, S_KEY);
-
-        async function initApp() {
-            await loadSidebar();
-            loadUpdates();
-            showPage('front-page');
-        }
-
-        async function loadSidebar() {
-            const navEl = document.getElementById('sidebar-nav');
-            try {
-                const { data, error } = await client
-                    .from('nav_menus')
-                    .select('*')
-                    .eq('is_active', true)
-                    .order('display_order', { ascending: true });
-                if (error) throw error;
-                const categories = {};
-                data.forEach(item => {
-                    if (!categories[item.category]) categories[item.category] = [];
-                    categories[item.category].push(item);
-                });
-                
-                let navHtml = '';
-                let catIdx = 0;
-                for (const catName in categories) {
-                    const ulId = `nav-ul-${catIdx}`;
-                    const titleId = `nav-title-${catIdx}`;
-                    // 仕切り(カテゴリータイトル)の作成
-                    navHtml += `<div id="${titleId}" class="nav-category-title has-items" onclick="toggleNav('${ulId}', '${titleId}')">${catName}</div>`;
-                    navHtml += `<ul id="${ulId}">`;
-                    categories[catName].forEach(item => {
-                        const target = item.page_id ? `'${item.page_id}'` : `'generic-page', '${item.display_name}'`;
-                        navHtml += `<li><a onclick="showPage(${target})">${item.display_name}</a></li>`;
-                    });
-                    navHtml += `</ul>`;
-                    catIdx++;
-                }
-                navEl.innerHTML = navHtml;
-                
-                // FrontPageを含むカテゴリーなどは最初から開いておきたい場合はここで制御可能
-            } catch (e) { navEl.innerHTML = 'メニュー読み込み失敗'; }
-        }
-
-        // サイドバーのアコーディオン制御
-        function toggleNav(ulId, titleId) {
-            const ul = document.getElementById(ulId);
-            const title = document.getElementById(titleId);
-            if (ul.classList.contains('show')) {
-                ul.classList.remove('show');
-                title.classList.remove('active');
-            } else {
-                ul.classList.add('show');
-                title.classList.add('active');
-            }
-        }
-
-        function showPage(pageId, title = '') {
-            const sections = ['front-page', 'faq-page', 'production-page', 'generic-page'];
-            sections.forEach(id => document.getElementById(id)?.classList.add('hidden'));
-            const target = document.getElementById(pageId);
-            if (target) {
-                target.classList.remove('hidden');
-                if (pageId === 'generic-page') document.getElementById('generic-title').textContent = title;
-                document.getElementById('main-scroll').scrollTop = 0;
-            }
-            if(pageId === 'production-page') loadAllRecipes();
-        }
-
-        async function loadUpdates() {
-            const historyBox = document.getElementById('update-history');
-            try {
-                const { data } = await client.from('site_updates').select('*').order('date', { ascending: false });
-                historyBox.innerHTML = data?.map(item => `・${item.date}：${item.content}`).join('<br>') || "履歴なし";
-            } catch (e) { historyBox.innerHTML = "読み込み失敗"; }
-        }
-
-        // --- 生産データ読み込みロジック (変更なし) ---
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
-            try {
-                const [rRes, iRes, jRes] = await Promise.all([
-                    client.from('recipes').select('*').order('skill_type').order('skill_lv'),
-                    client.from('items').select('*'),
-                    client.from('job_masters').select('*')
-                ]);
-                const recipes = rRes.data || [];
-                const itemsData = iRes.data || [];
-                const jobsData = jRes.data || [];
-                const getFullJobName = (short) => (jobsData.find(j => j.short_name === short)?.full_name || short);
+            tbody.innerHTML = '<tr><td>データ読み込み中...</td></tr>';
 
-                const getMethods = (itemName, pId, idx) => {
-                    if (!itemName) return { labels: '', details: '' };
-                    const matches = itemsData.filter(item => item.name === itemName);
-                    const craftR = recipes.find(r => r.output_item_name === itemName);
-                    const safeName = itemName.replace(/[\s-【】]/g, '_');
-                    const baseId = `src-${pId}-${idx}-${safeName}`; 
-                    let labels = '', details = '';
-                    const buy = matches.filter(m => m.method === '購入');
-                    if (buy.length) {
-                        const id = `${baseId}-buy`;
-                        labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${id}')">購入</span>`;
-                        details += `<div id="${id}" class="source-container" style="display:none;">${buy.map(m=>`<div>●購入：${m.location} (${m.target})</div>`).join('')}</div>`;
-                    }
-                    const drop = matches.filter(m => m.method === 'ドロップ');
-                    if (drop.length) {
-                        const id = `${baseId}-drop`;
-                        labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${id}')">ドロップ</span>`;
-                        details += `<div id="${id}" class="source-container" style="display:none;">${drop.map(m=>`<div>◆ドロップ：${m.location} (${m.target})</div>`).join('')}</div>`;
-                    }
-                    if (craftR) {
-                        const id = `${baseId}-craft`;
-                        labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${id}')">生産</span>`;
-                        details += `<div id="${id}" class="source-container" style="display:none;"><div style="color:#0066cc; font-weight:bold;">${getFullJobName(craftR.required_jobs)} Lv${craftR.skill_lv}：${craftR.recipe_name}</div></div>`;
-                    }
-                    return { labels, details };
-                };
+            const [rRes, iRes, jRes] = await Promise.all([
+                client.from('recipes').select('*').order('skill_lv'),
+                client.from('items').select('*'),
+                client.from('job_masters').select('*')
+            ]);
+            const recipes = rRes.data, itemsData = iRes.data, jobsData = jRes.data;
 
-                const renderMaterials = (recipe, pId, trace = []) => {
-                    let rows = '';
-                    const mats = [];
-                    for(let i=1; i<=4; i++) if(recipe[`material_${i}`] && recipe[`material_${i}`]!=='NULL') mats.push({n: recipe[`material_${i}`], q: recipe[`amount_${i}`]});
-                    mats.forEach((m, idx) => {
-                        const isLast = (idx === mats.length - 1);
-                        let pre = ''; trace.forEach(last => { pre += last ? '    ' : '│  '; });
-                        const mark = isLast ? '┗' : '┣';
-                        const currentMatId = `${pId}-m${idx}`; 
-                        const {labels, details} = getMethods(m.n, pId, idx);
-                        const subR = recipes.find(r => r.output_item_name === m.n);
-                        const onclick = subR ? `onclick="toggleLayer('${currentMatId}', 'btn-${currentMatId}')"` : '';
-                        const icon = subR ? `<span class="toggle-icon" id="btn-${currentMatId}">▶</span>` : '';
-                        rows += `<tr class="row-sub hidden" data-id="${currentMatId}" data-parent="${pId}" ${onclick}><td><span class="tree-line">${pre}${mark}</span>${icon}<input type="checkbox" class="cb"><span>${m.n || '名称不明'}</span><span style="font-weight:bold;">(×${m.q})</span>${labels}${details}</td></tr>`;
-                        if(subR && m.n) rows += renderMaterials(subR, currentMatId, [...trace, isLast]);
-                    });
-                    return rows;
-                };
+            const getMethods = (name, pId, idx) => {
+                const matches = itemsData.filter(i => i.name === name);
+                const craftR = recipes.find(r => r.output_item_name === name);
+                const baseId = `src-${pId}-${idx}`;
+                let labels = '', details = '';
+                
+                const buy = matches.filter(m => m.method === '購入');
+                if(buy.length) {
+                    labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${baseId}-buy')">購入</span>`;
+                    details += `<div id="${baseId}-buy" class="source-container" style="display:none;">${buy.map(m=>`●購入：${m.location}`).join('<br>')}</div>`;
+                }
+                const drop = matches.filter(m => m.method === 'ドロップ');
+                if(drop.length) {
+                    labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${baseId}-drop')">ドロップ</span>`;
+                    details += `<div id="${baseId}-drop" class="source-container" style="display:none;">${drop.map(m=>`◆落：${m.location}(${m.target})`).join('<br>')}</div>`;
+                }
+                if(craftR) {
+                    labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${baseId}-craft')">生産</span>`;
+                    details += `<div id="${baseId}-craft" class="source-container" style="display:none;">★生産：${craftR.recipe_name}</div>`;
+                }
+                return { labels, details };
+            };
 
-                let html = '';
-                jobsData.forEach((job, jIdx) => {
-                    const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
-                    if (!jobRecipes.length) return;
-                    const jobId = `job-node-${jIdx}`; 
-                    html += `<tr class="row-job" id="${jobId}" data-id="${jobId}" onclick="toggleLayer('${jobId}', 'btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
-                    const groups = {};
-                    jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
-                    Object.keys(groups).forEach((gk, sIdx) => {
-                        const sId = `${jobId}-s-${sIdx}`, [type, lv] = gk.split('_');
-                        html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}', 'btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
-                        const recipeGroups = {};
-                        groups[gk].forEach(r => { if (!recipeGroups[r.recipe_name]) recipeGroups[r.recipe_name] = []; recipeGroups[r.recipe_name].push(r); });
-                        Object.keys(recipeGroups).forEach((rName, rIdx) => {
-                            const rId = `${sId}-r-${rIdx}`, isLast = (rIdx === Object.keys(recipeGroups).length-1);
-                            const variants = recipeGroups[rName];
-                            html += `<tr class="row-recipe hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}', 'btn-${rId}')"><td><span class="tree-line">   ${isLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}">▶</span>【${rName}】</td></tr>`;
-                            variants.forEach((v, vIdx) => {
-                                const vIsLast = (vIdx === variants.length - 1);
-                                const outMatId = `${rId}-v-${vIdx}`;
-                                const {labels, details} = getMethods(v.output_item_name, rId, vIdx);
-                                const treeBase = isLast ? '      ' : '   │  ';
-                                html += `<tr class="row-output hidden" data-id="${outMatId}" data-parent="${rId}" onclick="toggleLayer('${outMatId}', 'btn-${outMatId}')"><td><span class="tree-line">${treeBase}${vIsLast?'┗':'┣'} </span><span class="toggle-icon" id="btn-${outMatId}">▶</span><input type="checkbox" class="cb"><span style="font-weight:bold;">${v.output_item_name}</span>${labels}${details}</td></tr>`;
-                                html += renderMaterials(v, outMatId, [isLast, vIsLast, true]);
-                            });
-                        });
+            const renderMaterials = (recipe, pId, trace = []) => {
+                let rows = '';
+                const mats = [];
+                for(let i=1; i<=4; i++) if(recipe[`material_${i}`] && recipe[`material_${i}`] !== 'NULL') mats.push({n: recipe[`material_${i}`], q: recipe[`amount_${i}`]});
+                mats.forEach((m, idx) => {
+                    const isLast = (idx === mats.length - 1);
+                    let pre = ''; trace.forEach(l => { pre += l ? '    ' : '│  '; });
+                    const mId = `${pId}-m${idx}`, {labels, details} = getMethods(m.n, pId, idx), subR = recipes.find(r => r.output_item_name === m.n);
+                    rows += `<tr class="hidden" data-id="${mId}" data-parent="${pId}" onclick="toggleLayer('${mId}','btn-${mId}')"><td><span class="tree-line">${pre}${isLast?'┗':'┣'}</span>${subR?`<span class="toggle-icon" id="btn-${mId}">▶</span>`:''}<input type="checkbox" class="cb">${m.n}(×${m.q})${labels}${details}</td></tr>`;
+                    if(subR) rows += renderMaterials(subR, mId, [...trace, isLast]);
+                });
+                return rows;
+            };
+
+            let html = '';
+            jobsData.forEach((job, jIdx) => {
+                const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
+                if (!jobRecipes.length) return;
+                const jobId = `job-${jIdx}`;
+                html += `<tr class="row-job" onclick="toggleLayer('${jobId}','btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
+                
+                const groups = {};
+                jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
+                Object.keys(groups).forEach((gk, sIdx) => {
+                    const sId = `${jobId}-s${sIdx}`, [type, lv] = gk.split('_');
+                    html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}','btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
+                    groups[gk].forEach((r, rIdx) => {
+                        const rId = `${sId}-r${rIdx}`, {labels, details} = getMethods(r.output_item_name, rId, 0);
+                        html += `<tr class="hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}','btn-${rId}')"><td><span class="tree-line">   ┗ </span><span class="toggle-icon" id="btn-${rId}">▶</span><input type="checkbox" class="cb"><b>${r.output_item_name}</b>【${r.recipe_name}】${labels}${details}</td></tr>`;
+                        html += renderMaterials(r, rId, [true, true]);
                     });
                 });
-                tbody.innerHTML = html;
-                tbody.setAttribute('data-loaded', 'true');
-            } catch (e) { tbody.innerHTML = `<tr><td>読み込み失敗</td></tr>`; }
+            });
+            tbody.innerHTML = html;
+            tbody.setAttribute('data-loaded', 'true');
         }
 
         function toggleLayer(id, btnId) {
             const btn = document.getElementById(btnId);
-            const isExpanding = btn ? btn.textContent === '▶' : true; 
-            const children = document.querySelectorAll(`tr[data-parent="${id}"]`);
-            children.forEach(el => {
-                if (isExpanding) el.classList.remove('hidden');
+            const isEx = btn ? (btn.innerText === '▶') : true;
+            document.querySelectorAll(`tr[data-parent="${id}"]`).forEach(el => {
+                if (isEx) el.classList.remove('hidden');
                 else { el.classList.add('hidden'); recursiveHide(el.getAttribute('data-id')); }
             });
-            if(btn) btn.textContent = isExpanding ? '▼' : '▶';
+            if(btn) btn.innerText = isEx ? '▼' : '▶';
         }
 
-        function recursiveHide(parentId) {
-            const children = document.querySelectorAll(`tr[data-parent="${parentId}"]`);
-            children.forEach(child => {
-                child.classList.add('hidden');
-                const btn = document.getElementById(`btn-${child.getAttribute('data-id')}`);
-                if (btn) btn.textContent = '▶';
-                recursiveHide(child.getAttribute('data-id'));
+        function recursiveHide(pId) {
+            document.querySelectorAll(`tr[data-parent="${pId}"]`).forEach(el => {
+                el.classList.add('hidden');
+                const b = document.getElementById(`btn-${el.getAttribute('data-id')}`);
+                if(b) b.innerText = '▶';
+                recursiveHide(el.getAttribute('data-id'));
             });
         }
 
-        function toggleDetail(detailId) {
-            const el = document.getElementById(detailId);
-            if (el) el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+        function toggleDetail(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
         }
+
+        // ページ読み込み完了後にデータを取得
+        window.addEventListener('DOMContentLoaded', loadAllRecipes);
     </script>
 </body>
 </html>
