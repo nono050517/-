@@ -21,7 +21,6 @@
     </div>
     <script src="common.js"></script>
     <script>
-        // --- 1. データ読み込みメイン処理 ---
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
@@ -35,31 +34,30 @@
                 ]);
                 const recipes = rRes.data, itemsData = iRes.data, jobsData = jRes.data;
 
-                // --- 2. 入手方法（購入/ドロップ/生産）の判定ロジック ---
-                const getMethods = (name, pId, idx) => {
+                // 修正ポイント①：IDのかぶりを無くすために独自のIDを割り振る
+                const getMethods = (name, uniqueId) => {
                     const matches = itemsData.filter(i => i.name === name);
                     const craftR = recipes.find(r => r.output_item_name === name);
-                    const baseId = `src-${pId}-${idx}`;
+                    const baseId = `src-${uniqueId}`;
                     let labels = '', details = '';
                     
                     const buy = matches.filter(m => m.method === '購入');
                     if(buy.length) {
                         labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${baseId}-buy')">購入</span>`;
-                        details += `<div id="${baseId}-buy" class="source-container" style="display:none;">${buy.map(m=>`●購入：${m.location}`).join('<br>')}</div>`;
+                        details += `<div id="${baseId}-buy" class="source-container" style="display:none;" onclick="event.stopPropagation();">${buy.map(m=>`●購入：${m.location}`).join('<br>')}</div>`;
                     }
                     const drop = matches.filter(m => m.method === 'ドロップ');
                     if(drop.length) {
                         labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${baseId}-drop')">ドロップ</span>`;
-                        details += `<div id="${baseId}-drop" class="source-container" style="display:none;">${drop.map(m=>`◆落：${m.location}(${m.target})`).join('<br>')}</div>`;
+                        details += `<div id="${baseId}-drop" class="source-container" style="display:none;" onclick="event.stopPropagation();">${drop.map(m=>`◆落：${m.location}(${m.target})`).join('<br>')}</div>`;
                     }
                     if(craftR) {
                         labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${baseId}-craft')">生産</span>`;
-                        details += `<div id="${baseId}-craft" class="source-container" style="display:none;">★生産：${craftR.recipe_name}</div>`;
+                        details += `<div id="${baseId}-craft" class="source-container" style="display:none;" onclick="event.stopPropagation();">★生産：${craftR.recipe_name}</div>`;
                     }
                     return { labels, details };
                 };
 
-                // --- 3. 材料ツリーの再帰レンダリング ---
                 const renderMaterials = (recipe, pId, trace = []) => {
                     let rows = '';
                     const mats = [];
@@ -74,11 +72,12 @@
                         trace.forEach(l => { pre += l ? '    ' : '│  '; });
                         
                         const mId = `${pId}-m${idx}`;
-                        const {labels, details} = getMethods(m.n, pId, idx);
+                        const {labels, details} = getMethods(m.n, mId);
                         const subR = recipes.find(r => r.output_item_name === m.n);
                         
+                        // 修正ポイント②：チェックボックスを押しても行が閉じないように event.stopPropagation() を追加
                         rows += `<tr class="hidden" data-id="${mId}" data-parent="${pId}" onclick="toggleLayer('${mId}','btn-${mId}')">
-                            <td><span class="tree-line">${pre}${isLast?'┗':'┣'}</span>${subR?`<span class="toggle-icon" id="btn-${mId}">▶</span>`:''}<input type="checkbox" class="cb">${m.n}(×${m.q})${labels}${details}</td>
+                            <td><span class="tree-line">${pre}${isLast?'┗':'┣'}</span>${subR?`<span class="toggle-icon" id="btn-${mId}">▶</span>`:''}<input type="checkbox" class="cb" onclick="event.stopPropagation()">${m.n}(×${m.q})${labels}${details}</td>
                         </tr>`;
                         
                         if(subR) {
@@ -88,7 +87,6 @@
                     return rows;
                 };
 
-                // --- 4. 職業ごとのレシピグループ化と表示 ---
                 let html = '';
                 jobsData.forEach((job, jIdx) => {
                     const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
@@ -109,8 +107,9 @@
                         
                         groups[gk].forEach((r, rIdx) => {
                             const rId = `${sId}-r${rIdx}`;
-                            const {labels, details} = getMethods(r.output_item_name, rId, 0);
-                            html += `<tr class="hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}','btn-${rId}')"><td><span class="tree-line">   ┗ </span><span class="toggle-icon" id="btn-${rId}">▶</span><input type="checkbox" class="cb"><b>${r.output_item_name}</b>【${r.recipe_name}】${labels}${details}</td></tr>`;
+                            // 親アイテムには末尾に '-out' をつけてIDを完全に分離
+                            const {labels, details} = getMethods(r.output_item_name, `${rId}-out`);
+                            html += `<tr class="hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}','btn-${rId}')"><td><span class="tree-line">   ┗ </span><span class="toggle-icon" id="btn-${rId}">▶</span><input type="checkbox" class="cb" onclick="event.stopPropagation()"><b>${r.output_item_name}</b>【${r.recipe_name}】${labels}${details}</td></tr>`;
                             html += renderMaterials(r, rId, [true, true]);
                         });
                     });
@@ -123,7 +122,6 @@
             }
         }
 
-        // --- 5. 開閉制御ロジック ---
         function toggleLayer(id, btnId) {
             const btn = document.getElementById(btnId);
             const isExpanding = btn ? (btn.innerText === '▶') : true;
@@ -148,7 +146,9 @@
 
         function toggleDetail(id) {
             const el = document.getElementById(id);
-            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            if (el) {
+                el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            }
         }
 
         window.addEventListener('DOMContentLoaded', loadAllRecipes);
