@@ -161,9 +161,13 @@
             </main>
         </div>
     </div>
-    <script>
-        const isJob = true; // ジョブ関連ページであることを明示
-    </script>
-    <script src="common.js"></script>
+<script>
+    const isJob = true; 
+    // もし common.js 内に関数があるなら、ここで呼び出す記述を追加
+    if (typeof fetchNavMenu === 'function') {
+        fetchNavMenu();
+    }
+</script>
+<script src="common.js"></script>
 
 </body></html>
