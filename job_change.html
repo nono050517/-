@@ -1,14 +1,18 @@
 <!DOCTYPE html>
-<!-- saved from url=(0063)file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html -->
-<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>転職について - エリシア・アーカイブス</title>
+    <!-- 共通のスタイルシートを読み込み -->
     <link rel="stylesheet" href="style.css">
+    <!-- Supabaseライブラリ（オンライン版） -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        main { font-size: 13px; line-height: 1.6; color: #4a4a4a; }
-        .page-title { font-size: 18px; margin-bottom: 15px; font-weight: bold; }
+        /* ページ固有の追加装飾 */
+        main { font-size: 13px; line-height: 1.6; color: #4a4a4a; background-color: #fffcf5; padding: 20px; flex: 1; }
+        .page-title { font-size: 18px; margin-bottom: 15px; font-weight: bold; color: #8b5a5a; }
         h3 { font-size: 15px; border-bottom: 2px solid #f5e1e1; padding-bottom: 3px; margin-top: 25px; margin-bottom: 10px; color: #8b5a5a; font-weight: bold; }
         
         .contents-list { background: #fffcfc; border: 1px solid #ffdae0; padding: 10px; margin-bottom: 20px; border-radius: 8px; }
@@ -25,37 +29,36 @@
         .q-item:last-child { border-bottom: none; }
         .q-text { color: #d81b60; font-weight: bold; display: block; }
         .a-text { color: #2e7d32; font-weight: bold; display: block; padding-left: 10px; }
-
-        .quest-section { margin-bottom: 20px; }
     </style>
 </head>
 <body>
     <div class="wrapper">
-        <div class="container">
-            <nav id="sidebar-nav"></nav>
-            <main>
+        <!-- サイドバー生成用 -->
+        <nav id="sidebar-nav"></nav>
+        
+        <main>
+            <div class="container">
                 <h2 class="page-title">転職ガイド</h2>
                 
                 <div class="contents-list">
                     <strong>【目次】</strong>
                     <ul>
-                        <li><a href="file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html#section1">見習い期間の活用とメリット</a></li>
-                        <li><a href="file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html#section2">一次職への転職試験内容</a></li>
-                        <li><a href="file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html#section3">転職のタイミングとコツ</a></li>
-                        <li><a href="file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html#section4">転職条件（一次・二次・三次）</a></li>
-                        <li><a href="file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html#section5">転職試験の流れ（一次・二次共通）</a></li>
-                        <li><a href="file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html#section6">転職許可への道！詳細データ</a></li>
+                        <li><a href="#section1">見習い期間の活用とメリット</a></li>
+                        <li><a href="#section2">一次職への転職試験内容</a></li>
+                        <li><a href="#section3">転職のタイミングとコツ</a></li>
+                        <li><a href="#section4">転職条件（一次・二次・三次）</a></li>
+                        <li><a href="#section5">転職試験の流れ（一次・二次共通）</a></li>
+                        <li><a href="#section6">転職許可への道！詳細データ</a></li>
                     </ul>
                 </div>
 
                 <h3 id="section1">■ 見習い期間の活用</h3>
                 <div class="highlight-box">
                     <strong>1. 装備制限なし</strong><br>
-                    見習い期間中は装備制限が一切ありません。<br>
-                    あらゆる装備を自由に使用可能です。<br>
+                    見習い期間中は装備制限が一切ありません。あらゆる装備を自由に使用可能です。<br>
                     <br>
                     <strong>2. 初回特典：ステータスリセット</strong><br>
-                    1回目の正規職への転職にかぎり、ステータスリセットをしてもらえます。<br>
+                    1回目の正規職への転職にかぎり、ステータスリセットをしてもらえます。
                     そのため、見習い期間中はすべての基本職をやってみることが可能です。<br>
                     ただし、各職の見習い期間で修得できるスキルはJobLv10までのスキルとなります。
                 </div>
@@ -96,71 +99,36 @@
                     <strong>・三次職への転生条件：</strong>BaseLv 70以上、かつ 対応JobLv 70以上。
                 </div>
 
-                <h3 id="section5">■ 転職試験の流れ（一次・二次共通）</h3>
+                <h3 id="section5">■ 転職試験の流れ</h3>
                 <div class="highlight-box">
-                    <strong>1. 転職条件を満たす。（BaseLv、JobLv）</strong><br>
-                    ステータス画面で自分のレベルが条件に達しているか確認しましょう。<br>
-                    <br>
-                    <strong>2. 冒険者協会長から許可証クエストを受ける。</strong><br>
-                    首都エリシアにいる冒険者協会長に話しかけ「転職許可への道！」を受注します。<br>
-                    <br>
-                    <strong>3. クエストを達成し、転職許可証を得る。</strong><br>
-                    依頼①と依頼②をクリアすることで「転職許可証」が得られます。<br>
-                    <br>
-                    <strong>4. 各職別の職試験を受験し、合格する。</strong><br>
-                    各職業の試験会場へ向かい、各職業の試験の合格を目指しましょう。<br>
-                    <br>
-                    <strong>5. NPC冒険者協会長から転職をする。</strong><br>
-                    転職をすると、装備・スキルがすべて外れます。<br>
-                    モンスターの討伐前に装備・スキルを整えてください。
+                    1. 転職条件を満たす。<br>
+                    2. 冒険者協会長から許可証クエストを受ける。<br>
+                    3. クエストを達成し、転職許可証を得る。<br>
+                    4. 各職別の職試験を受験し、合格する。<br>
+                    5. NPC冒険者協会長から転職をする。
                 </div>
 
                 <h3 id="section6">■ 転職許可への道！詳細データ</h3>
                 <div class="info-note">
-                    場所：首都エリシア王宮前広場 / 依頼人：NPC冒険者協会長<br>
-                    依頼①と依頼②の両方をクリアすることで、転職許可証が発行されます。
+                    場所：首都エリシア王宮前広場 / 依頼人：NPC冒険者協会長
                 </div>
                 <div class="highlight-box">
-                    <div class="quest-section">
-                        <strong>依頼①：アイテム収集（ランダム3パターン）</strong><br>
-                        ・P1：ゼリー × 150<br>
-                        ・P2：えびの尻尾 × 20、ぶたにく × 20、銅原石 × 20<br>
-                        ・P3：粘液 × 20、はなびら × 20、部族の紋章 × 20
-                    </div>
-
-                    <div class="quest-section">
-                        <strong>依頼②：口頭試問（順番はランダム）</strong><br>
-                        <div class="quiz-container">
-                            <div class="q-item">
-                                <span class="q-text">Q：目の前にモンスターに襲われている一般市民がいます。どうしますか？</span>
-                                <span class="a-text">A：すぐに助ける。</span>
-                            </div>
-                            <div class="q-item">
-                                <span class="q-text">Q：依頼達成後、もらったお礼のイデアが指示より多いようです。どうしますか？</span>
-                                <span class="a-text">A：念のため、額が違うことを指摘する。</span>
-                            </div>
-                            <div class="q-item">
-                                <span class="q-text">Q：街の外で、初心者の冒険者が困っている様子です。どうしますか？</span>
-                                <span class="a-text">A：話しかけ、困っているか聞いてみる。</span>
-                            </div>
-                            <div class="q-item">
-                                <span class="q-text">Q：仲間とＰＴを組んで高価なアイテムを１つだけ手に入れました。どうしますか？</span>
-                                <span class="a-text">A：相場を調べ、どう分けるか相手と相談。</span>
-                            </div>
-                            <div class="q-item">
-                                <span class="q-text">Q：街で、持ち主の分からない大金の入った袋を拾いました。どうしますか？</span>
-                                <span class="a-text">A：王宮憲兵隊に届ける。</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <strong>【報酬】</strong><br>
-                    ・Base/Job exp（-/- exp）<br>
-                    ・転職許可証 × 1
+                    <strong>依頼①：アイテム収集（ランダム3パターン）</strong><br>
+                    ・P1：ゼリー × 150<br>
+                    ・P2：えびの尻尾 × 20、ぶたにく × 20、銅原石 × 20<br>
+                    ・P3：粘液 × 20、はなびら × 20、部族の紋章 × 20
                 </div>
-            </main>
-        </div>
+            </div>
+        </main>
     </div>
-    <script src="file:///C:/Users/cinry/Downloads/common.js"></script>
 
-</body></html>
+    <!-- サイドバー生成スクリプト -->
+    <script src="common.js"></script>
+    <script>
+        const isJob = true; 
+        if (typeof fetchNavMenu === 'function') {
+            fetchNavMenu();
+        }
+    </script>
+</body>
+</html>
