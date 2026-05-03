@@ -11,18 +11,50 @@
         <div class="container">
             <nav id="sidebar-nav"></nav>
             <main>
-                <h2 class="page-title">エリシア・アーカイブスへようこそ</h2>
+                <h2 class="page-title">FrontPage：エリシア・アーカイブスへようこそ</h2>
+
                 <div class="section-category">1. 概要</div>
                 <div class="item-content">
                     本サイト『エリシア・アーカイブス（Ellicia Archives）』は、MMORPG『エリシアオンライン』のアイテム、生産レシピ、装備等の情報をまとめた個人運営の非公式データベースサイトです。<br>
-                    情報の蓄積にあたっては、「エリシアオンラインまとめ Wiki*」をはじめとする有志による既存のデータを一部引用・参考にさせていただいております。
+                    情報の蓄積にあたっては、「エリシアオンラインまとめ Wiki*」をはじめとする有志による既存の蓄積データを一部引用・参考にさせていただいております。 先人の皆様の多大なる調査と記録に深く感謝し、その遺産を次代の冒険者へ繋げることを目的としています。
                 </div>
+
                 <div class="section-category">2. 利用上の注意点</div>
-                <div class="item-content">アップデート等により実際のゲーム内データと異なる場合があります。利用は自己責任でお願いいたします。</div>
-                <div class="section-category">3. 禁止行為</div>
-                <div class="item-content">サーバーへの負荷行為や誹謗中傷、サイト運営を妨げる行為を禁止します。</div>
+                <div class="item-content">
+                    本サイトに掲載されている情報は、有志による調査や既存Wikiのデータに基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
+                    本サイトを利用したことによって生じたいかなる損害についても、管理人は一切の責任を負いかねます。情報の利用は自己責任でお願いいたします。
+                </div>
+
+                <div class="section-category">3. 禁止行為と措置</div>
+                <div class="item-content">
+                    <ul>
+                        <li>サーバーに過度な負荷をかける行為（自動巡回ソフトやスクレイピングツールによる過度なアクセス等）。</li>
+                        <li>公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み（今後コメント欄等を設置した場合）。</li>
+                        <li>その他、サイトの運営を妨げるあらゆる行為。</li>
+                    </ul>
+                    禁止行為が確認された場合、予告なくアクセス制限等の措置を取る場合があります。
+                </div>
+
                 <div class="section-category">4. リンクについて</div>
-                <div class="item-content">本サイトはリンクフリーです。画像への直リンクはご遠慮ください。</div>
+                <div class="item-content">
+                    本サイトはリンクフリーです。トップページ、各データページなど、どのページへリンクしていただいても構いません。<br>
+                    ただし、画像ファイル等への直接リンク（直リンク）はサーバー負荷の原因となるためご遠慮ください。
+                </div>
+
+                <div class="section-category">5. 著作権と情報の取り扱いについて</div>
+                <div class="item-content">
+                    <span class="sub-item-title">■ゲームデータの帰属</span>
+                    本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
+                    権利を有しない者がこれらの権利を放棄することはできません。本サイトの記載内容であっても、アソビモ株式会社やその他の権利者の知的財産権に属する場合があります。
+
+                    <span class="sub-item-title">■情報の権利と放棄</span>
+                    本サイトへの情報提供（書き込みや編集行為を含む）は、著作権その他の知的財産権を放棄してなされるものとします。これは、寄せられた情報を共有財産として永続的に活用するためです。
+
+                    <span class="sub-item-title">■転載について</span>
+                    本サイトの記載内容を他のサイト、Wiki、SNS等に転載する場合は、必ず<b>『エリシア・アーカイブス からの転載』</b>である旨を表記してください。<br>
+                    引用元データが「エリシアオンラインまとめ Wiki*」等の外部サイトである場合は、それぞれの元サイトの規約に従った表記をお願いいたします。
+                </div>
+
                 <div class="section-category">更新履歴</div>
                 <div id="update-history" class="history-box">読み込み中...</div>
             </main>
@@ -31,8 +63,12 @@
     <script src="common.js"></script>
     <script>
         async function loadUpdates() {
-            const { data } = await client.from('site_updates').select('*').order('date', {ascending:false});
-            if(data) document.getElementById('update-history').innerHTML = data.map(d => `・${d.date}：${d.content}`).join('<br>');
+            try {
+                const { data } = await client.from('site_updates').select('*').order('date', {ascending:false});
+                if(data) document.getElementById('update-history').innerHTML = data.map(d => `・${d.date}：${d.content}`).join('<br>');
+            } catch (e) {
+                document.getElementById('update-history').innerText = "履歴の取得に失敗しました。";
+            }
         }
         window.addEventListener('DOMContentLoaded', loadUpdates);
     </script>
