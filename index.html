@@ -56,7 +56,7 @@
             overflow: hidden;
         }
 
-        /* --- 2. サイドバー (アコーディオン改修) --- */
+        /* --- 2. サイドバー (条件付きアコーディオン) --- */
         nav {
             width: 180px;
             background-color: #fffaf0;
@@ -73,20 +73,23 @@
             margin: 8px 0 2px 0;
             color: #8b5a5a;
             font-weight: bold;
-            cursor: pointer; /* クリック可能に */
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .nav-category-title:hover {
+        /* 折りたたみ対象のみクリック可能にする */
+        .nav-category-title.collapsible {
+            cursor: pointer;
+        }
+        .nav-category-title.collapsible:hover {
             background-color: #eedada;
         }
-        .nav-category-title.has-items:after {
+        .nav-category-title.collapsible:after {
             content: "▶";
             font-size: 8px;
             transition: transform 0.2s;
         }
-        .nav-category-title.active:after {
+        .nav-category-title.collapsible.active:after {
             transform: rotate(90deg);
         }
 
@@ -94,11 +97,15 @@
             list-style: none; 
             padding: 0; 
             margin: 0; 
-            display: none; /* 初期状態は非表示 */
+        }
+        /* 折りたたみ対象の初期状態 */
+        nav ul.collapsed {
+            display: none;
         }
         nav ul.show {
             display: block;
         }
+        
         nav li { margin: 2px 0; }
         nav a {
             text-decoration: none;
@@ -180,78 +187,43 @@
             <nav id="sidebar-nav"></nav>
 
             <main id="main-scroll">
-                <!-- 1. FrontPage -->
+                <!-- Content Sections -->
                 <div id="front-page">
                     <h2 class="page-title">エリシア・アーカイブスへようこそ</h2>
-                    
                     <div class="section-category">1. 概要</div>
                     <div class="item-content">
-                        本サイト『エリシア・アーカイブス（Ellicia Archives）』は、MMORPG『エリシアオンライン』のアイテム、生産レシピ、装備等の情報をまとめた個人運営の非公式データベースサイトです。<br>
-                        情報の蓄積にあたっては、「エリシアオンラインまとめ Wiki*」をはじめとする有志による既存の蓄積データを一部引用・参考にさせていただいております。 先人の皆様の多大なる調査と記録に深く感謝し、その遺産を次代の冒険者へ繋げることを目的としています。
+                        本サイト『エリシア・アーカイブス（Ellicia Archives）』は、MMORPG『エリシアオンライン』の情報をまとめた個人運営の非公式データベースサイトです。<br>
+                        「エリシアオンラインまとめ Wiki*」をはじめとする先人の遺産を次代の冒険者へ繋げることを目的としています。
                     </div>
-
                     <div class="section-category">2. 利用上の注意点</div>
-                    <div class="item-content">
-                        本サイトに掲載されている情報は、有志による調査や既存Wikiのデータに基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
-                        本サイトを利用したことによって生じたいかなる損害についても、管理人は一切の責任を負いかねます。情報の利用は自己責任でお願いいたします。
-                    </div>
-
-                    <div class="section-category">3. 禁止行為と措置</div>
-                    <div class="item-content">
-                        ・サーバーに過度な負荷をかける行為（自動巡回ソフトやスクレイピングツールによる過度なアクセス等）。<br>
-                        ・公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み（今後コメント欄等を設置した場合）。<br>
-                        ・その他、サイトの運営を妨げるあらゆる行為。<br>
-                        禁止行為が確認された場合、予告なくアクセス制限等の措置を取る場合があります。
-                    </div>
-
+                    <div class="item-content">掲載情報は調査に基づきますが、正確性を保証するものではありません。利用は自己責任でお願いいたします。</div>
+                    <div class="section-category">3. 禁止行為</div>
+                    <div class="item-content">サーバーへの過負荷、誹謗中傷、運営を妨げる行為を禁止します。</div>
                     <div class="section-category">4. リンクについて</div>
+                    <div class="item-content">リンクフリーですが、画像への直リンクはご遠慮ください。</div>
+                    <div class="section-category">5. 著作権</div>
                     <div class="item-content">
-                        本サイトはリンクフリーです。トップページ、各データページなど、どのページへリンクしていただいても構いません。<br>
-                        ただし、画像ファイル等への直接リンク（直リンク）はサーバー負荷の原因となるためご遠慮ください。
+                        ゲームデータの権利はアソビモ株式会社等に帰属します。転載時は『エリシア・アーカイブス からの転載』と明記してください。
                     </div>
-
-                    <div class="section-category">5. 著作権と情報の取り扱いについて</div>
-                    <div class="item-content">
-                        <span class="sub-item-title">ゲームデータの帰属</span>
-                        本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
-                        権利を有しない者がこれらの権利を放棄することはできません。本サイトの記載内容であっても、アソビモ株式会社やその他の権利者の知的財産権に属する場合があります。
-
-                        <span class="sub-item-title">情報の権利と放棄</span>
-                        当Wiki（本サイト）への書き込みや編集行為、情報提供は、著作権その他の知的財産権を放棄してなされるものとします。これは、寄せられた情報を共有財産として永続的に活用するためです。
-
-                        <span class="sub-item-title">転載について</span>
-                        本サイトの記載内容を他のサイト、Wiki、SNS等に転載する場合は、必ず『<b>エリシア・アーカイブス からの転載</b>』である旨を表記してください。<br>
-                        引用元データが「エリシアオンラインまとめ Wiki*」等の外部サイトである場合は、それぞれの元サイトの規約に従った表記をお願いいたします。
-                    </div>
-
                     <div class="section-category">更新履歴</div>
                     <div class="history-box" id="update-history">読み込み中...</div>
                 </div>
 
-                <!-- 2. FAQページ -->
                 <div id="faq-page" class="hidden">
                     <h2 class="page-title">FAQ：よくある質問</h2>
-                    <div class="section-category">サイト全般について</div>
+                    <div class="section-category">サイト全般</div>
                     <div class="faq-q">このサイトは公式ですか？</div>
-                    <p class="faq-a">いいえ、本サイトは有志によるファンサイトです。運営元のアソビモ株式会社様とは一切関係ありません。</p>
-                    <div class="faq-q">スマホからでも見られますか？</div>
-                    <p class="faq-a">はい、ブラウザから閲覧可能です。</p>
+                    <p class="faq-a">いいえ、非公式のファンサイトです。</p>
                 </div>
 
-                <!-- 3. 生産データページ -->
                 <div id="production-page" class="hidden">
                     <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
                     <table>
-                        <thead>
-                            <tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr>
-                        </thead>
-                        <tbody id="recipe-body">
-                            <tr><td>データ読み込み中...</td></tr>
-                        </tbody>
+                        <thead><tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr></thead>
+                        <tbody id="recipe-body"><tr><td>データ読み込み中...</td></tr></tbody>
                     </table>
                 </div>
 
-                <!-- 4. 汎用ページ -->
                 <div id="generic-page" class="hidden">
                     <h2 class="page-title" id="generic-title"></h2>
                     <p>このページの内容は現在準備中です。</p>
@@ -273,6 +245,8 @@
 
         async function loadSidebar() {
             const navEl = document.getElementById('sidebar-nav');
+            const toggleTargets = ["一次職", "二次職", "三次職"]; // 折りたたみ対象のリスト
+
             try {
                 const { data, error } = await client
                     .from('nav_menus')
@@ -280,6 +254,7 @@
                     .eq('is_active', true)
                     .order('display_order', { ascending: true });
                 if (error) throw error;
+                
                 const categories = {};
                 data.forEach(item => {
                     if (!categories[item.category]) categories[item.category] = [];
@@ -291,9 +266,16 @@
                 for (const catName in categories) {
                     const ulId = `nav-ul-${catIdx}`;
                     const titleId = `nav-title-${catIdx}`;
-                    // 仕切り(カテゴリータイトル)の作成
-                    navHtml += `<div id="${titleId}" class="nav-category-title has-items" onclick="toggleNav('${ulId}', '${titleId}')">${catName}</div>`;
-                    navHtml += `<ul id="${ulId}">`;
+                    const isCollapsible = toggleTargets.includes(catName);
+                    
+                    // 折りたたみ対象かどうかでクラスを分ける
+                    const titleClass = isCollapsible ? "nav-category-title collapsible" : "nav-category-title";
+                    const ulClass = isCollapsible ? "collapsed" : "show";
+                    const onClick = isCollapsible ? `onclick="toggleNav('${ulId}', '${titleId}')"` : "";
+
+                    navHtml += `<div id="${titleId}" class="${titleClass}" ${onClick}>${catName}</div>`;
+                    navHtml += `<ul id="${ulId}" class="${ulClass}">`;
+                    
                     categories[catName].forEach(item => {
                         const target = item.page_id ? `'${item.page_id}'` : `'generic-page', '${item.display_name}'`;
                         navHtml += `<li><a onclick="showPage(${target})">${item.display_name}</a></li>`;
@@ -302,12 +284,9 @@
                     catIdx++;
                 }
                 navEl.innerHTML = navHtml;
-                
-                // FrontPageを含むカテゴリーなどは最初から開いておきたい場合はここで制御可能
             } catch (e) { navEl.innerHTML = 'メニュー読み込み失敗'; }
         }
 
-        // サイドバーのアコーディオン制御
         function toggleNav(ulId, titleId) {
             const ul = document.getElementById(ulId);
             const title = document.getElementById(titleId);
@@ -340,7 +319,7 @@
             } catch (e) { historyBox.innerHTML = "読み込み失敗"; }
         }
 
-        // --- 生産データ読み込みロジック (変更なし) ---
+        // --- 以下、生産データ読み込みロジック (変更なし) ---
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
