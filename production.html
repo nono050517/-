@@ -6,39 +6,43 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 他のCSSとの干渉を避けるための強力な設定 */
         .hidden { display: none !important; }
 
-        /* スクロール領域の親要素が原因の場合が多いので、ここを調整 */
+        /* スクロールバーを復活させ、固定を有効にする設定 */
+        .container {
+            display: flex;
+            height: 100vh; /* 画面いっぱいの高さを確保 */
+            overflow: hidden;
+        }
+
         main {
-            overflow: visible !important;
+            flex: 1;
+            overflow-y: auto; /* メインコンテンツ側でスクロールさせる */
+            position: relative;
         }
 
         table {
             border-collapse: separate !important;
             border-spacing: 0 !important;
             width: 100%;
-            position: relative;
         }
 
-        /* 🌸タイトル行の完全固定 */
+        /* 🌸タイトル行をメイン領域の最上部に固定[cite: 2] */
         thead th {
-            position: -webkit-sticky; /* Safari対応 */
             position: sticky;
             top: 0;
-            z-index: 9999; /* 他のどの要素よりも前面に */
+            z-index: 1000;
             background-color: #ffc0cb !important;
             color: #d81b60;
             padding: 12px;
-            font-size: 1.1em;
             border-bottom: 3px solid #d81b60;
-            box-shadow: 0 4px 6px -2px rgba(0,0,0,0.3); /* 下に影をつけて浮いている感を出す */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* 職業バーとの重なり防止 */
-        .row-job td {
+        /* 職業バーがタイトルの上に被らないように調整 */
+        .row-job {
             position: relative;
-            z-index: 10;
+            z-index: 1;
         }
     </style>
 </head>
@@ -59,7 +63,7 @@
     </div>
     <script src="common.js"></script>
     <script>
-        // ロジック部分は「順番」と「階層閉じ」を維持した最新版です
+        // ロジック（ソート順・階層制御）はそのまま維持しています
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
