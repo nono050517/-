@@ -3,133 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ステータスについて - エリシアアーカイブス</title>
+    <title>ステータスについて - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .status-table { width: 100%; border-collapse: collapse; margin: 15px 0; background-color: #fff; font-size: 0.95em; }
-        .status-table th, .status-table td { border: 1px solid #e0c8c8; padding: 10px 8px; text-align: left; }
-        .status-table th { background-color: #f8eeee; color: #8b5a5a; white-space: nowrap; }
+        /* status.html 独自の追加スタイル */
+        .status-table { width: 100%; border-collapse: collapse; margin: 15px 0; background-color: #fff; font-size: 11px; }
+        .status-table th, .status-table td { border: 1px solid #ffdae0; padding: 10px 8px; text-align: left; }
+        .status-table th { background-color: #ffc0cb; color: #5d4037; white-space: nowrap; }
         
-        /* 補正値テーブル専用の軽量スタイル */
-        .correction-table { font-size: 0.85em; }
+        .correction-table { font-size: 10px; }
         .correction-table th, .correction-table td { padding: 6px 4px; text-align: center; }
         .correction-table td:first-child { text-align: left; font-weight: bold; background-color: #fffafb; }
-        .zero { color: #ccc; } /* 数値がない部分を薄くして可読性アップ */
+        .zero { color: #ccc; }
 
-        .highlight { color: #d88; font-weight: bold; }
-        .formula-box { background: #fdfaf6; padding: 15px; border: 1px solid #eee; margin: 10px 0; font-family: monospace; font-size: 0.9em; line-height: 1.6; border-radius: 4px; }
-        .info-note { font-size: 0.85em; color: #666; margin-bottom: 8px; border-left: 3px solid #d88; padding-left: 10px; background: #fffcfc; padding-top: 5px; padding-bottom: 5px; }
+        .highlight { color: #e91e63; font-weight: bold; }
+        .formula-box { background: #fffaf0; padding: 15px; border: 1px solid #e0d0c0; margin: 10px 0; font-family: monospace; line-height: 1.6; border-radius: 4px; }
+        .info-note { font-size: 10px; color: #8b5a5a; margin-bottom: 8px; border-left: 3px solid #ffb6c1; padding-left: 10px; background: #fffcfc; padding-top: 5px; padding-bottom: 5px; }
         
-        h3 { border-bottom: 1px solid #e0c8c8; padding-bottom: 5px; margin-top: 30px; }
+        h3 { border-bottom: 2px solid #f5e1e1; padding-bottom: 5px; margin-top: 30px; color: #8b5a5a; font-size: 13px; }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <div class="container">
-            <aside class="sidebar"><nav id="sidebar-nav"></nav></aside>
+            <nav id="sidebar-nav"></nav>
 
-            <main class="main-content">
-                <section class="content-section">
-                    <h2 class="section-title">ステータス解説</h2>
-                    <p>エリシアオンラインにおける能力値の影響と、三次職における実測上昇規則をまとめています。</p>
+            <main>
+                <h2 class="page-title">ステータス解説</h2>
+                <p>エリシアオンラインにおける能力値の影響と、三次職における実測上昇規則をまとめています。</p>
 
-                    <h3>■ 基本能力と影響</h3>
-                    <div class="info-note">
-                        ステータス合計値 ＝ 「振分値 ＋ <strong>現在の職業補正値</strong>」
+                <h3>■ 基本能力と影響</h3>
+                <div class="info-note">
+                    ステータス合計値 ＝ 「振分値 ＋ <strong>現在の職業補正値</strong>」
+                </div>
+                <table class="status-table">
+                    <thead>
+                        <tr>
+                            <th>ステータス</th>
+                            <th>戦闘への影響</th>
+                            <th>生産への影響</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>STR</strong></td><td><span class="highlight">ATK</span>（物理攻撃力）</td><td>武器生産</td></tr>
+                        <tr><td><strong>DEX</strong></td><td>HIT、ASPD、SSPD、弓ATK</td><td>防具生産</td></tr>
+                        <tr><td><strong>INT</strong></td><td>SP最大値、<span class="highlight">MATK</span>（魔法攻撃力）</td><td>製薬</td></tr>
+                        <tr><td><strong>VIT</strong></td><td><span class="highlight">HP</span>最大値</td><td>鉱石加工</td></tr>
+                        <tr><td><strong>AGI</strong></td><td>AVOID（回避）、ASPD、SSPD</td><td>料理</td></tr>
+                        <tr><td><strong>LUK</strong></td><td>CRI（クリティカル）</td><td>全生産・HQ確率</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>■ ステータス上昇値の目安（三次職基準）</h3>
+                <div style="margin-top:10px;">
+                    <strong>STR（攻撃力）</strong>
+                    <div class="formula-box">
+                        <strong>【算出規則】</strong> 合計STRにつきATK+1。さらに10の倍数でボーナス加算。<br>
+                        ・実測例：ロイヤルガード（181） ＝ <span class="highlight">ATK 520</span>
                     </div>
-                    <table class="status-table">
+
+                    <strong>INT（魔法攻撃力・SP）</strong>
+                    <div class="formula-box">
+                        <strong>【MATK算出規則】</strong> 7の倍数時にボーナス加算。<br>
+                        ・実測：合計INT 171 ＝ <span class="highlight">MATK 747</span><br><br>
+                        <strong>【SP比較（170pt振分時）】</strong><br>
+                        ・ベルセルク　　：合計170 ＝ <span class="highlight">SP 6,490</span><br>
+                        ・ロイヤルガード：合計171 ＝ <span class="highlight">SP 13,056</span><br>
+                        ・アークメイジ　：合計174 ＝ <span class="highlight">SP 23,061</span>
+                    </div>
+
+                    <strong>VIT（最大HP）</strong>
+                    <div class="formula-box">
+                        <strong>【HP比較（170pt振分時）】</strong><br>
+                        ・ベルセルク　　：合計175 ＝ <span class="highlight">HP 52,704</span><br>
+                        ・ロイヤルガード：合計178 ＝ <span class="highlight">HP 47,568</span><br>
+                        ・アサシン　　　：合計171 ＝ <span class="highlight">HP 40,362</span>
+                    </div>
+
+                    <strong>DEX / AGI / LUK</strong>
+                    <div class="formula-box">
+                        ・<strong>DEX</strong>：合計× (HIT:1.5 / ASPD:0.5 / SSPD:2.0)<br>
+                        ・<strong>AGI</strong>：合計× (AVD:1.5 / ASPD:2.0 / SSPD:0.5)<br>
+                        ・<strong>LUK</strong>：合計× (CRI:0.3)
+                    </div>
+                </div>
+
+                <h3>■ 三次職の補正値一覧</h3>
+                <p style="font-size: 10px; color: #888;">※各職業に固定で付与される初期ボーナス値です。</p>
+                <div style="overflow-x: auto;">
+                    <table class="status-table correction-table">
                         <thead>
                             <tr>
-                                <th>ステータス</th>
-                                <th>戦闘への影響</th>
-                                <th>生産への影響</th>
+                                <th>職業</th><th>HP</th><th>SP</th><th>STR</th><th>DEX</th><th>INT</th><th>VIT</th><th>AGI</th><th>LUK</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td><strong>STR</strong></td><td><span class="highlight">ATK</span>（物理攻撃力）</td><td>武器生産</td></tr>
-                            <tr><td><strong>DEX</strong></td><td>HIT、ASPD、SSPD、弓ATK</td><td>防具生産</td></tr>
-                            <tr><td><strong>INT</strong></td><td>SP最大値、<span class="highlight">MATK</span>（魔法攻撃力）</td><td>製薬</td></tr>
-                            <tr><td><strong>VIT</strong></td><td><span class="highlight">HP</span>最大値</td><td>鉱石加工</td></tr>
-                            <tr><td><strong>AGI</strong></td><td>AVOID（回避）、ASPD、SSPD</td><td>料理</td></tr>
-                            <tr><td><strong>LUK</strong></td><td>CRI（クリティカル）</td><td>全生産・HQ確率</td></tr>
+                            <tr><td>ロイヤルガード</td><td>7008</td><td>212</td><td>11</td><td class="zero">-</td><td>1</td><td>8</td><td>15</td><td>1</td></tr>
+                            <tr><td>ベルセルク</td><td>7074</td><td>68</td><td>14</td><td>1</td><td class="zero">-</td><td>5</td><td>16</td><td class="zero">-</td></tr>
+                            <tr><td>匠</td><td>5304</td><td>201</td><td>12</td><td class="zero">-</td><td>2</td><td>6</td><td>16</td><td class="zero">-</td></tr>
+                            <tr><td>アサシン</td><td>4662</td><td>212</td><td>4</td><td class="zero">-</td><td>1</td><td>1</td><td class="zero">-</td><td class="zero">-</td></tr>
+                            <tr><td>ガンスリンガー</td><td>4134</td><td>169</td><td class="zero">-</td><td>5</td><td>1</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td></tr>
+                            <tr><td>ペネトレイター</td><td>4134</td><td>212</td><td class="zero">-</td><td class="zero">-</td><td>1</td><td class="zero">-</td><td>5</td><td class="zero">-</td></tr>
+                            <tr><td>アークメイジ</td><td>3816</td><td>748</td><td class="zero">-</td><td>1</td><td>4</td><td class="zero">-</td><td class="zero">-</td><td>1</td></tr>
                         </tbody>
                     </table>
+                </div>
 
-                    <h3>■ ステータス上昇値の目安（三次職基準）</h3>
-                    <ul class="nav-list" style="list-style: none; padding-left: 0;">
-                        <li>
-                            <strong>STR（攻撃力）</strong>
-                            <div class="formula-box">
-                                <strong>【算出規則】</strong> 合計STRにつきATK+1。さらに10の倍数でボーナス加算。<br>
-                                ・実測例：ロイヤルガード（振分170 ＋ 補正11 ＝ 合計181） ＝ <span class="highlight">ATK 520</span>
-                            </div>
-                        </li>
-                        <li>
-                            <strong>INT（魔法攻撃力・SP）</strong>
-                            <div class="formula-box">
-                                <strong>【MATK算出規則】</strong> 7の倍数時にボーナス加算。<br>
-                                ・実測：合計INT 171 (振分170 ＋ 補正1) ＝ <span class="highlight">MATK 747</span><br><br>
-                                <strong>【SP比較（170pt振分時）】</strong><br>
-                                ・ベルセルク　　：合計170 ＝ <span class="highlight">SP 6,490</span><br>
-                                ・ロイヤルガード：合計171 ＝ <span class="highlight">SP 13,056</span> (+76/INT)<br>
-                                ・アークメイジ　：合計174 ＝ <span class="highlight">SP 23,061</span> (+129/INT)<br>
-                                ・匠　　　　　　：合計172 ＝ <span class="highlight">SP 9,192</span><br>
-                                ・アサシン　　　：合計171 ＝ <span class="highlight">SP 13,056</span><br>
-                                ・ガンスリンガー：合計171 ＝ <span class="highlight">SP 10,507</span><br>
-                                ・ペネトレイター：合計171 ＝ <span class="highlight">SP 13,056</span>
-                            </div>
-                        </li>
-                        <li>
-                            <strong>VIT（最大HP）</strong>
-                            <div class="formula-box">
-                                <strong>【HP比較（170pt振分時）】</strong><br>
-                                ・ベルセルク　　：合計175 ＝ <span class="highlight">HP 52,704</span> (+270/VIT)<br>
-                                ・ロイヤルガード：合計178 ＝ <span class="highlight">HP 47,568</span> (+240/VIT)<br>
-                                ・アークメイジ　：合計170 ＝ <span class="highlight">HP 34,416</span> (+180/VIT)<br>
-                                ・匠　　　　　　：合計176 ＝ <span class="highlight">HP 38,454</span> (+195/VIT)<br>
-                                ・アサシン　　　：合計171 ＝ <span class="highlight">HP 40,362</span> (+210/VIT)<br>
-                                ・ガンスリンガー：合計170 ＝ <span class="highlight">HP 37,284</span><br>
-                                ・ペネトレイター：合計170 ＝ <span class="highlight">HP 37,284</span>
-                            </div>
-                        </li>
-                        <li>
-                            <strong>DEX / AGI / LUK</strong>
-                            <div class="formula-box">
-                                ・<strong>DEX</strong>：合計× (HIT:1.5 / ASPD:0.5 / SSPD:2.0)<br>
-                                ・<strong>AGI</strong>：合計× (AVD:1.5 / ASPD:2.0 / SSPD:0.5)<br>
-                                ・<strong>LUK</strong>：合計× (CRI:0.3)
-                            </div>
-                        </li>
-                    </ul>
-
-                    <h3>■ 三次職の補正値一覧</h3>
-                    <p style="font-size: 0.85em; color: #888;">※各職業に固定で付与される初期ボーナス値です。</p>
-                    <div style="overflow-x: auto;"> <!-- スマホ用スクロール対応 -->
-                        <table class="status-table correction-table">
-                            <thead>
-                                <tr>
-                                    <th>職業</th><th>HP</th><th>SP</th><th>STR</th><th>DEX</th><th>INT</th><th>VIT</th><th>AGI</th><th>LUK</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td>ロイヤルガード</td><td>7008</td><td>212</td><td>11</td><td class="zero">-</td><td>1</td><td>8</td><td>15</td><td>1</td></tr>
-                                <tr><td>ベルセルク</td><td>7074</td><td>68</td><td>14</td><td>1</td><td class="zero">-</td><td>5</td><td>16</td><td class="zero">-</td></tr>
-                                <tr><td>匠</td><td>5304</td><td>201</td><td>12</td><td class="zero">-</td><td>2</td><td>6</td><td>16</td><td class="zero">-</td></tr>
-                                <tr><td>アサシン</td><td>4662</td><td>212</td><td>4</td><td class="zero">-</td><td>1</td><td>1</td><td class="zero">-</td><td class="zero">-</td></tr>
-                                <tr><td>ガンスリンガー</td><td>4134</td><td>169</td><td class="zero">-</td><td>5</td><td>1</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td></tr>
-                                <tr><td>ペネトレイター</td><td>4134</td><td>212</td><td class="zero">-</td><td class="zero">-</td><td>1</td><td class="zero">-</td><td>5</td><td class="zero">-</td></tr>
-                                <tr><td>アークメイジ</td><td>3816</td><td>748</td><td class="zero">-</td><td>1</td><td>4</td><td class="zero">-</td><td class="zero">-</td><td>1</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <h3>■ 用語集</h3>
-                    <div style="background: #fdfaf6; padding: 15px; border-radius: 4px; border: 1px solid #eee; font-size: 0.9em;">
-                        <p><strong>ASPD / SSPD</strong>：攻撃速度と詠唱速度。AGIとDEXの両方が影響します。</p>
-                        <p><strong>AVOID</strong>：回避。敵の物理攻撃を無効化する確率に影響します。</p>
-                        <p><strong>CRI</strong>：クリティカル率。防御無視ダメージの発生率です。</p>
-                    </div>
-                </section>
+                <h3>■ 用語集</h3>
+                <div style="background: #fffaf0; padding: 15px; border-radius: 4px; border: 1px solid #e0d0c0; margin-top:10px;">
+                    <p style="margin:5px 0;"><strong>ASPD / SSPD</strong>：攻撃速度と詠唱速度。AGIとDEXの両方が影響します。</p>
+                    <p style="margin:5px 0;"><strong>AVOID</strong>：回避。敵の物理攻撃を無効化する確率に影響します。</p>
+                    <p style="margin:5px 0;"><strong>CRI</strong>：クリティカル率。防御無視ダメージの発生率です。</p>
+                </div>
             </main>
         </div>
     </div>
