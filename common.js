@@ -13,19 +13,26 @@ async function loadSidebar() {
     try {
         const { data } = await client.from('nav_menus').select('*').eq('is_active', true).order('display_order');
         const categories = {};
-        data.forEach(item => { if (!categories[item.category]) categories[item.category] = []; categories[item.category].push(item); });
+        data.forEach(item => { 
+            if (!categories[item.category]) categories[item.category] = []; 
+            categories[item.category].push(item); 
+        });
         
-        const jobCats = ["一次職", "二次職", "三次職"];
+        // 閉じておきたいカテゴリのキーワード設定
+        const collapsibleCats = ["一次職", "二次職", "三次職"];
         let html = '';
+        
         Object.keys(categories).forEach((cat, i) => {
-            const isJob = jobCats.includes(cat);
-            const titleCls = isJob ? "nav-category-title collapsible" : "nav-category-title";
-            const ulCls = isJob ? "" : "always-show";
-            const click = isJob ? `onclick="toggleNav('u-${i}','t-${i}')"` : "";
+            // カテゴリ名に「次職」が含まれるか、リストに完全一致するか判定
+            const isCollapsible = collapsibleCats.includes(cat) || cat.includes("次職");
+            
+            const titleCls = isCollapsible ? "nav-category-title collapsible" : "nav-category-title";
+            const ulCls = isCollapsible ? "" : "always-show";
+            const click = isCollapsible ? `onclick="toggleNav('u-${i}','t-${i}')"` : "";
 
             html += `<div id="t-${i}" class="${titleCls}" ${click}>${cat}</div><ul id="u-${i}" class="${ulCls}">`;
+            
             categories[cat].forEach(item => {
-                // リンク先をファイル名に紐付け
                 let link = 'index.html'; 
                 if (item.page_id === 'production-page') link = 'production.html';
                 if (item.page_id === 'faq-page') link = 'faq.html';
@@ -35,15 +42,21 @@ async function loadSidebar() {
             html += `</ul>`;
         });
         navEl.innerHTML = html;
-    } catch (e) { console.error("Sidebar error:", e); }
+    } catch (e) { 
+        console.error("Sidebar error:", e); 
+    }
 }
 
 function toggleNav(u, t) {
-    document.getElementById(u).classList.toggle('show');
-    document.getElementById(t).classList.toggle('active');
+    const ul = document.getElementById(u);
+    const title = document.getElementById(t);
+    if (ul && title) {
+        ul.classList.toggle('show');
+        title.classList.toggle('active');
+    }
 }
 
-// ページ読み込み時にヘッダーを注入
+// 共通パーツ（ヘッダー）の注入
 document.addEventListener("DOMContentLoaded", () => {
     const headerHtml = `
         <header>
