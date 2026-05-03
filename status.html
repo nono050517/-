@@ -18,7 +18,7 @@
         .zero { color: #ccc; }
 
         .highlight { color: #e91e63; font-weight: bold; }
-        .formula-box { background: #fffaf0; padding: 15px; border: 1px solid #e0d0c0; margin: 10px 0; font-family: monospace; line-height: 1.6; border-radius: 4px; }
+        .formula-box { background: #fffaf0; padding: 15px; border: 1px solid #e0d0c0; margin: 10px 0; font-family: monospace; line-height: 1.6; border-radius: 4px; font-size: 11px; }
         .info-note { font-size: 10px; color: #8b5a5a; margin-bottom: 8px; border-left: 3px solid #ffb6c1; padding-left: 10px; background: #fffcfc; padding-top: 5px; padding-bottom: 5px; }
         
         h3 { border-bottom: 2px solid #f5e1e1; padding-bottom: 5px; margin-top: 30px; color: #8b5a5a; font-size: 13px; }
@@ -60,7 +60,7 @@
                     <strong>STR（攻撃力）</strong>
                     <div class="formula-box">
                         <strong>【算出規則】</strong> 合計STRにつきATK+1。さらに10の倍数でボーナス加算。<br>
-                        ・実測例：ロイヤルガード（181） ＝ <span class="highlight">ATK 520</span>
+                        ・実測例：ロイヤルガード（合計181） ＝ <span class="highlight">ATK 520</span>
                     </div>
 
                     <strong>INT（魔法攻撃力・SP）</strong>
@@ -69,16 +69,24 @@
                         ・実測：合計INT 171 ＝ <span class="highlight">MATK 747</span><br><br>
                         <strong>【SP比較（170pt振分時）】</strong><br>
                         ・ベルセルク　　：合計170 ＝ <span class="highlight">SP 6,490</span><br>
-                        ・ロイヤルガード：合計171 ＝ <span class="highlight">SP 13,056</span><br>
-                        ・アークメイジ　：合計174 ＝ <span class="highlight">SP 23,061</span>
+                        ・ロイヤルガード：合計171 ＝ <span class="highlight">SP 13,056</span> (+76/INT)<br>
+                        ・アークメイジ　：合計174 ＝ <span class="highlight">SP 23,061</span> (+129/INT)<br>
+                        ・匠　　　　　　：合計172 ＝ <span class="highlight">SP 9,192</span><br>
+                        ・アサシン　　　：合計171 ＝ <span class="highlight">SP 13,056</span><br>
+                        ・ガンスリンガー：合計171 ＝ <span class="highlight">SP 10,507</span><br>
+                        ・ペネトレイター：合計171 ＝ <span class="highlight">SP 13,056</span>
                     </div>
 
                     <strong>VIT（最大HP）</strong>
                     <div class="formula-box">
                         <strong>【HP比較（170pt振分時）】</strong><br>
-                        ・ベルセルク　　：合計175 ＝ <span class="highlight">HP 52,704</span><br>
-                        ・ロイヤルガード：合計178 ＝ <span class="highlight">HP 47,568</span><br>
-                        ・アサシン　　　：合計171 ＝ <span class="highlight">HP 40,362</span>
+                        ・ベルセルク　　：合計175 ＝ <span class="highlight">HP 52,704</span> (+270/VIT)<br>
+                        ・ロイヤルガード：合計178 ＝ <span class="highlight">HP 47,568</span> (+240/VIT)<br>
+                        ・アークメイジ　：合計170 ＝ <span class="highlight">HP 34,416</span> (+180/VIT)<br>
+                        ・匠　　　　　　：合計176 ＝ <span class="highlight">HP 38,454</span> (+195/VIT)<br>
+                        ・アサシン　　　：合計171 ＝ <span class="highlight">HP 40,362</span> (+210/VIT)<br>
+                        ・ガンスリンガー：合計170 ＝ <span class="highlight">HP 37,284</span><br>
+                        ・ペネトレイター：合計170 ＝ <span class="highlight">HP 37,284</span>
                     </div>
 
                     <strong>DEX / AGI / LUK</strong>
@@ -89,17 +97,14 @@
                     </div>
                 </div>
 
-<h3>■ 三次職の補正値一覧</h3>
-                <!-- 注釈部分を追記・修正 -->
+                <h3>■ 三次職の補正値一覧</h3>
                 <div class="info-note">
                     <strong>【データ計測条件】</strong><br>
                     ・ベースLv150、ステータスポイント未振分（ALL 0）の状態です。<br>
                     ・装備・スキル・パッシブ補正等は一切適用されていない「素体」の数値です。
                 </div>
-                
                 <div style="overflow-x: auto;">
                     <table class="status-table correction-table">
-                        <!-- 以下、既存のテーブルコード -->
                         <thead>
                             <tr>
                                 <th>職業</th><th>HP</th><th>SP</th><th>STR</th><th>DEX</th><th>INT</th><th>VIT</th><th>AGI</th><th>LUK</th>
