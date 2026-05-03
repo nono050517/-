@@ -8,17 +8,29 @@
     <style>
         .hidden { display: none !important; }
 
-        /* スクロールバーを復活させ、固定を有効にする設定 */
+        /* スクロールと固定を両立させる設定 */
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        .wrapper {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
         .container {
             display: flex;
-            height: 100vh; /* 画面いっぱいの高さを確保 */
+            flex: 1;
             overflow: hidden;
         }
 
         main {
             flex: 1;
-            overflow-y: auto; /* メインコンテンツ側でスクロールさせる */
+            overflow-y: auto; /* ここでスクロールを発生させる */
             position: relative;
+            padding: 20px;
         }
 
         table {
@@ -27,10 +39,10 @@
             width: 100%;
         }
 
-        /* 🌸タイトル行をメイン領域の最上部に固定[cite: 2] */
+        /* 🌸タイトル行の完全固定 */
         thead th {
             position: sticky;
-            top: 0;
+            top: -20px; /* mainのpadding分を調整 */
             z-index: 1000;
             background-color: #ffc0cb !important;
             color: #d81b60;
@@ -39,11 +51,8 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* 職業バーがタイトルの上に被らないように調整 */
-        .row-job {
-            position: relative;
-            z-index: 1;
-        }
+        .row-job { background-color: #ffc0cb !important; position: relative; z-index: 10; }
+        .row-skill { background-color: #fff0f5 !important; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -63,7 +72,6 @@
     </div>
     <script src="common.js"></script>
     <script>
-        // ロジック（ソート順・階層制御）はそのまま維持しています
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
@@ -121,7 +129,12 @@
                 html += `<tr class="row-job" onclick="toggleLayer('${jobId}','btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
                 
                 const groups = {};
-                jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
+                // スキル名とレベルでグループ化
+                jobRecipes.forEach(r => { 
+                    const k = `${r.skill_type}_${r.skill_lv}`; 
+                    if(!groups[k]) groups[k]=[]; 
+                    groups[k].push(r); 
+                });
                 
                 const sortedKeys = Object.keys(groups).sort((a, b) => {
                     const [typeA, lvA] = a.split('_');
@@ -133,6 +146,8 @@
                 sortedKeys.forEach((gk, sIdx) => {
                     const sId = `${jobId}-s${sIdx}`, [type, lv] = gk.split('_');
                     html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}','btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
+                    
+                    // そのスキル・レベルに属するすべてのレシピをループ表示[cite: 1]
                     groups[gk].forEach((r, rIdx) => {
                         const rId = `${sId}-r${rIdx}`, {labels, details} = getMethods(r.output_item_name, rId, 0);
                         html += `<tr class="hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}','btn-${rId}')"><td><span class="tree-line">   ┗ </span><span class="toggle-icon" id="btn-${rId}">▶</span><input type="checkbox" class="cb"><b>${r.output_item_name}</b>【${r.recipe_name}】${labels}${details}</td></tr>`;
