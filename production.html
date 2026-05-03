@@ -6,28 +6,39 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* 他のCSSとの干渉を避けるための強力な設定 */
         .hidden { display: none !important; }
 
-        /* タイトル行固定の決定版 */
-        table {
-            border-collapse: separate; /* stickyを効かせるために重要 */
-            border-spacing: 0;
-            width: 100%;
+        /* スクロール領域の親要素が原因の場合が多いので、ここを調整 */
+        main {
+            overflow: visible !important;
         }
 
+        table {
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+            width: 100%;
+            position: relative;
+        }
+
+        /* 🌸タイトル行の完全固定 */
         thead th {
+            position: -webkit-sticky; /* Safari対応 */
             position: sticky;
             top: 0;
-            z-index: 100;
-            background-color: #ffc0cb; /* タイトル行の背景色 */
-            border-bottom: 2px solid #e91e63;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            padding: 10px;
+            z-index: 9999; /* 他のどの要素よりも前面に */
+            background-color: #ffc0cb !important;
+            color: #d81b60;
+            padding: 12px;
+            font-size: 1.1em;
+            border-bottom: 3px solid #d81b60;
+            box-shadow: 0 4px 6px -2px rgba(0,0,0,0.3); /* 下に影をつけて浮いている感を出す */
         }
 
-        /* 職業行も少し目立たせて固定の邪魔をしないように調整 */
-        .row-job {
-            background-color: #ffc0cb !important;
+        /* 職業バーとの重なり防止 */
+        .row-job td {
+            position: relative;
+            z-index: 10;
         }
     </style>
 </head>
@@ -38,7 +49,9 @@
             <main>
                 <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
                 <table>
-                    <thead><tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr></thead>
+                    <thead>
+                        <tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr>
+                    </thead>
                     <tbody id="recipe-body"></tbody>
                 </table>
             </main>
@@ -46,6 +59,7 @@
     </div>
     <script src="common.js"></script>
     <script>
+        // ロジック部分は「順番」と「階層閉じ」を維持した最新版です
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
