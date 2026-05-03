@@ -60,17 +60,29 @@
             </main>
         </div>
     </div>
-    <script src="common.js"></script>
-    <script>
-        async function loadUpdates() {
-            try {
-                const { data } = await client.from('site_updates').select('*').order('date', {ascending:false});
-                if(data) document.getElementById('update-history').innerHTML = data.map(d => `・${d.date}：${d.content}`).join('<br>');
-            } catch (e) {
-                document.getElementById('update-history').innerText = "履歴の取得に失敗しました。";
+<!-- 63行目付近から入れ替え -->
+<script src="common.js"></script>
+<script>
+    async function loadUpdates() {
+        // common.jsのclientが準備できるまで少し待つか、再定義する
+        try {
+            // もしclientが未定義なら、common.jsが読み込まれるのを待つ
+            if (typeof client === 'undefined') {
+                setTimeout(loadUpdates, 100);
+                return;
             }
+
+            const { data } = await client.from('site_updates').select('*').order('date', {ascending:false});
+            if(data) {
+                document.getElementById('update-history').innerHTML = data.map(d => `${d.date} : ${d.content}`).join('<br>');
+            }
+        } catch (e) {
+            console.error(e);
+            document.getElementById('update-history').innerText = "履歴の取得に失敗しました。";
         }
-        window.addEventListener('DOMContentLoaded', loadUpdates);
-    </script>
+    }
+    // サイドバーの読み込み完了を待ってから実行
+    window.addEventListener('load', loadUpdates);
+</script>
 </body>
 </html>
