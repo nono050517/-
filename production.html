@@ -1,56 +1,11 @@
-<style>
-    /* 1. テーブルを表示させるための最低限の設定 */
-    .recipe-wrapper {
-        width: 100%;
-        max-height: 80vh; /* 画面の8割の高さを超えたらスクロール */
-        overflow-y: auto; /* ここでスクロールを発生させる */
-        border: 1px solid #ddd;
-        position: relative;
-    }
-
-    table {
-        border-collapse: separate !important;
-        border-spacing: 0 !important;
-        width: 100%;
-    }
-
-    /* 2. 🌸タイトル行：これだけで固定する */
-    thead th {
-        position: -webkit-sticky; /* Safari用 */
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        background-color: #ffc0cb !important;
-        color: #d81b60;
-        padding: 15px;
-        border-bottom: 3px solid #d81b60;
-    }
-
-    /* 3. 職業・スキルの行（タイトルの下に潜り込ませる） */
-    .row-job { background-color: #ffc0cb !important; position: relative; z-index: 1; }
-    .row-skill { background-color: #fff0f5 !important; font-weight: bold; }
-    
-    .hidden { display: none !important; }
-</style>
-
-<div class="container">
-    <nav id="sidebar-nav"></nav>
-    <main>
-        <h2 class="page-title">エリシア生産データ一覧</h2>
-        
-        <!-- この div で囲むのが一番安全です -->
-        <div class="recipe-wrapper">
-            <table>
-                <thead>
-                    <tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr>
-                </thead>
-                <tbody id="recipe-body"></tbody>
-            </table>
-        </div>
-    </main>
-</div>
-
-<script>
-    // JS部分は「全レシピ表示」のロジック[cite: 1]を維持しています。
-    // （前回のコードからロジック部分をそのまま貼り付けてください）
-</script>
+<!-- mainタグに直接 overflow: visible を指定します -->
+<main style="overflow: visible !important;">
+    <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
+    <table style="border-collapse: separate !important;">
+        <thead>
+            <!-- 既存の style.css の thead th { position: sticky; } を活かします -->
+            <tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr>
+        </thead>
+        <tbody id="recipe-body"></tbody>
+    </table>
+</main>
