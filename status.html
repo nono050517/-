@@ -9,24 +9,32 @@
         .status-table { width: 100%; border-collapse: collapse; margin: 15px 0; background-color: #fff; font-size: 0.95em; }
         .status-table th, .status-table td { border: 1px solid #e0c8c8; padding: 10px 8px; text-align: left; }
         .status-table th { background-color: #f8eeee; color: #8b5a5a; white-space: nowrap; }
-        
-        /* 補正値テーブル専用の軽量スタイル */
         .correction-table { font-size: 0.85em; }
         .correction-table th, .correction-table td { padding: 6px 4px; text-align: center; }
         .correction-table td:first-child { text-align: left; font-weight: bold; background-color: #fffafb; }
-        .zero { color: #ccc; } /* 数値がない部分を薄くして可読性アップ */
-
+        .zero { color: #ccc; }
         .highlight { color: #d88; font-weight: bold; }
         .formula-box { background: #fdfaf6; padding: 15px; border: 1px solid #eee; margin: 10px 0; font-family: monospace; font-size: 0.9em; line-height: 1.6; border-radius: 4px; }
         .info-note { font-size: 0.85em; color: #666; margin-bottom: 8px; border-left: 3px solid #d88; padding-left: 10px; background: #fffcfc; padding-top: 5px; padding-bottom: 5px; }
-        
         h3 { border-bottom: 1px solid #e0c8c8; padding-bottom: 5px; margin-top: 30px; }
     </style>
 </head>
 <body>
+    <!-- ヘッダー部分は common.js で生成されるかもしれませんが、
+         枠組みがないと表示されないため、既存のページと ID を合わせます -->
+    <header class="site-header">
+        <div class="header-container">
+            <h1 class="site-title">エリシアオンライン　アーカイブス</h1>
+            <p class="site-subtitle">Ellicia-Online Archives</p>
+        </div>
+    </header>
+
     <div class="wrapper">
         <div class="container">
-            <aside class="sidebar"><nav id="sidebar-nav"></nav></aside>
+            <!-- ここが重要！ここに common.js がメニューを書き込みます -->
+            <aside class="sidebar">
+                <nav id="sidebar-nav"></nav>
+            </aside>
 
             <main class="main-content">
                 <section class="content-section">
@@ -40,9 +48,7 @@
                     <table class="status-table">
                         <thead>
                             <tr>
-                                <th>ステータス</th>
-                                <th>戦闘への影響</th>
-                                <th>生産への影響</th>
+                                <th>ステータス</th><th>戦闘への影響</th><th>生産への影響</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -92,19 +98,11 @@
                                 ・ペネトレイター：合計170 ＝ <span class="highlight">HP 37,284</span>
                             </div>
                         </li>
-                        <li>
-                            <strong>DEX / AGI / LUK</strong>
-                            <div class="formula-box">
-                                ・<strong>DEX</strong>：合計× (HIT:1.5 / ASPD:0.5 / SSPD:2.0)<br>
-                                ・<strong>AGI</strong>：合計× (AVD:1.5 / ASPD:2.0 / SSPD:0.5)<br>
-                                ・<strong>LUK</strong>：合計× (CRI:0.3)
-                            </div>
-                        </li>
                     </ul>
 
                     <h3>■ 三次職の補正値一覧</h3>
                     <p style="font-size: 0.85em; color: #888;">※各職業に固定で付与される初期ボーナス値です。</p>
-                    <div style="overflow-x: auto;"> <!-- スマホ用スクロール対応 -->
+                    <div style="overflow-x: auto;">
                         <table class="status-table correction-table">
                             <thead>
                                 <tr>
@@ -133,6 +131,7 @@
             </main>
         </div>
     </div>
+    <!-- 最後に common.js を呼ぶことで、上記の nav にメニューが生成されます -->
     <script src="common.js"></script>
 </body>
 </html>
