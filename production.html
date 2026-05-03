@@ -6,47 +6,31 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 【ここだけ追加】JavaScriptが隠してしまう行を強制的に表示させます */
-        .hidden { display: table-row !important; }
-
-        /* タイトル行を最前面に固定（元の database.html の設定を維持） */
+        .hidden { display: none !important; }
+        /* タイトル行を最前面に固定するための調整 */
         th { 
             position: sticky; 
             top: 0; 
             z-index: 100; 
-            background: #ffc0cb; 
             box-shadow: 0 2px 2px rgba(0,0,0,0.1);
         }
-
-        /* スクロール時にタイトルが一番上に隙間なく吸着するようにします[cite: 2] */
-        main { padding-top: 0 !important; }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <div class="container">
             <nav id="sidebar-nav"></nav>
-            <main id="main-scroll">
-                <div id="production-page">
-                    <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
-                    <table>
-                        <thead>
-                            <tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr>
-                        </thead>
-                        <tbody id="recipe-body">
-                            <!-- ここに JavaScript がデータを読み込みます -->
-                        </tbody>
-                    </table>
-                </div>
+            <main>
+                <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
+                <table>
+                    <thead><tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr></thead>
+                    <tbody id="recipe-body"></tbody>
+                </table>
             </main>
         </div>
     </div>
-
-    <!-- 外部の共通スクリプトを読み込み[cite: 1] -->
     <script src="common.js"></script>
-
     <script>
-        /* あなたが提示した、本来正しく動いていた JS コード[cite: 3] */
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
@@ -106,6 +90,7 @@
                 const groups = {};
                 jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
                 
+                // スキル名(アルケミーI等)でソートし、次にLvでソートするようにキーを整理
                 const sortedKeys = Object.keys(groups).sort((a, b) => {
                     const [typeA, lvA] = a.split('_');
                     const [typeB, lvB] = b.split('_');
@@ -116,11 +101,44 @@
                 sortedKeys.forEach((gk, sIdx) => {
                     const sId = `${jobId}-s${sIdx}`, [type, lv] = gk.split('_');
                     html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}','btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
-                    groups[gk].forEach((r, rIdx) => {
-                        const rId = `${sId}-r${rIdx}`, {labels, details} = getMethods(r.output_item_name, rId, 0);
-                        html += `<tr class="hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}','btn-${rId}')"><td><span class="tree-line">   ┗ </span><span class="toggle-icon" id="btn-${rId}">▶</span><input type="checkbox" class="cb"><b>${r.output_item_name}</b>【${r.recipe_name}】${labels}${details}</td></tr>`;
-                        html += renderMaterials(r, rId, [true, true]);
+                    
+                    // --- 修正箇所：ここでさらにレシピ名ごとにグループ化する ---
+                    const recipeGroups = {};
+                    groups[gk].forEach(r => {
+                        const rName = r.recipe_name || '名称不明レシピ';
+                        if(!recipeGroups[rName]) recipeGroups[rName] = [];
+                        recipeGroups[rName].push(r);
                     });
+
+                    const recKeys = Object.keys(recipeGroups);
+                    recKeys.forEach((rName, recIdx) => {
+                        const recId = `${sId}-rec${recIdx}`;
+                        const isLastRec = (recIdx === recKeys.length - 1);
+                        const recTree = `    ${isLastRec ? '┗' : '┣'} `; // レシピ階層の罫線
+                        
+                        // レシピ名の行を追加
+                        html += `<tr class="hidden" data-id="${recId}" data-parent="${sId}" onclick="toggleLayer('${recId}','btn-${recId}')"><td><span class="tree-line">${recTree}</span><span class="toggle-icon" id="btn-${recId}">▶</span><b>【${rName}】</b></td></tr>`;
+                        
+                        // レシピ内のアイテムを展開
+                        recipeGroups[rName].forEach((r, itemIdx) => {
+                            const itemId = `${recId}-i${itemIdx}`;
+                            const isLastItem = (itemIdx === recipeGroups[rName].length - 1);
+                            
+                            // アイテム階層の罫線計算
+                            let itemTree = '    '; 
+                            itemTree += isLastRec ? '    ' : '│  '; 
+                            itemTree += `${isLastItem ? '┗' : '┣'} `;
+                            
+                            const {labels, details} = getMethods(r.output_item_name, itemId, 0);
+                            
+                            // アイテム行を追加（レシピ名は親行にあるためここからは削除）
+                            html += `<tr class="hidden" data-id="${itemId}" data-parent="${recId}" onclick="toggleLayer('${itemId}','btn-${itemId}')"><td><span class="tree-line">${itemTree}</span><span class="toggle-icon" id="btn-${itemId}">▶</span><input type="checkbox" class="cb"><b>${r.output_item_name}</b>${labels}${details}</td></tr>`;
+                            
+                            // 素材ツリーを展開（階層が1つ深くなったため、trace配列にisLastRecを追加）
+                            html += renderMaterials(r, itemId, [true, isLastRec, isLastItem]);
+                        });
+                    });
+                    // --- 修正箇所ここまで ---
                 });
             });
             tbody.innerHTML = html;
