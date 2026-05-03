@@ -8,10 +8,11 @@
     <style>
         .hidden { display: none !important; }
 
-        /* スクロールと固定を両立させる設定 */
+        /* レイアウトの再構築 */
         html, body {
             height: 100%;
             margin: 0;
+            overflow: hidden; /* 親要素でのスクロールを禁止 */
         }
 
         .wrapper {
@@ -23,36 +24,47 @@
         .container {
             display: flex;
             flex: 1;
-            overflow: hidden;
+            height: 100%;
         }
 
+        /* レシピ表示エリア */
         main {
             flex: 1;
-            overflow-y: auto; /* ここでスクロールを発生させる */
+            overflow-y: scroll; /* 強制的にスクロールバーを表示 */
             position: relative;
-            padding: 20px;
+            padding: 0; /* paddingを0にすることでタイトルの隙間を無くす */
+        }
+
+        /* コンテンツに余白が欲しい場合は内部の要素で調整 */
+        .page-title {
+            padding: 20px 20px 0 20px;
+            margin: 0;
         }
 
         table {
             border-collapse: separate !important;
             border-spacing: 0 !important;
             width: 100%;
+            margin-top: 10px;
         }
 
-        /* 🌸タイトル行の完全固定 */
+        /* 🌸タイトル行：画面の一番上にピタッと固定[cite: 2] */
         thead th {
             position: sticky;
-            top: -20px; /* mainのpadding分を調整 */
+            top: 0;
             z-index: 1000;
             background-color: #ffc0cb !important;
             color: #d81b60;
-            padding: 12px;
+            padding: 15px;
             border-bottom: 3px solid #d81b60;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        .row-job { background-color: #ffc0cb !important; position: relative; z-index: 10; }
-        .row-skill { background-color: #fff0f5 !important; font-weight: bold; }
+        .row-job { background-color: #ffc0cb !important; cursor: pointer; }
+        .row-skill { background-color: #fff0f5 !important; font-weight: bold; cursor: pointer; }
+        
+        /* 木構造の調整 */
+        .tree-line { white-space: pre; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -72,6 +84,7 @@
     </div>
     <script src="common.js"></script>
     <script>
+        // ロジック（全レシピ表示 & ソート）
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
@@ -129,7 +142,6 @@
                 html += `<tr class="row-job" onclick="toggleLayer('${jobId}','btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
                 
                 const groups = {};
-                // スキル名とレベルでグループ化
                 jobRecipes.forEach(r => { 
                     const k = `${r.skill_type}_${r.skill_lv}`; 
                     if(!groups[k]) groups[k]=[]; 
@@ -147,7 +159,6 @@
                     const sId = `${jobId}-s${sIdx}`, [type, lv] = gk.split('_');
                     html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}','btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
                     
-                    // そのスキル・レベルに属するすべてのレシピをループ表示[cite: 1]
                     groups[gk].forEach((r, rIdx) => {
                         const rId = `${sId}-r${rIdx}`, {labels, details} = getMethods(r.output_item_name, rId, 0);
                         html += `<tr class="hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}','btn-${rId}')"><td><span class="tree-line">   ┗ </span><span class="toggle-icon" id="btn-${rId}">▶</span><input type="checkbox" class="cb"><b>${r.output_item_name}</b>【${r.recipe_name}】${labels}${details}</td></tr>`;
