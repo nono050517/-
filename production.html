@@ -1,11 +1,144 @@
-<!-- mainタグに直接 overflow: visible を指定します -->
-<main style="overflow: visible !important;">
-    <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
-    <table style="border-collapse: separate !important;">
-        <thead>
-            <!-- 既存の style.css の thead th { position: sticky; } を活かします -->
-            <tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr>
-        </thead>
-        <tbody id="recipe-body"></tbody>
-    </table>
-</main>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>生産データ - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .hidden { display: none !important; }
+        /* タイトル行を最前面に固定するための調整 */
+        th { 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">エリシア生産データ一覧（Archives Ver.）</h2>
+                <table>
+                    <thead><tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr></thead>
+                    <tbody id="recipe-body"></tbody>
+                </table>
+            </main>
+        </div>
+    </div>
+    <script src="common.js"></script>
+    <script>
+        async function loadAllRecipes() {
+            const tbody = document.getElementById('recipe-body');
+            if (tbody.getAttribute('data-loaded') === 'true') return;
+            tbody.innerHTML = '<tr><td>データ読み込み中...</td></tr>';
+
+            const [rRes, iRes, jRes] = await Promise.all([
+                client.from('recipes').select('*').order('skill_lv'),
+                client.from('items').select('*'),
+                client.from('job_masters').select('*')
+            ]);
+            const recipes = rRes.data, itemsData = iRes.data, jobsData = jRes.data;
+
+            const getMethods = (name, pId, idx) => {
+                const matches = itemsData.filter(i => i.name === name);
+                const craftR = recipes.find(r => r.output_item_name === name);
+                const baseId = `src-${pId}-${idx}`;
+                let labels = '', details = '';
+                
+                const buy = matches.filter(m => m.method === '購入');
+                if(buy.length) {
+                    labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${baseId}-buy')">購入</span>`;
+                    details += `<div id="${baseId}-buy" class="source-container" style="display:none;">${buy.map(m=>`●購入：${m.location}`).join('<br>')}</div>`;
+                }
+                const drop = matches.filter(m => m.method === 'ドロップ');
+                if(drop.length) {
+                    labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${baseId}-drop')">ドロップ</span>`;
+                    details += `<div id="${baseId}-drop" class="source-container" style="display:none;">${drop.map(m=>`◆落：${m.location}(${m.target})`).join('<br>')}</div>`;
+                }
+                if(craftR) {
+                    labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${baseId}-craft')">生産</span>`;
+                    details += `<div id="${baseId}-craft" class="source-container" style="display:none;">★生産：${craftR.recipe_name}</div>`;
+                }
+                return { labels, details };
+            };
+
+            const renderMaterials = (recipe, pId, trace = []) => {
+                let rows = '';
+                const mats = [];
+                for(let i=1; i<=4; i++) if(recipe[`material_${i}`] && recipe[`material_${i}`] !== 'NULL') mats.push({n: recipe[`material_${i}`], q: recipe[`amount_${i}`]});
+                mats.forEach((m, idx) => {
+                    const isLast = (idx === mats.length - 1);
+                    let pre = ''; trace.forEach(l => { pre += l ? '    ' : '│  '; });
+                    const mId = `${pId}-m${idx}`, {labels, details} = getMethods(m.n, pId, idx), subR = recipes.find(r => r.output_item_name === m.n);
+                    rows += `<tr class="hidden" data-id="${mId}" data-parent="${pId}" onclick="toggleLayer('${mId}','btn-${mId}')"><td><span class="tree-line">${pre}${isLast?'┗':'┣'}</span>${subR?`<span class="toggle-icon" id="btn-${mId}">▶</span>`:''}<input type="checkbox" class="cb">${m.n}(×${m.q})${labels}${details}</td></tr>`;
+                    if(subR) rows += renderMaterials(subR, mId, [...trace, isLast]);
+                });
+                return rows;
+            };
+
+            let html = '';
+            jobsData.forEach((job, jIdx) => {
+                const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
+                if (!jobRecipes.length) return;
+                const jobId = `job-${jIdx}`;
+                html += `<tr class="row-job" onclick="toggleLayer('${jobId}','btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
+                
+                const groups = {};
+                jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
+                
+                // スキル名(アルケミーI等)でソートし、次にLvでソートするようにキーを整理
+                const sortedKeys = Object.keys(groups).sort((a, b) => {
+                    const [typeA, lvA] = a.split('_');
+                    const [typeB, lvB] = b.split('_');
+                    if (typeA !== typeB) return typeA.localeCompare(typeB, 'ja');
+                    return parseInt(lvA) - parseInt(lvB);
+                });
+
+                sortedKeys.forEach((gk, sIdx) => {
+                    const sId = `${jobId}-s${sIdx}`, [type, lv] = gk.split('_');
+                    html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}','btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
+                    groups[gk].forEach((r, rIdx) => {
+                        const rId = `${sId}-r${rIdx}`, {labels, details} = getMethods(r.output_item_name, rId, 0);
+                        html += `<tr class="hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}','btn-${rId}')"><td><span class="tree-line">   ┗ </span><span class="toggle-icon" id="btn-${rId}">▶</span><input type="checkbox" class="cb"><b>${r.output_item_name}</b>【${r.recipe_name}】${labels}${details}</td></tr>`;
+                        html += renderMaterials(r, rId, [true, true]);
+                    });
+                });
+            });
+            tbody.innerHTML = html;
+            tbody.setAttribute('data-loaded', 'true');
+        }
+
+        function toggleLayer(id, btnId) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            const isEx = btn.innerText === '▶';
+            document.querySelectorAll(`tr[data-parent="${id}"]`).forEach(el => {
+                if (isEx) el.classList.remove('hidden');
+                else { el.classList.add('hidden'); recursiveHide(el.getAttribute('data-id')); }
+            });
+            btn.innerText = isEx ? '▼' : '▶';
+            if(window.event) window.event.stopPropagation();
+        }
+
+        function recursiveHide(pId) {
+            document.querySelectorAll(`tr[data-parent="${pId}"]`).forEach(el => {
+                el.classList.add('hidden');
+                const b = document.getElementById(`btn-${el.getAttribute('data-id')}`);
+                if(b) b.innerText = '▶';
+                recursiveHide(el.getAttribute('data-id'));
+            });
+        }
+
+        function toggleDetail(id) {
+            const el = document.getElementById(id);
+            if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        window.addEventListener('DOMContentLoaded', loadAllRecipes);
+    </script>
+</body>
+</html>
