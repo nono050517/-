@@ -35,7 +35,7 @@ main { flex: 1; padding: 15px 35px; overflow-y: auto; background-color: #fff; }
 
 /* --- 生産データ専用 --- */
 table { width: 100%; border-collapse: collapse; background-color: #fff; }
-th { border: 1px solid #ffb6c1; padding: 4px; background: #ffc0cb; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+th { border: 1px solid #ffb6c1; padding: 4px; background: #ffc0cb; font-weight: bold; }
 td { border: 1px solid #ffdae0; padding: 4px; color: #000; }
 .row-job { background: #ffb6c1; color: #fff !important; font-weight: bold; cursor: pointer; }
 .row-skill { background: #fff0f5; font-weight: bold; cursor: pointer; }
