@@ -56,7 +56,7 @@
             overflow: hidden;
         }
 
-        /* --- 2. サイドバー --- */
+        /* --- 2. サイドバー (アコーディオン改修) --- */
         nav {
             width: 180px;
             background-color: #fffaf0;
@@ -68,20 +68,44 @@
         .nav-category-title {
             background-color: #f5e1e1;
             border-left: 4px solid #8b5a5a;
-            padding: 3px 8px;
+            padding: 4px 8px;
             font-size: 11px;
-            margin: 12px 0 4px 0;
+            margin: 8px 0 2px 0;
             color: #8b5a5a;
             font-weight: bold;
+            cursor: pointer; /* クリック可能に */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        nav ul { list-style: none; padding: 0; margin: 0; }
+        .nav-category-title:hover {
+            background-color: #eedada;
+        }
+        .nav-category-title.has-items:after {
+            content: "▶";
+            font-size: 8px;
+            transition: transform 0.2s;
+        }
+        .nav-category-title.active:after {
+            transform: rotate(90deg);
+        }
+
+        nav ul { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+            display: none; /* 初期状態は非表示 */
+        }
+        nav ul.show {
+            display: block;
+        }
         nav li { margin: 2px 0; }
         nav a {
             text-decoration: none;
             color: #5d4037;
             display: block;
             cursor: pointer;
-            padding: 2px 4px;
+            padding: 2px 4px 2px 10px;
             font-size: 11px;
         }
         nav a:before { content: "┣"; margin-right: 4px; color: #d2b48c; }
@@ -114,35 +138,16 @@
             display: flex;
             align-items: center;
         }
-        .section-category:before {
-            content: "■";
-            margin-right: 8px;
-            font-size: 10px;
-        }
-        .item-content {
-            margin-bottom: 20px;
-            margin-left: 5px;
-            padding: 5px 15px;
-            line-height: 1.8;
-            color: #5d4037;
-        }
-        .sub-item-title {
-            font-weight: bold;
-            color: #a04040;
-            margin: 15px 0 5px 0;
-            display: block;
-        }
+        .section-category:before { content: "■"; margin-right: 8px; font-size: 10px; }
+        .item-content { margin-bottom: 20px; margin-left: 5px; padding: 5px 15px; line-height: 1.8; color: #5d4037; }
+        .sub-item-title { font-weight: bold; color: #a04040; margin: 15px 0 5px 0; display: block; }
 
-        /* FAQ用のQ/Aスタイル */
         .faq-q { font-weight: bold; color: #a04040; margin-top: 15px; position: relative; padding-left: 2.2em; }
         .faq-q:before { content: "Q："; position: absolute; left: 0; color: #8b5a5a; }
         .faq-a { margin-bottom: 20px; border-left: 2px solid #f5e1e1; padding-left: 2.2em; line-height: 1.8; position: relative; }
         .faq-a:before { content: "A："; position: absolute; left: 0.5em; font-weight: bold; color: #8b5a5a; }
 
-        .history-box {
-            background-color: #fdf5f5; border: 1px solid #f5e1e1; padding: 10px 15px;
-            color: #7d5a5a; max-height: 100px; overflow-y: auto; line-height: 1.6;
-        }
+        .history-box { background-color: #fdf5f5; border: 1px solid #f5e1e1; padding: 10px 15px; color: #7d5a5a; max-height: 100px; overflow-y: auto; line-height: 1.6; }
 
         .hidden { display: none !important; }
 
@@ -175,7 +180,7 @@
             <nav id="sidebar-nav"></nav>
 
             <main id="main-scroll">
-                <!-- 1. FrontPage (ご指定の内容に更新) -->
+                <!-- 1. FrontPage -->
                 <div id="front-page">
                     <h2 class="page-title">エリシア・アーカイブスへようこそ</h2>
                     
@@ -228,14 +233,9 @@
                     <h2 class="page-title">FAQ：よくある質問</h2>
                     <div class="section-category">サイト全般について</div>
                     <div class="faq-q">このサイトは公式ですか？</div>
-                    <p class="faq-a">いいえ、本サイトは有志による非公式のファンサイトです。運営元のアソビモ株式会社様とは一切関係ありません。</p>
-                    
+                    <p class="faq-a">いいえ、本サイトは有志によるファンサイトです。運営元のアソビモ株式会社様とは一切関係ありません。</p>
                     <div class="faq-q">スマホからでも見られますか？</div>
-                    <p class="faq-a">はい、ブラウザから閲覧可能です。シンプルなレイアウトにしているため、移動中の確認にも適しています。</p>
-                    
-                    <div class="section-category">データ・内容について</div>
-                    <div class="faq-q">掲載されている情報が古い（間違っている）のですが？</div>
-                    <p class="faq-a">申し訳ありません。もし間違いを見つけた場合は、今後のアップデートをお待ちいただくか、管理人までお知らせください。</p>
+                    <p class="faq-a">はい、ブラウザから閲覧可能です。</p>
                 </div>
 
                 <!-- 3. 生産データページ -->
@@ -285,17 +285,39 @@
                     if (!categories[item.category]) categories[item.category] = [];
                     categories[item.category].push(item);
                 });
+                
                 let navHtml = '';
+                let catIdx = 0;
                 for (const catName in categories) {
-                    navHtml += `<div class="nav-category-title">${catName}</div><ul>`;
+                    const ulId = `nav-ul-${catIdx}`;
+                    const titleId = `nav-title-${catIdx}`;
+                    // 仕切り(カテゴリータイトル)の作成
+                    navHtml += `<div id="${titleId}" class="nav-category-title has-items" onclick="toggleNav('${ulId}', '${titleId}')">${catName}</div>`;
+                    navHtml += `<ul id="${ulId}">`;
                     categories[catName].forEach(item => {
                         const target = item.page_id ? `'${item.page_id}'` : `'generic-page', '${item.display_name}'`;
                         navHtml += `<li><a onclick="showPage(${target})">${item.display_name}</a></li>`;
                     });
                     navHtml += `</ul>`;
+                    catIdx++;
                 }
                 navEl.innerHTML = navHtml;
+                
+                // FrontPageを含むカテゴリーなどは最初から開いておきたい場合はここで制御可能
             } catch (e) { navEl.innerHTML = 'メニュー読み込み失敗'; }
+        }
+
+        // サイドバーのアコーディオン制御
+        function toggleNav(ulId, titleId) {
+            const ul = document.getElementById(ulId);
+            const title = document.getElementById(titleId);
+            if (ul.classList.contains('show')) {
+                ul.classList.remove('show');
+                title.classList.remove('active');
+            } else {
+                ul.classList.add('show');
+                title.classList.add('active');
+            }
         }
 
         function showPage(pageId, title = '') {
@@ -318,6 +340,7 @@
             } catch (e) { historyBox.innerHTML = "読み込み失敗"; }
         }
 
+        // --- 生産データ読み込みロジック (変更なし) ---
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
