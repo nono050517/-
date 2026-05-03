@@ -64,6 +64,7 @@
                     const isLast = (idx === mats.length - 1);
                     let pre = ''; trace.forEach(l => { pre += l ? '    ' : '│  '; });
                     const mId = `${pId}-m${idx}`, {labels, details} = getMethods(m.n, pId, idx), subR = recipes.find(r => r.output_item_name === m.n);
+                    // 初期状態で非表示にするため class="hidden" を維持します
                     rows += `<tr class="hidden" data-id="${mId}" data-parent="${pId}" onclick="toggleLayer('${mId}','btn-${mId}')"><td><span class="tree-line">${pre}${isLast?'┗':'┣'}</span>${subR?`<span class="toggle-icon" id="btn-${mId}">▶</span>`:''}<input type="checkbox" class="cb">${m.n}(×${m.q})${labels}${details}</td></tr>`;
                     if(subR) rows += renderMaterials(subR, mId, [...trace, isLast]);
                 });
@@ -75,12 +76,14 @@
                 const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
                 if (!jobRecipes.length) return;
                 const jobId = `job-${jIdx}`;
+                // 最上位の職業行のみ表示し、配下のスキル行は初期状態で hidden になります
                 html += `<tr class="row-job" onclick="toggleLayer('${jobId}','btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
                 
                 const groups = {};
                 jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
                 Object.keys(groups).forEach((gk, sIdx) => {
                     const sId = `${jobId}-s${sIdx}`, [type, lv] = gk.split('_');
+                    // class に hidden を追加して、最初から閉じている状態にします
                     html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}','btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
                     groups[gk].forEach((r, rIdx) => {
                         const rId = `${sId}-r${rIdx}`, {labels, details} = getMethods(r.output_item_name, rId, 0);
@@ -117,7 +120,6 @@
             el.style.display = el.style.display === 'none' ? 'block' : 'none';
         }
 
-        // ページ読み込み完了後にデータを取得
         window.addEventListener('DOMContentLoaded', loadAllRecipes);
     </script>
 </body>
