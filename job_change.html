@@ -4,8 +4,9 @@
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>転職について - エリシア・アーカイブス</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="./job_change_files/supabase-js@2"></script>
+<!-- 修正前： file:///C:/Users/... となっているはずです -->
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         main { font-size: 13px; line-height: 1.6; color: #4a4a4a; }
         .page-title { font-size: 18px; margin-bottom: 15px; font-weight: bold; }
@@ -42,12 +43,12 @@
                 <div class="contents-list">
                     <strong>【目次】</strong>
                     <ul>
-                        <li><a href="file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html#section1">見習い期間の活用とメリット</a></li>
-                        <li><a href="file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html#section2">一次職への転職試験内容</a></li>
-                        <li><a href="file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html#section3">転職のタイミングとコツ</a></li>
-                        <li><a href="file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html#section4">転職条件（一次・二次・三次）</a></li>
-                        <li><a href="file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html#section5">転職試験の流れ（一次・二次共通）</a></li>
-                        <li><a href="file:///C:/Users/cinry/Downloads/gemini-code-1777810221600.html#section6">転職許可への道！詳細データ</a></li>
+                        <li><a href="#section1">見習い期間の活用とメリット</a></li>
+                        <li><a href="#section2">一次職への転職試験内容</a></li>
+                        <li><a href="#section3">転職のタイミングとコツ</a></li>
+                        <li><a href="#section4">転職条件（一次・二次・三次）</a></li>
+                        <li><a href="#section5">転職試験の流れ（一次・二次共通）</a></li>
+                        <li><a href="#section6">転職許可への道！詳細データ</a></li>
                     </ul>
                 </div>
 
@@ -164,10 +165,10 @@
             </main>
         </div>
     </div>
-<!-- 先に common.js を読み込む -->
-<script src="common.js"></script>
 
-<!-- その後で実行命令を出す -->
+
+
+
 <script>
     const isJob = true; 
     if (typeof fetchNavMenu === 'function') {
