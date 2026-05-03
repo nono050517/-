@@ -7,13 +7,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .hidden { display: none !important; }
-        /* タイトル行を最前面に固定するための調整 */
-        th { 
-            position: sticky; 
-            top: 0; 
-            z-index: 100; 
-            box-shadow: 0 2px 2px rgba(0,0,0,0.1);
-        }
+        th { position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 2px rgba(0,0,0,0.1); }
+        /* レシピ行を少し目立たせる */
+        .row-recipe-group { background: #fff5f7; font-weight: bold; cursor: pointer; color: #d02090; }
     </style>
 </head>
 <body>
@@ -87,58 +83,39 @@
                 const jobId = `job-${jIdx}`;
                 html += `<tr class="row-job" onclick="toggleLayer('${jobId}','btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▶</span>${job.full_name}</td></tr>`;
                 
-                const groups = {};
-                jobRecipes.forEach(r => { const k = `${r.skill_type}_${r.skill_lv}`; if(!groups[k]) groups[k]=[]; groups[k].push(r); });
+                const skillGroups = {};
+                jobRecipes.forEach(r => { 
+                    const k = `${r.skill_type}_${r.skill_lv}`; 
+                    if(!skillGroups[k]) skillGroups[k] = {};
+                    const rName = r.recipe_name || '名称不明レシピ';
+                    if(!skillGroups[k][rName]) skillGroups[k][rName] = [];
+                    skillGroups[k][rName].push(r);
+                });
                 
-                // スキル名(アルケミーI等)でソートし、次にLvでソートするようにキーを整理
-                const sortedKeys = Object.keys(groups).sort((a, b) => {
-                    const [typeA, lvA] = a.split('_');
-                    const [typeB, lvB] = b.split('_');
-                    if (typeA !== typeB) return typeA.localeCompare(typeB, 'ja');
-                    return parseInt(lvA) - parseInt(lvB);
+                const sortedSkillKeys = Object.keys(skillGroups).sort((a, b) => {
+                    const [typeA, lvA] = a.split('_'), [typeB, lvB] = b.split('_');
+                    return typeA !== typeB ? typeA.localeCompare(typeB, 'ja') : parseInt(lvA) - parseInt(lvB);
                 });
 
-                sortedKeys.forEach((gk, sIdx) => {
-                    const sId = `${jobId}-s${sIdx}`, [type, lv] = gk.split('_');
+                sortedSkillKeys.forEach((sk, sIdx) => {
+                    const sId = `${jobId}-s${sIdx}`, [type, lv] = sk.split('_');
                     html += `<tr class="row-skill hidden" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}','btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▶</span>${type} (Lv${lv})</td></tr>`;
                     
-                    // --- 修正箇所：ここでさらにレシピ名ごとにグループ化する ---
-                    const recipeGroups = {};
-                    groups[gk].forEach(r => {
-                        const rName = r.recipe_name || '名称不明レシピ';
-                        if(!recipeGroups[rName]) recipeGroups[rName] = [];
-                        recipeGroups[rName].push(r);
-                    });
-
-                    const recKeys = Object.keys(recipeGroups);
-                    recKeys.forEach((rName, recIdx) => {
-                        const recId = `${sId}-rec${recIdx}`;
-                        const isLastRec = (recIdx === recKeys.length - 1);
-                        const recTree = `    ${isLastRec ? '┗' : '┣'} `; // レシピ階層の罫線
+                    const recipeNames = Object.keys(skillGroups[sk]);
+                    recipeNames.forEach((rName, rIdx) => {
+                        const rId = `${sId}-r${rIdx}`;
+                        const isLastR = rIdx === recipeNames.length - 1;
+                        html += `<tr class="row-recipe-group hidden" data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}','btn-${rId}')"><td><span class="tree-line">    ${isLastR?'┗':'┣'} </span><span class="toggle-icon" id="btn-${rId}">▶</span>【${rName}】</td></tr>`;
                         
-                        // レシピ名の行を追加
-                        html += `<tr class="hidden" data-id="${recId}" data-parent="${sId}" onclick="toggleLayer('${recId}','btn-${recId}')"><td><span class="tree-line">${recTree}</span><span class="toggle-icon" id="btn-${recId}">▶</span><b>【${rName}】</b></td></tr>`;
-                        
-                        // レシピ内のアイテムを展開
-                        recipeGroups[rName].forEach((r, itemIdx) => {
-                            const itemId = `${recId}-i${itemIdx}`;
-                            const isLastItem = (itemIdx === recipeGroups[rName].length - 1);
-                            
-                            // アイテム階層の罫線計算
-                            let itemTree = '    '; 
-                            itemTree += isLastRec ? '    ' : '│  '; 
-                            itemTree += `${isLastItem ? '┗' : '┣'} `;
-                            
+                        skillGroups[sk][rName].forEach((r, iIdx) => {
+                            const itemId = `${rId}-i${iIdx}`;
+                            const isLastI = iIdx === skillGroups[sk][rName].length - 1;
+                            const pre = isLastR ? '        ' : '    │   ';
                             const {labels, details} = getMethods(r.output_item_name, itemId, 0);
-                            
-                            // アイテム行を追加（レシピ名は親行にあるためここからは削除）
-                            html += `<tr class="hidden" data-id="${itemId}" data-parent="${recId}" onclick="toggleLayer('${itemId}','btn-${itemId}')"><td><span class="tree-line">${itemTree}</span><span class="toggle-icon" id="btn-${itemId}">▶</span><input type="checkbox" class="cb"><b>${r.output_item_name}</b>${labels}${details}</td></tr>`;
-                            
-                            // 素材ツリーを展開（階層が1つ深くなったため、trace配列にisLastRecを追加）
-                            html += renderMaterials(r, itemId, [true, isLastRec, isLastItem]);
+                            html += `<tr class="hidden" data-id="${itemId}" data-parent="${rId}" onclick="toggleLayer('${itemId}','btn-${itemId}')"><td><span class="tree-line">${pre}${isLastI?'┗':'┣'} </span><span class="toggle-icon" id="btn-${itemId}">▶</span><input type="checkbox" class="cb"><b>${r.output_item_name}</b>${labels}${details}</td></tr>`;
+                            html += renderMaterials(r, itemId, [isLastR, isLastI]);
                         });
                     });
-                    // --- 修正箇所ここまで ---
                 });
             });
             tbody.innerHTML = html;
