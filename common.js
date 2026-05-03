@@ -12,32 +12,42 @@ async function loadSidebar() {
 
     try {
         const { data } = await client.from('nav_menus').select('*').eq('is_active', true).order('display_order');
-        const categories = {};
-        data.forEach(item => { 
-            if (!categories[item.category]) categories[item.category] = []; 
-            categories[item.category].push(item); 
-        });
         
-        // 閉じておきたいカテゴリのキーワード設定
-        const collapsibleCats = ["一次職", "二次職", "三次職"];
+        // データを整理
         let html = '';
-        
-        Object.keys(categories).forEach((cat, i) => {
-            // カテゴリ名に「次職」が含まれるか、リストに完全一致するか判定
-            const isCollapsible = collapsibleCats.includes(cat) || cat.includes("次職");
-            
-            const titleCls = isCollapsible ? "nav-category-title collapsible" : "nav-category-title";
-            const ulCls = isCollapsible ? "" : "always-show";
-            const click = isCollapsible ? `onclick="toggleNav('u-${i}','t-${i}')"` : "";
+        const categories = [...new Set(data.map(item => item.category))];
 
-            html += `<div id="t-${i}" class="${titleCls}" ${click}>${cat}</div><ul id="u-${i}" class="${ulCls}">`;
+        categories.forEach((cat, i) => {
+            html += `<div class="nav-category-title">■${cat}</div><ul class="nav-list">`;
             
-            categories[cat].forEach(item => {
-                let link = 'index.html'; 
-                if (item.page_id === 'production-page') link = 'production.html';
-                if (item.page_id === 'faq-page') link = 'faq.html';
+            const items = data.filter(item => item.category === cat);
+            
+            items.forEach((item, j) => {
+                const uniqueId = `menu-${i}-${j}`;
                 
-                html += `<li><a href="${link}">${item.display_name}</a></li>`;
+                // 「一次職」「二次職」「三次職」という名前のメニューを見つけたら開閉ボタンにする
+                if (item.display_name.includes("次職")) {
+                    html += `<li class="sub-category">
+                                <div class="sub-title" onclick="toggleSubMenu('${uniqueId}')">
+                                    <span id="icon-${uniqueId}">▶</span> ${item.display_name}
+                                </div>
+                                <ul id="${uniqueId}" class="sub-menu" style="display:none;">`;
+                } else {
+                    // 通常のリンク
+                    let link = 'index.html'; 
+                    if (item.page_id === 'production-page') link = 'production.html';
+                    if (item.page_id === 'faq-page') link = 'faq.html';
+                    
+                    // 前に付いている枝記号を整える
+                    const symbol = item.display_name.startsWith('┣') || item.display_name.startsWith('┗') ? '' : '┣ ';
+                    html += `<li><a href="${link}">${symbol}${item.display_name}</a></li>`;
+                }
+
+                // 次のアイテムが「次職」系、またはカテゴリの最後なら、閉じタグを入れる
+                const nextItem = items[j + 1];
+                if (nextItem && nextItem.display_name.includes("次職") && !item.display_name.includes("次職")) {
+                    // ここは何もしない（次のループで新しいsub-categoryが始まる）
+                }
             });
             html += `</ul>`;
         });
@@ -47,16 +57,19 @@ async function loadSidebar() {
     }
 }
 
-function toggleNav(u, t) {
-    const ul = document.getElementById(u);
-    const title = document.getElementById(t);
-    if (ul && title) {
-        ul.classList.toggle('show');
-        title.classList.toggle('active');
+// サブメニューの開閉用
+function toggleSubMenu(id) {
+    const target = document.getElementById(id);
+    const icon = document.getElementById(`icon-${id}`);
+    if (target.style.display === 'none') {
+        target.style.display = 'block';
+        icon.innerText = '▼';
+    } else {
+        target.style.display = 'none';
+        icon.innerText = '▶';
     }
 }
 
-// 共通パーツ（ヘッダー）の注入
 document.addEventListener("DOMContentLoaded", () => {
     const headerHtml = `
         <header>
