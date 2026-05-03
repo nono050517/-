@@ -48,3 +48,21 @@ td { border: 1px solid #ffdae0; padding: 4px; color: #000; }
 .source-container { font-size: 10px; background: #fffafa; border: 1px solid #ffb6c1; padding: 3px 6px; margin: 2px 0 4px 20px; border-radius: 4px; }
 .cb { vertical-align: middle; margin: 0 3px; cursor: pointer; accent-color: #e91e63; }
 .history-box { background-color: #fdf5f5; border: 1px solid #f5e1e1; padding: 10px; max-height: 100px; overflow-y: auto; }
+/* サブメニュー（一次職など）の見た目 */
+.sub-title {
+    cursor: pointer;
+    padding: 5px 10px;
+    color: #8b4513;
+    font-weight: bold;
+}
+.sub-title:hover {
+    background-color: #f5f5dc;
+}
+.sub-menu {
+    list-style: none;
+    padding-left: 15px; /* 中身を少し右にずらす */
+}
+.sub-menu li a {
+    font-size: 0.9em;
+    padding: 3px 10px;
+}
