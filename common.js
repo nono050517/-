@@ -51,7 +51,6 @@ function toggleNav(u, t) {
     if (title) title.classList.toggle('active');
 }
 
-// 余計なヘッダー注入を削除し、初期化だけ実行
 document.addEventListener("DOMContentLoaded", () => {
     initCommon();
 });
