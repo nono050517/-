@@ -56,7 +56,7 @@
             overflow: hidden;
         }
 
-        /* --- 2. サイドバー --- */
+        /* --- 2. サイドバー (アコーディオン改修) --- */
         nav {
             width: 180px;
             background-color: #fffaf0;
@@ -68,27 +68,51 @@
         .nav-category-title {
             background-color: #f5e1e1;
             border-left: 4px solid #8b5a5a;
-            padding: 3px 8px;
+            padding: 4px 8px;
             font-size: 11px;
-            margin: 12px 0 4px 0;
+            margin: 8px 0 2px 0;
             color: #8b5a5a;
             font-weight: bold;
+            cursor: pointer; /* クリック可能に */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        nav ul { list-style: none; padding: 0; margin: 0; }
+        .nav-category-title:hover {
+            background-color: #eedada;
+        }
+        .nav-category-title.has-items:after {
+            content: "▶";
+            font-size: 8px;
+            transition: transform 0.2s;
+        }
+        .nav-category-title.active:after {
+            transform: rotate(90deg);
+        }
+
+        nav ul { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+            display: none; /* 初期状態は非表示 */
+        }
+        nav ul.show {
+            display: block;
+        }
         nav li { margin: 2px 0; }
         nav a {
             text-decoration: none;
             color: #5d4037;
             display: block;
             cursor: pointer;
-            padding: 2px 4px;
+            padding: 2px 4px 2px 10px;
             font-size: 11px;
         }
         nav a:before { content: "┣"; margin-right: 4px; color: #d2b48c; }
         nav li:last-child a:before { content: "┗"; }
         nav a:hover { background-color: #f5e1e1; color: #8b5a5a; }
 
-        /* --- 3. メインコンテンツ (スタイル統一) --- */
+        /* --- 3. メインコンテンツ --- */
         main {
             flex: 1;
             padding: 15px 35px;
@@ -107,36 +131,23 @@
         .section-category {
             background-color: #f5e1e1;
             color: #8b5a5a;
-            padding: 5px 12px;
+            padding: 6px 12px;
             font-weight: bold;
             margin: 25px 0 10px 0;
             border-radius: 4px;
+            display: flex;
+            align-items: center;
         }
-        .item-title {
-            font-weight: bold;
-            color: #a04040;
-            margin-top: 15px;
-            padding-left: 10px;
-            border-left: 3px solid #8b5a5a;
-        }
-        .item-content {
-            margin-bottom: 20px;
-            margin-left: 10px;
-            padding-left: 10px;
-            line-height: 1.8;
-            position: relative;
-        }
+        .section-category:before { content: "■"; margin-right: 8px; font-size: 10px; }
+        .item-content { margin-bottom: 20px; margin-left: 5px; padding: 5px 15px; line-height: 1.8; color: #5d4037; }
+        .sub-item-title { font-weight: bold; color: #a04040; margin: 15px 0 5px 0; display: block; }
 
-        /* FAQ用のQ/Aスタイル（フロントページでも再利用） */
         .faq-q { font-weight: bold; color: #a04040; margin-top: 15px; position: relative; padding-left: 2.2em; }
         .faq-q:before { content: "Q："; position: absolute; left: 0; color: #8b5a5a; }
         .faq-a { margin-bottom: 20px; border-left: 2px solid #f5e1e1; padding-left: 2.2em; line-height: 1.8; position: relative; }
         .faq-a:before { content: "A："; position: absolute; left: 0.5em; font-weight: bold; color: #8b5a5a; }
 
-        .history-box {
-            background-color: #fdf5f5; border: 1px solid #f5e1e1; padding: 10px 15px;
-            color: #7d5a5a; max-height: 100px; overflow-y: auto; line-height: 1.6;
-        }
+        .history-box { background-color: #fdf5f5; border: 1px solid #f5e1e1; padding: 10px 15px; color: #7d5a5a; max-height: 100px; overflow-y: auto; line-height: 1.6; }
 
         .hidden { display: none !important; }
 
@@ -169,38 +180,48 @@
             <nav id="sidebar-nav"></nav>
 
             <main id="main-scroll">
-                <!-- 1. FrontPage (FAQスタイルへ修正) -->
+                <!-- 1. FrontPage -->
                 <div id="front-page">
-                    <h2 class="page-title">FrontPage</h2>
+                    <h2 class="page-title">エリシア・アーカイブスへようこそ</h2>
                     
                     <div class="section-category">1. 概要</div>
                     <div class="item-content">
-                        このサイトは、MMORPG『エリシアオンライン』のアイテムや生産レシピなどの情報をまとめた、個人運営の非公式データベースサイトです。 プレイヤーの皆様の冒険に役立つ情報を、シンプルで見やすい形で記録・蓄積していくことを目的としています。
+                        本サイト『エリシア・アーカイブス（Ellicia Archives）』は、MMORPG『エリシアオンライン』のアイテム、生産レシピ、装備等の情報をまとめた個人運営の非公式データベースサイトです。<br>
+                        情報の蓄積にあたっては、「エリシアオンラインまとめ Wiki*」をはじめとする有志による既存の蓄積データを一部引用・参考にさせていただいております。 先人の皆様の多大なる調査と記録に深く感謝し、その遺産を次代の冒険者へ繋げることを目的としています。
                     </div>
 
                     <div class="section-category">2. 利用上の注意点</div>
                     <div class="item-content">
-                        本サイトに掲載されている情報は、有志による調査やプレイヤーからの提供に基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
-                        本サイトを利用したことによって生じたいかなる損害についても、管理人は責任を負いかねます。
+                        本サイトに掲載されている情報は、有志による調査や既存Wikiのデータに基づいています。情報の正確性については細心の注意を払っていますが、アップデート等により実際のゲーム内データと異なる場合があります。<br>
+                        本サイトを利用したことによって生じたいかなる損害についても、管理人は一切の責任を負いかねます。情報の利用は自己責任でお願いいたします。
                     </div>
 
                     <div class="section-category">3. 禁止行為と措置</div>
                     <div class="item-content">
-                        ・サーバーに過度な負荷をかける行為（自動巡回ソフトによる過度なアクセス等）。<br>
-                        ・公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み（※今後コメント欄などを設置した場合）。<br>
-                        ・禁止行為が確認された場合、アクセス制限等の措置を取る場合があります。
+                        ・サーバーに過度な負荷をかける行為（自動巡回ソフトやスクレイピングツールによる過度なアクセス等）。<br>
+                        ・公序良俗に反する内容や、他者を誹謗中傷する内容の書き込み（今後コメント欄等を設置した場合）。<br>
+                        ・その他、サイトの運営を妨げるあらゆる行為。<br>
+                        禁止行為が確認された場合、予告なくアクセス制限等の措置を取る場合があります。
                     </div>
 
                     <div class="section-category">4. リンクについて</div>
                     <div class="item-content">
-                        本サイトはリンクフリーです。どのページへリンクしていただいても構いません。<br>
-                        ただし、画像ファイル等への直リンクはご遠慮ください。
+                        本サイトはリンクフリーです。トップページ、各データページなど、どのページへリンクしていただいても構いません。<br>
+                        ただし、画像ファイル等への直接リンク（直リンク）はサーバー負荷の原因となるためご遠慮ください。
                     </div>
 
-                    <div class="section-category">5. 著作権について</div>
+                    <div class="section-category">5. 著作権と情報の取り扱いについて</div>
                     <div class="item-content">
+                        <span class="sub-item-title">ゲームデータの帰属</span>
                         本サイトで使用されている『エリシアオンライン』のゲーム内画像、データ、商標等の知的財産権は、すべて運営元（アソビモ株式会社等）に帰属します。<br>
-                        本サイト内の独自コンテンツ（レイアウト、独自解説文、ロゴ等）の無断転載・再配布は禁止します。
+                        権利を有しない者がこれらの権利を放棄することはできません。本サイトの記載内容であっても、アソビモ株式会社やその他の権利者の知的財産権に属する場合があります。
+
+                        <span class="sub-item-title">情報の権利と放棄</span>
+                        当Wiki（本サイト）への書き込みや編集行為、情報提供は、著作権その他の知的財産権を放棄してなされるものとします。これは、寄せられた情報を共有財産として永続的に活用するためです。
+
+                        <span class="sub-item-title">転載について</span>
+                        本サイトの記載内容を他のサイト、Wiki、SNS等に転載する場合は、必ず『<b>エリシア・アーカイブス からの転載</b>』である旨を表記してください。<br>
+                        引用元データが「エリシアオンラインまとめ Wiki*」等の外部サイトである場合は、それぞれの元サイトの規約に従った表記をお願いいたします。
                     </div>
 
                     <div class="section-category">更新履歴</div>
@@ -212,27 +233,9 @@
                     <h2 class="page-title">FAQ：よくある質問</h2>
                     <div class="section-category">サイト全般について</div>
                     <div class="faq-q">このサイトは公式ですか？</div>
-                    <p class="faq-a">いいえ、本サイトは有志による非公式のファンサイトです。運営元のアソビモ株式会社様とは一切関係ありません。</p>
-                    
+                    <p class="faq-a">いいえ、本サイトは有志によるファンサイトです。運営元のアソビモ株式会社様とは一切関係ありません。</p>
                     <div class="faq-q">スマホからでも見られますか？</div>
-                    <p class="faq-a">はい、ブラウザから閲覧可能です。シンプルなレイアウトにしているため、移動中の確認にも適しています。</p>
-                    
-                    <div class="faq-q">データの更新頻度はどれくらいですか？</div>
-                    <p class="faq-a">管理人の空き時間での更新となるため不定期ですが、新イベントやアップデート時にはなるべく早く反映できるよう努めています。</p>
-
-                    <div class="section-category">データ・内容について</div>
-                    <div class="faq-q">掲載されている情報が古い（間違っている）のですが？</div>
-                    <p class="faq-a">申し訳ありません。もし間違いを見つけた場合は、今後のアップデート（掲示板設置など）をお待ちいただくか、管理人までお知らせください。</p>
-                    
-                    <div class="faq-q">生産レシピの成功率は掲載されていますか？</div>
-                    <p class="faq-a">現在、基本的なレシピデータを中心に掲載を進めています。成功率などの詳細データも順次追加予定です。</p>
-
-                    <div class="section-category">リンク・利用について</div>
-                    <div class="faq-q">自分のブログやSNSでこのサイトを紹介してもいいですか？</div>
-                    <p class="faq-a">大歓迎です！本サイトはリンクフリーですので、許可なくリンクを貼っていただいて構いません。</p>
-                    
-                    <div class="faq-q">サイト内の画像やロゴを使ってもいいですか？</div>
-                    <p class="faq-a">ゲーム内画像の著作権は運営元に帰属します。当サイトオリジナルのロゴや解説文については、無断転載・二次利用をご遠慮いただいております。</p>
+                    <p class="faq-a">はい、ブラウザから閲覧可能です。</p>
                 </div>
 
                 <!-- 3. 生産データページ -->
@@ -282,17 +285,39 @@
                     if (!categories[item.category]) categories[item.category] = [];
                     categories[item.category].push(item);
                 });
+                
                 let navHtml = '';
+                let catIdx = 0;
                 for (const catName in categories) {
-                    navHtml += `<div class="nav-category-title">${catName}</div><ul>`;
+                    const ulId = `nav-ul-${catIdx}`;
+                    const titleId = `nav-title-${catIdx}`;
+                    // 仕切り(カテゴリータイトル)の作成
+                    navHtml += `<div id="${titleId}" class="nav-category-title has-items" onclick="toggleNav('${ulId}', '${titleId}')">${catName}</div>`;
+                    navHtml += `<ul id="${ulId}">`;
                     categories[catName].forEach(item => {
                         const target = item.page_id ? `'${item.page_id}'` : `'generic-page', '${item.display_name}'`;
                         navHtml += `<li><a onclick="showPage(${target})">${item.display_name}</a></li>`;
                     });
                     navHtml += `</ul>`;
+                    catIdx++;
                 }
                 navEl.innerHTML = navHtml;
+                
+                // FrontPageを含むカテゴリーなどは最初から開いておきたい場合はここで制御可能
             } catch (e) { navEl.innerHTML = 'メニュー読み込み失敗'; }
+        }
+
+        // サイドバーのアコーディオン制御
+        function toggleNav(ulId, titleId) {
+            const ul = document.getElementById(ulId);
+            const title = document.getElementById(titleId);
+            if (ul.classList.contains('show')) {
+                ul.classList.remove('show');
+                title.classList.remove('active');
+            } else {
+                ul.classList.add('show');
+                title.classList.add('active');
+            }
         }
 
         function showPage(pageId, title = '') {
@@ -315,7 +340,7 @@
             } catch (e) { historyBox.innerHTML = "読み込み失敗"; }
         }
 
-        // --- 生産レシピ読み込み（省略なし） ---
+        // --- 生産データ読み込みロジック (変更なし) ---
         async function loadAllRecipes() {
             const tbody = document.getElementById('recipe-body');
             if (tbody.getAttribute('data-loaded') === 'true') return;
