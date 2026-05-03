@@ -11,9 +11,14 @@ async function loadSidebar() {
     if (!navEl) return;
 
     try {
-        const { data } = await client.from('nav_menus').select('*').eq('is_active', true).order('display_order');
+        const { data, error } = await client.from('nav_menus').select('*').eq('is_active', true).order('display_order');
+        if (error) throw error;
+
         const categories = {};
-        data.forEach(item => { if (!categories[item.category]) categories[item.category] = []; categories[item.category].push(item); });
+        data.forEach(item => { 
+            if (!categories[item.category]) categories[item.category] = []; 
+            categories[item.category].push(item); 
+        });
         
         const jobCats = ["一次職", "二次職", "三次職"];
         let html = '';
@@ -25,7 +30,6 @@ async function loadSidebar() {
 
             html += `<div id="t-${i}" class="${titleCls}" ${click}>${cat}</div><ul id="u-${i}" class="${ulCls}">`;
             categories[cat].forEach(item => {
-                // リンク先をファイル名に紐付け
                 let link = 'index.html'; 
                 if (item.page_id === 'production-page') link = 'production.html';
                 if (item.page_id === 'faq-page') link = 'faq.html';
@@ -35,24 +39,19 @@ async function loadSidebar() {
             html += `</ul>`;
         });
         navEl.innerHTML = html;
-    } catch (e) { console.error("Sidebar error:", e); }
+    } catch (e) { 
+        console.error("Sidebar error:", e); 
+    }
 }
 
 function toggleNav(u, t) {
-    document.getElementById(u).classList.toggle('show');
-    document.getElementById(t).classList.toggle('active');
+    const ul = document.getElementById(u);
+    const title = document.getElementById(t);
+    if (ul) ul.classList.toggle('show');
+    if (title) title.classList.toggle('active');
 }
 
-// ページ読み込み時にヘッダーを注入
+// 余計なヘッダー注入を削除し、初期化だけ実行
 document.addEventListener("DOMContentLoaded", () => {
-    const headerHtml = `
-        <header>
-            <h1 class="header-title">エリシアオンライン　アーカイブス</h1>
-            <h2 class="header-subtitle">Ellicia-Online Archives</h2>
-        </header>
-        <div class="nav-bar"></div>
-    `;
-    const wrapper = document.querySelector('.wrapper');
-    if (wrapper) wrapper.insertAdjacentHTML('afterbegin', headerHtml);
     initCommon();
 });
