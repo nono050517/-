@@ -33,11 +33,13 @@
             <!-- ここが最重要！ここに common.js がメニューを書き込みます -->
             <aside class="sidebar">
                 <nav id="sidebar-nav"></nav>
-            </aside>
+         <!-- 37行目あたり -->
+        </aside>
 
-            <main class="main-content">
-                <section class="content-section">
-                    <h2 class="section-title">ステータス解説</h2>
+        <main class="main-content"> <!-- ★ここを1つだけに！ -->
+            <section class="content-section">
+                <h2 class="section-title">ステータス解説</h2>
+                <!-- ここから下、表や用語集の中身は一切いじらない！ -->
                     <p>エリシアオンラインにおける能力値の影響と、三次職における実測上昇規則をまとめています。</p>
 
                     <h3>■ 基本能力と影響</h3>
@@ -126,11 +128,12 @@
                         <p><strong>AVOID</strong>：回避。敵の物理攻撃を無効化する確率に影響します。</p>
                         <p><strong>CRI</strong>：クリティカル率。防御無視ダメージの発生率です。</p>
                     </div>
-                </section>
-            </main>
-        </div>
-    </div>
-    <!-- 最後に common.js を呼ぶことで、上記の nav にメニューが生成されます -->
-    <script src="common.js"></script>
+</section>
+        </main> <!-- 130行目：main を閉じる -->
+    </div> <!-- 131行目：container を閉じる -->
+</div> <!-- 132行目：wrapper を閉じる -->
+
+<!-- あとは common.js を呼ぶだけ -->
+<script src="common.js"></script>
 </body>
 </html>
