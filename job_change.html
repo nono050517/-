@@ -4,26 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>転職について - エリシア・アーカイブス</title>
-    <!-- 共通のスタイルシートを読み込み -->
+    <!-- 共通CSSを読み込み。これで他のページと同じ横並びルールが適用されます -->
     <link rel="stylesheet" href="style.css">
-    <!-- Supabaseライブラリ（オンライン版） -->
+    <!-- ライブラリの読み込み -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* ページ固有の追加装飾 */
-        main { font-size: 13px; line-height: 1.6; color: #4a4a4a; background-color: #fffcf5; padding: 20px; flex: 1; }
+        /* 転職ページ専用のデザイン（消してしまった装飾の復元） */
+        main { font-size: 13px; line-height: 1.6; color: #4a4a4a; padding: 20px; }
         .page-title { font-size: 18px; margin-bottom: 15px; font-weight: bold; color: #8b5a5a; }
         h3 { font-size: 15px; border-bottom: 2px solid #f5e1e1; padding-bottom: 3px; margin-top: 25px; margin-bottom: 10px; color: #8b5a5a; font-weight: bold; }
-        
         .contents-list { background: #fffcfc; border: 1px solid #ffdae0; padding: 10px; margin-bottom: 20px; border-radius: 8px; }
         .contents-list ul { list-style: none; padding: 0; margin: 5px 0 0 0; }
         .contents-list li { margin-bottom: 4px; padding-left: 15px; position: relative; font-size: 12px; }
         .contents-list li::before { content: "▶"; position: absolute; left: 0; color: #ffb6c1; font-size: 10px; }
         .contents-list a { color: #8b5a5a; text-decoration: none; font-weight: bold; }
-
         .highlight-box { background: #fffaf0; padding: 12px; border: 1px solid #e0d0c0; margin: 10px 0; border-radius: 4px; }
         .info-note { font-size: 11px; color: #8b5a5a; border-left: 3px solid #ffb6c1; padding: 6px 10px; background: #fffcfc; margin: 10px 0; }
-        
         .quiz-container { margin-top: 8px; padding: 8px; background: #fff; border: 1px solid #ffdae0; border-radius: 4px; font-size: 11px; }
         .q-item { margin-bottom: 8px; border-bottom: 1px dotted #ffdae0; padding-bottom: 6px; }
         .q-item:last-child { border-bottom: none; }
@@ -32,10 +29,13 @@
     </style>
 </head>
 <body>
+    <!-- この wrapper で囲むのが横並びの絶対条件です -->
     <div class="wrapper">
-        <!-- サイドバー生成用 -->
+        
+        <!-- 左側：サイドバー -->
         <nav id="sidebar-nav"></nav>
         
+        <!-- 右側：メインコンテンツ（ここに全てのデータを詰め込みました） -->
         <main>
             <div class="container">
                 <h2 class="page-title">転職ガイド</h2>
@@ -99,13 +99,13 @@
                     <strong>・三次職への転生条件：</strong>BaseLv 70以上、かつ 対応JobLv 70以上。
                 </div>
 
-                <h3 id="section5">■ 転職試験の流れ</h3>
+                <h3 id="section5">■ 転職試験の流れ（一次・二次共通）</h3>
                 <div class="highlight-box">
-                    1. 転職条件を満たす。<br>
-                    2. 冒険者協会長から許可証クエストを受ける。<br>
-                    3. クエストを達成し、転職許可証を得る。<br>
-                    4. 各職別の職試験を受験し、合格する。<br>
-                    5. NPC冒険者協会長から転職をする。
+                    <strong>1. 転職条件を満たす。</strong><br>
+                    <strong>2. 冒険者協会長から許可証クエストを受ける。</strong><br>
+                    <strong>3. クエストを達成し、転職許可証を得る。</strong><br>
+                    <strong>4. 各職別の職試験を受験し、合格する。</strong><br>
+                    <strong>5. NPC冒険者協会長から転職をする。</strong>
                 </div>
 
                 <h3 id="section6">■ 転職許可への道！詳細データ</h3>
@@ -116,13 +116,16 @@
                     <strong>依頼①：アイテム収集（ランダム3パターン）</strong><br>
                     ・P1：ゼリー × 150<br>
                     ・P2：えびの尻尾 × 20、ぶたにく × 20、銅原石 × 20<br>
-                    ・P3：粘液 × 20、はなびら × 20、部族の紋章 × 20
+                    ・P3：粘液 × 20、はなびら × 20、部族の紋章 × 20<br>
+                    <br>
+                    <strong>依頼②：口頭試問（全5問）</strong><br>
+                    「すぐに助ける」「王宮憲兵隊に届ける」など、善人としての回答を選べば合格です。
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- サイドバー生成スクリプト -->
+    <!-- サイドバー生成実行 -->
     <script src="common.js"></script>
     <script>
         const isJob = true; 
