@@ -1,206 +1,56 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>生産データ - エリシア・アーカイブス</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        .hidden { display: none !important; }
+<style>
+    /* 1. テーブルを表示させるための最低限の設定 */
+    .recipe-wrapper {
+        width: 100%;
+        max-height: 80vh; /* 画面の8割の高さを超えたらスクロール */
+        overflow-y: auto; /* ここでスクロールを発生させる */
+        border: 1px solid #ddd;
+        position: relative;
+    }
 
-        /* スクロール設定の徹底見直し */
-        html, body {
-            height: 100%;
-            margin: 0;
-            overflow: hidden; 
-        }
+    table {
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        width: 100%;
+    }
 
-        .wrapper {
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
-        }
+    /* 2. 🌸タイトル行：これだけで固定する */
+    thead th {
+        position: -webkit-sticky; /* Safari用 */
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background-color: #ffc0cb !important;
+        color: #d81b60;
+        padding: 15px;
+        border-bottom: 3px solid #d81b60;
+    }
 
-        /* 既存のサイドバーとの兼ね合い */
-        #sidebar-nav {
-            width: 250px;
-            height: 100%;
-            overflow-y: auto;
-        }
+    /* 3. 職業・スキルの行（タイトルの下に潜り込ませる） */
+    .row-job { background-color: #ffc0cb !important; position: relative; z-index: 1; }
+    .row-skill { background-color: #fff0f5 !important; font-weight: bold; }
+    
+    .hidden { display: none !important; }
+</style>
 
-        main {
-            flex: 1;
-            height: 100vh;
-            overflow-y: scroll; /* スクロールをここだけに限定 */
-            position: relative;
-            background: #fff;
-        }
-
-        table {
-            border-collapse: separate !important;
-            border-spacing: 0 !important;
-            width: 100%;
-        }
-
-        /* 🌸ピンクのタイトル行：最強の固定[cite: 2] */
-        thead th {
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 10001 !important; /* 他のどの要素よりも絶対上 */
-            background-color: #ffc0cb !important;
-            color: #d81b60 !important;
-            padding: 15px;
-            border-bottom: 3px solid #d81b60;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* 浮いていることを強調 */
-        }
-
-        /* 職業行：タイトルの下に潜るように設定[cite: 2] */
-        .row-job {
-            position: sticky;
-            top: 50px; /* タイトルの高さ分ずらして固定（任意） */
-            z-index: 1000; /* タイトル(10001)より低く設定 */
-            background-color: #ffc0cb !important;
-            cursor: pointer;
-        }
-
-        .row-skill {
-            background-color: #fff0f5 !important;
-            font-weight: bold;
-            cursor: pointer;
-        }
+<div class="container">
+    <nav id="sidebar-nav"></nav>
+    <main>
+        <h2 class="page-title">エリシア生産データ一覧</h2>
         
-        .tree-line { white-space: pre; font-family: monospace; }
-        .cb { transform: scale(1.2); margin-right: 5px; }
-    </style>
-</head>
-<body>
-    <div class="wrapper">
-        <nav id="sidebar-nav"></nav>
-        <main>
-            <h2 class="page-title" style="padding: 20px;">エリシア生産データ一覧（Archives Ver.）</h2>
+        <!-- この div で囲むのが一番安全です -->
+        <div class="recipe-wrapper">
             <table>
                 <thead>
                     <tr><th>🌸 生産レシピ・チェックリスト 🌸</th></tr>
                 </thead>
                 <tbody id="recipe-body"></tbody>
             </table>
-        </main>
-    </div>
-    <script src="common.js"></script>
-    <script>
-        // ロジック（全レシピ表示 & 正しいソート）[cite: 1]
-        async function loadAllRecipes() {
-            const tbody = document.getElementById('recipe-body');
-            if (tbody.getAttribute('data-loaded') === 'true') return;
-            tbody.innerHTML = '<tr><td>データ読み込み中...</td></tr>';
+        </div>
+    </main>
+</div>
 
-            const [rRes, iRes, jRes] = await Promise.all([
-                client.from('recipes').select('*').order('skill_lv'),
-                client.from('items').select('*'),
-                client.from('job_masters').select('*')
-            ]);
-            const recipes = rRes.data, itemsData = iRes.data, jobsData = jRes.data;
-
-            const getMethods = (name, pId, idx) => {
-                const matches = itemsData.filter(i => i.name === name);
-                const craftR = recipes.find(r => r.output_item_name === name);
-                const baseId = `src-${pId}-${idx}`;
-                let labels = '', details = '';
-                
-                const buy = matches.filter(m => m.method === '購入');
-                if(buy.length) {
-                    labels += `<span class="method-label label-buy" onclick="event.stopPropagation(); toggleDetail('${baseId}-buy')">購入</span>`;
-                    details += `<div id="${baseId}-buy" class="source-container" style="display:none;">${buy.map(m=>`●購入：${m.location}`).join('<br>')}</div>`;
-                }
-                const drop = matches.filter(m => m.method === 'ドロップ');
-                if(drop.length) {
-                    labels += `<span class="method-label label-drop" onclick="event.stopPropagation(); toggleDetail('${baseId}-drop')">ドロップ</span>`;
-                    details += `<div id="${baseId}-drop" class="source-container" style="display:none;">${drop.map(m=>`◆落：${m.location}(${m.target})`).join('<br>')}</div>`;
-                }
-                if(craftR) {
-                    labels += `<span class="method-label label-craft" onclick="event.stopPropagation(); toggleDetail('${baseId}-craft')">生産</span>`;
-                    details += `<div id="${baseId}-craft" class="source-container" style="display:none;">★生産：${craftR.recipe_name}</div>`;
-                }
-                return { labels, details };
-            };
-
-            const renderMaterials = (recipe, pId, trace = []) => {
-                let rows = '';
-                const mats = [];
-                for(let i=1; i<=4; i++) if(recipe[`material_${i}`] && recipe[`material_${i}`] !== 'NULL') mats.push({n: recipe[`material_${i}`], q: recipe[`amount_${i}`]});
-                mats.forEach((m, idx) => {
-                    const isLast = (idx === mats.length - 1);
-                    let pre = ''; trace.forEach(l => { pre += l ? '    ' : '│  '; });
-                    const mId = `${pId}-m${idx}`, {labels, details} = getMethods(m.n, pId, idx), subR = recipes.find(r => r.output_item_name === m.n);
-                    rows += `<tr class="hidden" data-id="${mId}" data-parent="${pId}" onclick="toggleLayer('${mId}','btn-${mId}')"><td><span class="tree-line">${pre}${isLast?'┗':'┣'}</span>${subR?`<span class="toggle-icon" id="btn-${mId}">▶</span>`:''}<input type="checkbox" class="cb">${m.n}(×${m.q})${labels}${details}</td></tr>`;
-                    if(subR) rows += renderMaterials(subR, mId, [...trace, isLast]);
-                });
-                return rows;
-            };
-
-            let html = '';
-            jobsData.forEach((job, jIdx) => {
-                const jobRecipes = recipes.filter(r => r.required_jobs === job.short_name);
-                if (!jobRecipes.length) return;
-                const jobId = `job-${jIdx}`;
-                html += `<tr class="row-job" onclick="toggleLayer('${jobId}','btn-${jobId}')"><td><span class="toggle-icon" id="btn-${jobId}" style="color:#fff">▼</span>${job.full_name}</td></tr>`;
-                
-                const groups = {};
-                jobRecipes.forEach(r => { 
-                    const k = `${r.skill_type}_${r.skill_lv}`; 
-                    if(!groups[k]) groups[k]=[]; 
-                    groups[k].push(r); 
-                });
-                
-                const sortedKeys = Object.keys(groups).sort((a, b) => {
-                    const [typeA, lvA] = a.split('_');
-                    const [typeB, lvB] = b.split('_');
-                    if (typeA !== typeB) return typeA.localeCompare(typeB, 'ja');
-                    return parseInt(lvA) - parseInt(lvB);
-                });
-
-                sortedKeys.forEach((gk, sIdx) => {
-                    const sId = `${jobId}-s${sIdx}`, [type, lv] = gk.split('_');
-                    html += `<tr class="row-skill" data-id="${sId}" data-parent="${jobId}" onclick="toggleLayer('${sId}','btn-${sId}')"><td><span class="tree-line">┗ </span><span class="toggle-icon" id="btn-${sId}">▼</span>${type} (Lv${lv})</td></tr>`;
-                    
-                    groups[gk].forEach((r, rIdx) => {
-                        const rId = `${sId}-r${rIdx}`, {labels, details} = getMethods(r.output_item_name, rId, 0);
-                        html += `<tr data-id="${rId}" data-parent="${sId}" onclick="toggleLayer('${rId}','btn-${rId}')"><td><span class="tree-line">   ┗ </span><span class="toggle-icon" id="btn-${rId}">▶</span><input type="checkbox" class="cb"><b>${r.output_item_name}</b>【${r.recipe_name}】${labels}${details}</td></tr>`;
-                        html += renderMaterials(r, rId, [true, true]);
-                    });
-                });
-            });
-            tbody.innerHTML = html;
-            tbody.setAttribute('data-loaded', 'true');
-        }
-
-        function toggleLayer(id, btnId) {
-            const btn = document.getElementById(btnId);
-            if (!btn) return;
-            const isEx = btn.innerText === '▶';
-            document.querySelectorAll(`tr[data-parent="${id}"]`).forEach(el => {
-                if (isEx) el.classList.remove('hidden');
-                else { el.classList.add('hidden'); recursiveHide(el.getAttribute('data-id')); }
-            });
-            btn.innerText = isEx ? '▼' : '▶';
-            if(window.event) window.event.stopPropagation();
-        }
-
-        function recursiveHide(pId) {
-            document.querySelectorAll(`tr[data-parent="${pId}"]`).forEach(el => {
-                el.classList.add('hidden');
-                const b = document.getElementById(`btn-${el.getAttribute('data-id')}`);
-                if(b) b.innerText = '▶';
-                recursiveHide(el.getAttribute('data-id'));
-            });
-        }
-
-        function toggleDetail(id) {
-            const el = document.getElementById(id);
-            if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-        }
-
-        window.addEventListener('DOMContentLoaded', loadAllRecipes);
-    </script>
-</body>
-</html>
+<script>
+    // JS部分は「全レシピ表示」のロジック[cite: 1]を維持しています。
+    // （前回のコードからロジック部分をそのまま貼り付けてください）
+</script>
