@@ -66,3 +66,35 @@ td { border: 1px solid #ffdae0; padding: 4px; color: #000; }
     font-size: 0.9em;
     padding: 3px 10px;
 }
+/* --- サイドバーメニューの文字を見えるようにする修正 --- */
+#sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#sidebar-nav li {
+    margin-bottom: 2px;
+}
+
+#sidebar-nav a {
+    display: block;
+    padding: 6px 12px;
+    color: #5d4037 !important; /* 文字を濃い茶色に固定 */
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+#sidebar-nav a:hover {
+    background-color: #e0c8c8;
+}
+
+/* カテゴリ（■はじめに 等）の見出し */
+.sidebar-category {
+    font-weight: bold;
+    background: #8b5a5a;
+    color: white !important;
+    padding: 8px 10px;
+    margin-top: 10px;
+    display: block;
+}
