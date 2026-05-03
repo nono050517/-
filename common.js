@@ -16,40 +16,38 @@ async function loadSidebar() {
         let html = '';
         const categories = {};
         
-        // カテゴリごとにデータを分ける
+        // 1. カテゴリごとにデータを分ける
         data.forEach(item => {
             if (!categories[item.category]) categories[item.category] = [];
             categories[item.category].push(item);
         });
 
+        // 2. 画面を作っていく
         Object.keys(categories).forEach((cat, i) => {
-            // カテゴリ見出し（「■」はDB側にあるのでそのまま表示）
             html += `<div class="nav-category-title">${cat}</div><ul class="nav-list">`;
             
-            let currentSubMenuId = null;
+            let isSubMenuOpen = false; // 現在、一次職などの「中身」を書き込み中かどうか
 
             categories[cat].forEach((item, j) => {
                 const isJobGroup = item.display_name.includes("次職");
                 const uniqueId = `sub-${i}-${j}`;
 
+                // もし「一次職」などが来たら、新しい折りたたみを作る
                 if (isJobGroup) {
-                    // 前に開いていたサブメニューがあれば閉じる
-                    if (currentSubMenuId) html += `</ul></li>`;
+                    if (isSubMenuOpen) html += `</ul></li>`; // 前のがあれば閉じる
                     
-                    // 「一次職」などの開閉タイトル
                     html += `<li class="sub-category">
                                 <div class="sub-title" onclick="toggleSubMenu('${uniqueId}')">
                                     <span id="icon-${uniqueId}">▶</span> ${item.display_name}
                                 </div>
                                 <ul id="${uniqueId}" class="sub-menu" style="display:none;">`;
-                    currentSubMenuId = uniqueId;
+                    isSubMenuOpen = true;
                 } else {
-                    // 通常のリンク設定
+                    // 通常のメニュー（一次職などの下にいない場合も表示する）
                     let link = 'index.html'; 
                     if (item.page_id === 'production-page') link = 'production.html';
                     if (item.page_id === 'faq-page') link = 'faq.html';
 
-                    // 枝記号の調整（DBに記号がない場合のみ付ける）
                     const hasSymbol = item.display_name.includes('┣') || item.display_name.includes('┗');
                     const displayName = hasSymbol ? item.display_name : `┣ ${item.display_name}`;
 
@@ -57,8 +55,7 @@ async function loadSidebar() {
                 }
             });
 
-            // 最後にサブメニューが開いたままなら閉じるタグを追加
-            if (currentSubMenuId) html += `</ul></li>`;
+            if (isSubMenuOpen) html += `</ul></li>`;
             html += `</ul>`;
         });
         
@@ -68,6 +65,7 @@ async function loadSidebar() {
     }
 }
 
+// 開閉スイッチ
 function toggleSubMenu(id) {
     const target = document.getElementById(id);
     const icon = document.getElementById(`icon-${id}`);
