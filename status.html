@@ -8,11 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* status.html 独自の追加スタイル */
-        .status-table.correction-table {
-        width: auto;
-        min-width: 600px; /* 必要最低限の幅を確保 */
-        margin-right: auto; /* 左寄せを維持 */
-    }
+        .status-table { width: 100%; border-collapse: collapse; margin: 15px 0; background-color: #fff; font-size: 11px; }
         .status-table th, .status-table td { border: 1px solid #ffdae0; padding: 10px 8px; text-align: left; }
         .status-table th { background-color: #ffc0cb; color: #5d4037; white-space: nowrap; }
         
@@ -22,7 +18,7 @@
         .zero { color: #ccc; }
 
         .highlight { color: #e91e63; font-weight: bold; }
-        .formula-box { background: #fffaf0; padding: 15px; border: 1px solid #e0d0c0; margin: 10px 0; font-family: monospace; line-height: 1.6; border-radius: 4px; font-size: 11px; }
+        .formula-box { background: #fffaf0; padding: 15px; border: 1px solid #e0d0c0; margin: 10px 0; font-family: monospace; line-height: 1.6; border-radius: 4px; }
         .info-note { font-size: 10px; color: #8b5a5a; margin-bottom: 8px; border-left: 3px solid #ffb6c1; padding-left: 10px; background: #fffcfc; padding-top: 5px; padding-bottom: 5px; }
         
         h3 { border-bottom: 2px solid #f5e1e1; padding-bottom: 5px; margin-top: 30px; color: #8b5a5a; font-size: 13px; }
@@ -60,41 +56,30 @@
                 </table>
 
                 <h3>■ ステータス上昇値の目安（三次職基準）</h3>
-                <strong>STR（攻撃力）</strong>
+                <div style="margin-top:10px;">
+                    <strong>STR（攻撃力）</strong>
                     <div class="formula-box">
                         <strong>【算出規則】</strong> 合計STRにつきATK+1。さらに10の倍数でボーナス加算。<br>
-                                ・実測例：ロイヤルガード（合計171） ＝ <span class="highlight">ATK 461</span>
-                                    <!-- 以前の合計181(ATK 520)から、STR10分+ボーナス分が減少 -->
+                        ・実測例：ロイヤルガード（181） ＝ <span class="highlight">ATK 520</span>
                     </div>
 
                     <strong>INT（魔法攻撃力・SP）</strong>
-<strong>INT（魔法攻撃力・SP）</strong>
-<div class="formula-box">
-    <strong>【MATK算出規則】</strong> 7の倍数時にボーナス加算。<br>
-    ・実測：合計INT 171 ＝ <span class="highlight">MATK 747</span><br><br>
-
-    <strong>【SP比較（170pt振分時）】</strong><br>
-    ・ベルセルク　　：合計170 ＝ <span class="highlight">SP 6,868</span> (+40/INT)<br> <!-- 68 + (170 * 40) -->
-    ・ロイヤルガード：合計171 ＝ <span class="highlight">SP 13,208</span> (+76/INT)<br> <!-- 212 + (171 * 76) -->
-    ・アークメイジ　：合計174 ＝ <span class="highlight">SP 23,194</span> (+129/INT)<br> <!-- 748 + (174 * 129) -->
-    ・匠　　　　　　：合計172 ＝ <span class="highlight">SP 9,317</span> (+53/INT)<br> <!-- 201 + (172 * 53)[cite: 1] -->
-    ・アサシン　　　：合計171 ＝ <span class="highlight">SP 13,208</span> (+76/INT)<br> <!-- 212 + (171 * 76)[cite: 1] -->
-    ・ガンスリンガー：合計171 ＝ <span class="highlight">SP 10,542</span> (+61/INT)<br> <!-- 169 + (171 * 61)[cite: 1] -->
-    ・ペネトレイター：合計171 ＝ <span class="highlight">SP 13,208</span> (+76/INT)     <!-- 212 + (171 * 76)[cite: 1] -->
-</div>
+                    <div class="formula-box">
+                        <strong>【MATK算出規則】</strong> 7の倍数時にボーナス加算。<br>
+                        ・実測：合計INT 171 ＝ <span class="highlight">MATK 747</span><br><br>
+                        <strong>【SP比較（170pt振分時）】</strong><br>
+                        ・ベルセルク　　：合計170 ＝ <span class="highlight">SP 6,490</span><br>
+                        ・ロイヤルガード：合計171 ＝ <span class="highlight">SP 13,056</span><br>
+                        ・アークメイジ　：合計174 ＝ <span class="highlight">SP 23,061</span>
+                    </div>
 
                     <strong>VIT（最大HP）</strong>
-
-<div class="formula-box">
-    <strong>【HP比較（170pt振分時）】</strong><br>
-    ・ベルセルク　　：合計170 ＝ <span class="highlight">HP 51,624</span> (+270/VIT)<br> <!-- 5724 + (170 * 270) -->
-    ・ロイヤルガード：合計173 ＝ <span class="highlight">HP 47,328</span> (+240/VIT)<br> <!-- 5808 + (173 * 240) -->
-    ・アークメイジ　：合計170 ＝ <span class="highlight">HP 34,416</span> (+180/VIT)<br> <!-- 3816 + (170 * 180) -->
-    ・匠　　　　　　：合計171 ＝ <span class="highlight">HP 37,674</span> (+195/VIT)<br> <!-- 4329 + (171 * 195) -->
-    ・アサシン　　　：合計171 ＝ <span class="highlight">HP 40,572</span> (+210/VIT)<br> <!-- 4662 + (171 * 210)[cite: 1] -->
-    ・ガンスリンガー：合計170 ＝ <span class="highlight">HP 39,834</span> (+210/VIT)<br> <!-- 4134 + (170 * 210)[cite: 1] -->
-    ・ペネトレイター：合計170 ＝ <span class="highlight">HP 39,834</span> (+210/VIT)     <!-- 4134 + (170 * 210)[cite: 1] -->
-</div>
+                    <div class="formula-box">
+                        <strong>【HP比較（170pt振分時）】</strong><br>
+                        ・ベルセルク　　：合計175 ＝ <span class="highlight">HP 52,704</span><br>
+                        ・ロイヤルガード：合計178 ＝ <span class="highlight">HP 47,568</span><br>
+                        ・アサシン　　　：合計171 ＝ <span class="highlight">HP 40,362</span>
+                    </div>
 
                     <strong>DEX / AGI / LUK</strong>
                     <div class="formula-box">
@@ -105,30 +90,25 @@
                 </div>
 
                 <h3>■ 三次職の補正値一覧</h3>
-<div class="info-note" style="width: fit-content;">
-    <strong>【データ計測条件】</strong><br>
-    ・ベースLv150、ステータスポイント未振分（ALL 0）の状態です。<br>
-    ・装備・スキル・パッシブ補正等は一切適用されていない「素体」の数値です。
-</div>
-
-<div style="overflow-x: auto; margin-top: 10px;">
-    <table class="status-table correction-table" style="width: auto;">
-        <thead>
-            <tr>
-                <th>職業</th><th>HP</th><th>SP</th><th>STR</th><th>DEX</th><th>INT</th><th>VIT</th><th>AGI</th><th>LUK</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr><td>ロイヤルガード</td><td>5808</td><td>212</td><td>1</td><td class="zero">-</td><td>1</td><td>3</td><td class="zero">-</td><td>1</td></tr>
-            <tr><td>ベルセルク</td><td>5724</td><td>68</td><td>4</td><td>1</td><td class="zero">-</td><td class="zero">-</td><td>1</td><td class="zero">-</td></tr>
-            <tr><td>匠</td><td>4329</td><td>201</td><td>2</td><td class="zero">-</td><td>2</td><td>1</td><td>1</td><td class="zero">-</td></tr>
-            <tr><td>アサシン</td><td>4662</td><td>212</td><td>4</td><td class="zero">-</td><td>1</td><td>1</td><td class="zero">-</td><td class="zero">-</td></tr>
-            <tr><td>ガンスリンガー</td><td>4134</td><td>169</td><td class="zero">-</td><td>5</td><td>1</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td></tr>
-            <tr><td>ペネトレイター</td><td>4134</td><td>212</td><td class="zero">-</td><td class="zero">-</td><td>1</td><td class="zero">-</td><td>5</td><td class="zero">-</td></tr>
-            <tr><td>アークメイジ</td><td>3816</td><td>748</td><td class="zero">-</td><td>1</td><td>4</td><td class="zero">-</td><td class="zero">-</td><td>1</td></tr>
-        </tbody>
-    </table>
-</div>
+                <p style="font-size: 10px; color: #888;">※各職業に固定で付与される初期ボーナス値です。</p>
+                <div style="overflow-x: auto;">
+                    <table class="status-table correction-table">
+                        <thead>
+                            <tr>
+                                <th>職業</th><th>HP</th><th>SP</th><th>STR</th><th>DEX</th><th>INT</th><th>VIT</th><th>AGI</th><th>LUK</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>ロイヤルガード</td><td>7008</td><td>212</td><td>11</td><td class="zero">-</td><td>1</td><td>8</td><td>15</td><td>1</td></tr>
+                            <tr><td>ベルセルク</td><td>7074</td><td>68</td><td>14</td><td>1</td><td class="zero">-</td><td>5</td><td>16</td><td class="zero">-</td></tr>
+                            <tr><td>匠</td><td>5304</td><td>201</td><td>12</td><td class="zero">-</td><td>2</td><td>6</td><td>16</td><td class="zero">-</td></tr>
+                            <tr><td>アサシン</td><td>4662</td><td>212</td><td>4</td><td class="zero">-</td><td>1</td><td>1</td><td class="zero">-</td><td class="zero">-</td></tr>
+                            <tr><td>ガンスリンガー</td><td>4134</td><td>169</td><td class="zero">-</td><td>5</td><td>1</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td></tr>
+                            <tr><td>ペネトレイター</td><td>4134</td><td>212</td><td class="zero">-</td><td class="zero">-</td><td>1</td><td class="zero">-</td><td>5</td><td class="zero">-</td></tr>
+                            <tr><td>アークメイジ</td><td>3816</td><td>748</td><td class="zero">-</td><td>1</td><td>4</td><td class="zero">-</td><td class="zero">-</td><td>1</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <h3>■ 用語集</h3>
                 <div style="background: #fffaf0; padding: 15px; border-radius: 4px; border: 1px solid #e0d0c0; margin-top:10px;">
