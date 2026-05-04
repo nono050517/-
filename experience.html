@@ -201,14 +201,14 @@
         <tbody>
             <tr><td class="lv-col">Lv1</td><td>1</td><td style="text-align:left;">見習い / 見習い</td><td>1 / 1</td></tr>
             <tr><td class="lv-col">Lv2</td><td>21</td><td style="text-align:left;">ビギナー / 徒弟</td><td>20 / 20</td></tr>
-            <tr><td class="lv-col">Lv3</td><td>51</td><td style="text-align:left;">練習生 / 補助士</td><td>200 / 200[cite: 2]</td></tr>
-            <tr><td class="lv-col">Lv4</td><td>121</td><td style="text-align:left;">初級者 / 初級工</td><td>4,000 / 3,000[cite: 2]</td></tr>
-            <tr><td class="lv-col">Lv5</td><td>201</td><td style="text-align:left;">中級者 / 中級工</td><td>65,000 / 45,000[cite: 2]</td></tr>
-            <tr><td class="lv-col">Lv6</td><td>301</td><td style="text-align:left;">上級者 / 上級工</td><td>100,000 / 75,000[cite: 2]</td></tr>
-            <tr><td class="lv-col">Lv7</td><td>451</td><td style="text-align:left;">プロ / 熟練工</td><td>250,000 / 100,000[cite: 2]</td></tr>
-            <tr><td class="lv-col">Lv8</td><td>601</td><td style="text-align:left;">エキスパート / エキスパート</td><td>1,500,000 / 800,000[cite: 2]</td></tr>
-            <tr><td class="lv-col">Lv9</td><td>751</td><td style="text-align:left;">達人 / 達人工</td><td>3,000,000 / 2,000,000[cite: 2]</td></tr>
-            <tr><td class="lv-col">Lv10</td><td>1,000</td><td style="text-align:left;">マスター / マイスター</td><td>上限[cite: 2]</td></tr>
+            <tr><td class="lv-col">Lv3</td><td>51</td><td style="text-align:left;">練習生 / 補助士</td><td>200 / 200</td></tr>
+            <tr><td class="lv-col">Lv4</td><td>121</td><td style="text-align:left;">初級者 / 初級工</td><td>4,000 / 3,000</td></tr>
+            <tr><td class="lv-col">Lv5</td><td>201</td><td style="text-align:left;">中級者 / 中級工</td><td>65,000 / 45,000</td></tr>
+            <tr><td class="lv-col">Lv6</td><td>301</td><td style="text-align:left;">上級者 / 上級工</td><td>100,000 / 75,000</td></tr>
+            <tr><td class="lv-col">Lv7</td><td>451</td><td style="text-align:left;">プロ / 熟練工</td><td>250,000 / 100,000</td></tr>
+            <tr><td class="lv-col">Lv8</td><td>601</td><td style="text-align:left;">エキスパート / エキスパート</td><td>1,500,000 / 800,000</td></tr>
+            <tr><td class="lv-col">Lv9</td><td>751</td><td style="text-align:left;">達人 / 達人工</td><td>3,000,000 / 2,000,000</td></tr>
+            <tr><td class="lv-col">Lv10</td><td>1,000</td><td style="text-align:left;">マスター / マイスター</td><td>上限</td></tr>
         </tbody>
     </table>
 </div>
@@ -219,29 +219,38 @@
                     <div class="table-scroll">
                         <table class="exp-table">
                             <thead>
-                                <tr>
-                                    <th rowspan="2">Lv</th>
-                                    <th colspan="5">BaseExp (次Lvまで)</th>
-                                    <th colspan="4">JobExp (次Lvまで)</th>
-                                </tr>
-                                <tr>
-                                    <th>初回</th><th>転生1</th><th>転生2</th><th>転生3</th><th>転生4</th>
-                                    <th>見習い</th><th>一次職</th><th>二次職</th><th>三次職</th>
-                                </tr>
-                            </thead>
+    <tr>
+        <th rowspan="2">Lv</th>
+        <th colspan="5">BaseExp（次Lvまで）</th>
+        <th colspan="4">JobExp（次Lvまで）</th> <!-- 4列分を統合 -->
+    </tr>
+    <tr>
+        <th>初回</th>
+        <th>転生1（初回の50％）</th>
+        <th>転生2（初回の40％）</th>
+        <th>転生3（初回の30％）</th>
+        <th>転生4（初回の200％）</th>
+        <th colspan="4">全職共通</th> <!-- ここを「全職共通」に変更 -->
+    </tr>
+</thead>
                             <tbody>
-                                <tr><td class="lv-col">1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>2</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr class="bg-highlight"><td class="lv-col">10</td><td>1,600</td><td>800</td><td>640</td><td>480</td><td>3,200</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td class="lv-col">20</td><td>37,000</td><td>18,500</td><td>14,800</td><td>11,100</td><td>74,000</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td class="lv-col">30</td><td>700,000</td><td>350,000</td><td>280,000</td><td>210,000</td><td>1,400,000</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td class="lv-col">40</td><td>4,000,000</td><td>2,000,000</td><td>1,600,000</td><td>1,200,000</td><td>8,000,000</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr class="bg-highlight"><td class="lv-col">50</td><td>10,000,000</td><td>5,000,000</td><td>4,000,000</td><td>3,000,000</td><td>20,000,000</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td class="lv-col">60</td><td>15,000,000</td><td>7,500,000</td><td>6,000,000</td><td>4,500,000</td><td>30,000,000</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td class="lv-col">70</td><td>40,000,000</td><td>20,000,000</td><td>16,000,000</td><td>12,000,000</td><td>80,000,000</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td class="lv-col">80</td><td>86,000,000</td><td>43,000,000</td><td>34,400,000</td><td>25,800,000</td><td>172,000,000</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td class="lv-col">90</td><td>144,000,000</td><td>72,000,000</td><td>57,600,000</td><td>43,200,000</td><td>288,000,000</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr class="bg-highlight"><td class="lv-col">99</td><td>210,000,000</td><td>105,000,000</td><td>84,000,000</td><td>63,000,000</td><td>420,000,000</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                            </tbody>
+    <tr><td class="lv-col">1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>2</td><td colspan="4">2</td></tr>
+    <tr><td class="lv-col">10</td><td>1,600</td><td>800</td><td>640</td><td>480</td><td>3,200</td><td colspan="4">3,200</td></tr>
+    <tr><td class="lv-col">20</td><td>37,000</td><td>18,500</td><td>14,800</td><td>11,100</td><td>74,000</td><td colspan="4">74,000</td></tr>
+    <tr><td class="lv-col">30</td><td>700,000</td><td>350,000</td><td>280,000</td><td>210,000</td><td>1,400,000</td><td colspan="4">1,400,000</td></tr>
+    <tr><td class="lv-col">40</td><td>4,000,000</td><td>2,000,000</td><td>1,600,000</td><td>1,200,000</td><td>8,000,000</td><td colspan="4">8,000,000</td></tr>
+    <tr><td class="lv-col">50</td><td>10,000,000</td><td>5,000,000</td><td>4,000,000</td><td>3,000,000</td><td>20,000,000</td><td colspan="4">20,000,000</td></tr>
+    <tr><td class="lv-col">60</td><td>15,000,000</td><td>7,500,000</td><td>6,000,000</td><td>4,500,000</td><td>30,000,000</td><td colspan="4">30,000,000</td></tr>
+    <tr><td class="lv-col">70</td><td>40,000,000</td><td>20,000,000</td><td>16,000,000</td><td>12,000,000</td><td>80,000,000</td><td colspan="4">80,000,000</td></tr>
+    <tr><td class="lv-col">80</td><td>86,000,000</td><td>43,000,000</td><td>34,400,000</td><td>25,800,000</td><td>172,000,000</td><td colspan="4">172,000,000</td></tr>
+    <tr><td class="lv-col">90</td><td>144,000,000</td><td>72,000,000</td><td>57,600,000</td><td>43,200,000</td><td>288,000,000</td><td colspan="4">288,000,000</td></tr>
+    <tr><td class="lv-col">100</td><td>-</td><td>108,500,500</td><td>86,800,000</td><td>65,100,000</td><td>434,000,000</td><td colspan="4">434,000,000</td></tr>
+    <tr><td class="lv-col">110</td><td>-</td><td>-</td><td>-</td><td>96,000,000</td><td>640,000,000</td><td colspan="4">640,000,000</td></tr>
+    <tr><td class="lv-col">120</td><td>-</td><td>-</td><td>-</td><td>-</td><td>2,000,000,000</td><td colspan="4">2,000,000,000</td></tr>
+    <tr><td class="lv-col">130</td><td>-</td><td>-</td><td>-</td><td>-</td><td>2,000,000,000</td><td colspan="4">2,000,000,000</td></tr>
+    <tr><td class="lv-col">140</td><td>-</td><td>-</td><td>-</td><td>-</td><td>2,000,000,000</td><td colspan="4">2,000,000,000</td></tr>
+    <tr><td class="lv-col">150</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td colspan="4">-</td></tr>
+</tbody>
                         </table>
                     </div>
                 </div>
