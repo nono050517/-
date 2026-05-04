@@ -49,10 +49,22 @@
             font-size: 12px; 
         }
 
-        .exp-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 30px; border: 1px solid #d2b48c; }
+        .exp-table { 
+    width: auto;           /* 100%からautoに変更して左に詰める */
+    min-width: 400px;      /* 最低限の幅を確保 */
+    border-collapse: collapse; 
+    font-size: 11px; 
+    margin-bottom: 30px; 
+    border: 1px solid #d2b48c; 
+}
         .exp-table th { background-color: #8b5a5a; color: #ffffff; border: 1px solid #d2b48c; padding: 5px; }
-        .exp-table td { border: 1px solid #e0d0c0; padding: 4px 8px; text-align: right; color: #5d4037; }
-        .exp-table .lv-col { background-color: #f5e1e1; text-align: center; font-weight: bold; width: 40px; }
+        .exp-table td { 
+    border: 1px solid #e0d0c0; 
+    padding: 4px 6px;      /* 余白をさらに狭く調整 */
+    text-align: right; 
+    color: #5d4037; 
+}
+        .exp-table .lv-col { background-color: #f5e1e1; text-align: center; font-weight: bold; width: 80px; }
         .table-scroll { max-height: 500px; overflow-y: auto; border: 1px solid #e0d0c0; margin-bottom: 25px; }
         
         .highlight { color: #a04040; font-weight: bold; }
@@ -174,31 +186,32 @@
                     </div>
                 </div>
 
-                <div class="section-category">スキルの必要熟練度</div>
-                <div class="item-content">
-                    <table class="exp-table">
-                        <thead>
-                            <tr>
-                                <th>ランク</th>
-                                <th style="text-align:left;">名称：戦闘職 / 生産職</th>
-                                <th>必要熟練度</th>
-                                <th>1上げるのに必要なJobExp</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td class="lv-col">Lv1</td><td style="text-align:left;">見習い / 見習い</td><td>1</td><td>1 / 1</td></tr>
-                            <tr><td class="lv-col">Lv2</td><td style="text-align:left;">ビギナー / 徒弟</td><td>21</td><td>20 / 20</td></tr>
-                            <tr><td class="lv-col">Lv3</td><td style="text-align:left;">練習生 / 補助士</td><td>51</td><td>200 / 200</td></tr>
-                            <tr><td class="lv-col">Lv4</td><td style="text-align:left;">初級者 / 初級工</td><td>121</td><td>4,000 / 3,000</td></tr>
-                            <tr><td class="lv-col">Lv5</td><td style="text-align:left;">中級者 / 中級工</td><td>201</td><td>65,000 / 45,000</td></tr>
-                            <tr><td class="lv-col">Lv6</td><td style="text-align:left;">上級者 / 上級工</td><td>301</td><td>100,000 / 75,000</td></tr>
-                            <tr><td class="lv-col">Lv7</td><td style="text-align:left;">プロ / 熟練工</td><td>451</td><td>250,000 / 100,000</td></tr>
-                            <tr><td class="lv-col">Lv8</td><td style="text-align:left;">エキスパート / エキスパート</td><td>601</td><td>1,500,000 / 800,000</td></tr>
-                            <tr><td class="lv-col">Lv9</td><td style="text-align:left;">達人 / 達人工</td><td>751</td><td>3,000,000 / 2,000,000</td></tr>
-                            <tr><td class="lv-col">Lv10</td><td style="text-align:left;">マスター / マイスター</td><td>1,000</td><td style="text-align:center;">上限</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+<div class="section-category">スキルの必要熟練度</div>
+<div class="item-content">
+    <table class="exp-table">
+        <thead>
+            <tr>
+                <th>ランク</th>
+                <th>必要熟練度</th>
+                <!-- widthを削除して中身に合わせる[cite: 2] -->
+                <th style="text-align:left; padding-right: 20px;">名称：戦闘職 / 生産職</th>
+                <th>1上げるのに必要なJobExp</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td class="lv-col">Lv1</td><td>1</td><td style="text-align:left;">見習い / 見習い</td><td>1 / 1</td></tr>
+            <tr><td class="lv-col">Lv2</td><td>21</td><td style="text-align:left;">ビギナー / 徒弟</td><td>20 / 20</td></tr>
+            <tr><td class="lv-col">Lv3</td><td>51</td><td style="text-align:left;">練習生 / 補助士</td><td>200 / 200[cite: 2]</td></tr>
+            <tr><td class="lv-col">Lv4</td><td>121</td><td style="text-align:left;">初級者 / 初級工</td><td>4,000 / 3,000[cite: 2]</td></tr>
+            <tr><td class="lv-col">Lv5</td><td>201</td><td style="text-align:left;">中級者 / 中級工</td><td>65,000 / 45,000[cite: 2]</td></tr>
+            <tr><td class="lv-col">Lv6</td><td>301</td><td style="text-align:left;">上級者 / 上級工</td><td>100,000 / 75,000[cite: 2]</td></tr>
+            <tr><td class="lv-col">Lv7</td><td>451</td><td style="text-align:left;">プロ / 熟練工</td><td>250,000 / 100,000[cite: 2]</td></tr>
+            <tr><td class="lv-col">Lv8</td><td>601</td><td style="text-align:left;">エキスパート / エキスパート</td><td>1,500,000 / 800,000[cite: 2]</td></tr>
+            <tr><td class="lv-col">Lv9</td><td>751</td><td style="text-align:left;">達人 / 達人工</td><td>3,000,000 / 2,000,000[cite: 2]</td></tr>
+            <tr><td class="lv-col">Lv10</td><td>1,000</td><td style="text-align:left;">マスター / マイスター</td><td>上限[cite: 2]</td></tr>
+        </tbody>
+    </table>
+</div>
 
                 <div class="section-category">ベース・ジョブ経験値早見表</div>
                 <div class="item-content">
