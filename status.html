@@ -105,13 +105,19 @@
                 </div>
 
                 <h3>■ 三次職の補正値一覧</h3>
-                <div class="info-note">
-                    <strong>【データ計測条件】</strong><br>
-                    ・ベースLv150、ステータスポイント未振分（ALL 0）の状態です。<br>
-                    ・装備・スキル・パッシブ補正等は一切適用されていない「素体」の数値です。
-                </div>
-<div style="overflow-x: auto;">
-    <table class="status-table correction-table">
+                <!-- 「データ計測条件」のエリアを独立させ、幅を文字に合わせる -->
+<div class="info-note" style="width: fit-content;">
+    <strong>【データ計測条件】</strong><br>
+    ・ベースLv150、ステータスポイント未振分（ALL 0）の状態です。<br>
+    ・装備・スキル・パッシブ補正等は一切適用されていない「素体」の数値です。
+</div> <!-- ここでしっかり閉じる -->
+
+<!-- テーブルを囲う div -->
+<div style="overflow-x: auto; margin-top: 10px;">
+    <table class="status-table correction-table" style="width: auto;">
+        <!-- テーブルの中身は変更なし -->
+    </table>
+</div>
         <thead>
             <tr>
                 <th>職業</th><th>HP</th><th>SP</th><th>STR</th><th>DEX</th><th>INT</th><th>VIT</th><th>AGI</th><th>LUK</th>
