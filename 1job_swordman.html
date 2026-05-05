@@ -77,8 +77,8 @@
                 tbody.innerHTML = data.map(skill => `
                     <tr>
                         <td style="text-align:center;">${skill.required_level || '-'}</td>
-                        <td class="row-skill">${skill.skill_name}</td>
-                        <td>${skill.skill_type || '-'}</td>
+                        <td class="row-skill">${skill.name}</td>
+                        <td>${skill.type || '-'}</td>
                         <td>${skill.prerequisite_skill_name || 'なし'}</td>
                     </tr>
                 `).join('');
