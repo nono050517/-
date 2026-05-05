@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <!-- saved from url=(0063)file:///C:/Users/cinry/Downloads/gemini-code-1778022551315.html -->
-<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<html lang="ja">
+    <head>
+    <meta charset="UTF-8">
     <title>ソードマン - エリシア・アーカイブス</title>
-    <link rel="stylesheet" href="file:///C:/Users/cinry/Downloads/style.css">
-    <script src="./1job_swordman_files/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css"> <!-- 修正 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> <!-- 修正 -->
 </head>
 <body>
     <div class="wrapper">
@@ -53,10 +54,11 @@
                 </div>
             </main>
         </div>
-    </div>
-    <script src="file:///C:/Users/cinry/Downloads/common.js"></script>
+</div> <!-- wrapperの閉じ -->
+    <script src="common.js"></script> <!-- 修正 -->
     <script>
         async function loadSwordmanSkills() {
+            // ...以下略
             // skills_listテーブルからソードマン(job_id: 1と仮定)のスキルを取得
             // 取得レベル(required_level)の昇順でソート
             const { data, error } = await client
