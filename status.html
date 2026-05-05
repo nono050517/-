@@ -91,76 +91,83 @@
     ・実測例：ロイヤルガード（合計171） ＝ <span class="highlight">ATK 461</span><br>
     <!-- 以前の合計181(ATK 520)から、STR10分+ボーナス分が減少 -->
     <div class="bonus-section" style="margin-top: 10px;">
-    <strong>【STR合計値と増加ボーナス】</strong>
-    <table class="bonus-check-table" style="width: auto; text-align: center; border-collapse: collapse; margin-top: 5px;">
-        <thead>
-            <tr style="background-color: #fce4ec;">
-                <th style="padding: 8px 15px; border: 1px solid #f8bbd0;">合計STR</th>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">10</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">20</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">30</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">40</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">50</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">60</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">...</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">150</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">160</td>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <th style="padding: 8px 15px; border: 1px solid #f8bbd0; background-color: #fce4ec;">ATK増加値</th>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+11</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+13</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+15</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+17</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+19</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+21</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">...</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+39</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+41</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+<!-- STRセクションの修正 -->
+<strong>STR（攻撃力）</strong>
+<div class="formula-box">
+    <strong>【算出規則】</strong> 合計STRにつきATK+1。さらに10の倍数でボーナス加算。<br>
+    <span class="highlight">※追加加算：STRが10の倍数に達するたびに、(合計STR / 10) の値がボーナスとして多く増える。</span><br>
+    ・実測例：ロイヤルガード（合計171） ＝ <span class="highlight">ATK 461</span><br>
+    
+    <div class="bonus-section" style="margin-top: 10px;">
+        <strong>【STR合計値と増加ボーナス】</strong>
+        <table class="bonus-check-table" style="width: auto; text-align: center; border-collapse: collapse; margin-top: 5px;">
+            <thead>
+                <tr style="background-color: #fce4ec;">
+                    <th style="padding: 8px 15px; border: 1px solid #f8bbd0;">合計STR</th>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">10</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">20</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">30</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">40</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">50</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">...</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">160</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th style="padding: 8px 15px; border: 1px solid #f8bbd0; background-color: #fce4ec;">ATK増加値</th>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+11</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+13</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+15</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+17</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+19</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">...</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+41</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
-                    <strong>INT（魔法攻撃力・SP）</strong>
+<!-- INTセクションの修正 -->
+<strong>INT（魔法攻撃力・SP）</strong>
 <div class="formula-box">
     <strong>【MATK算出規則】</strong> 7の倍数時にボーナス加算。<br>
+    <span class="highlight">※追加加算：INTが7の倍数に達するたびに、(合計INT / 7 × 2) の値がボーナスとして多く増える。</span><br>
     ・実測：合計INT 171 ＝ <span class="highlight">MATK 747</span><br>
-<div class="bonus-section" style="margin-top: 20px;">
-    <strong>【INT合計値と増加ボーナス】</strong>
-    <table class="bonus-check-table" style="width: auto; text-align: center; border-collapse: collapse; margin-top: 5px;">
-        <thead>
-            <tr style="background-color: #fce4ec;">
-                <th style="padding: 8px 15px; border: 1px solid #f8bbd0;">合計INT</th>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">7</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">14</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">21</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">28</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">35</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">42</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">...</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">161</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">168</td>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <th style="padding: 8px 15px; border: 1px solid #f8bbd0; background-color: #fce4ec;">MATK増加値</th>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+11</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+13</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+15</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+17</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+19</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+21</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">...</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+42</td>
-                <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+43</td>
-            </tr>
-        </tbody>
-    </table>
+
+    <div class="bonus-section" style="margin-top: 20px;">
+        <strong>【INT合計値と増加ボーナス】</strong>
+        <table class="bonus-check-table" style="width: auto; text-align: center; border-collapse: collapse; margin-top: 5px;">
+            <thead>
+                <tr style="background-color: #fce4ec;">
+                    <th style="padding: 8px 15px; border: 1px solid #f8bbd0;">合計INT</th>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">7</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">14</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">21</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">28</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">35</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">...</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">161</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">168</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th style="padding: 8px 15px; border: 1px solid #f8bbd0; background-color: #fce4ec;">MATK増加値</th>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+11</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+13</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+15</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+17</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+19</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">...</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+42</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+43</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <!-- 以下のSP比較などは継続 -->
 </div>
     <br>
     <strong>【SP比較（170pt振分時）】</strong><br>
