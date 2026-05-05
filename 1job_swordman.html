@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!-- saved from url=(0063)file:///C:/Users/cinry/Downloads/gemini-code-1778022551315.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <title>ソードマン - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="file:///C:/Users/cinry/Downloads/style.css">
+    <script src="./1job_swordman_files/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：ソードマン (Swordman)</h2>
+                
+                <div class="section-category">1. 職能と役割</div>
+                <div class="item-content">
+                    体力と防御力に優れた近接戦闘のスペシャリストです。高い防御性能を誇る重装備や盾を扱えるため、パーティでは壁役（タンク）として活躍します。また、攻撃力の高い武器を選択することで、二次職のウォリアーなどのようにアタッカーとしての役割を担うことも可能です。
+                </div>
+
+                <div class="section-category">2. 育成のメリット</div>
+                <div class="item-content">
+                    習得スキルのうち、<strong>『耐久力（HP増加）』</strong>や<strong>『心眼（命中率上昇）』</strong>は非常に汎用性が高く、二次職以降や他の職業に転職した後でも長く重宝されます。そのため、まずはソードマンでこれらの熟練度を優先的に上げておくことが推奨されます。
+                </div>
+
+                <div class="section-category">3. 転職ルート</div>
+                <div class="item-content">
+                    <strong>■見習いからの転職</strong><br>
+                    JobLv10で試験を受けることができ、特定のエリアでモンスターを全滅させることで正規のソードマンになれます。<br><br>
+                    
+                    <strong>■他職からの転職</strong><br>
+                    大量のモンスターが配置されたコースを制限内に走り抜ける試験が課されます。<br><br>
+                    
+                    <strong>■主な派生二次職</strong><br>
+                    ウォリアー、テンペレシオン、シードランサー、フェンサーなど、BaseLv50および指定の職業JobLv40を満たすことで転職可能です。
+                </div>
+
+                <div class="section-category">4. 習得可能スキル（取得レベル順）</div>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th>取得Lv</th>
+                                <th>スキル名</th>
+                                <th>タイプ</th>
+                                <th>前提条件</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <!-- JSでここにスキルが流し込まれます -->
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="file:///C:/Users/cinry/Downloads/common.js"></script>
+    <script>
+        async function loadSwordmanSkills() {
+            // skills_listテーブルからソードマン(job_id: 1と仮定)のスキルを取得
+            // 取得レベル(required_level)の昇順でソート
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 1) 
+                .order('required_level', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.required_level || '-'}</td>
+                        <td class="row-skill">${skill.skill_name}</td>
+                        <td>${skill.skill_type || '-'}</td>
+                        <td>${skill.prerequisite_skill_name || 'なし'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが登録されていません</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadSwordmanSkills);
+    </script>
+
+</body></html>
