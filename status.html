@@ -91,82 +91,89 @@
     ・実測例：ロイヤルガード（合計171） ＝ <span class="highlight">ATK 461</span><br>
     <!-- 以前の合計181(ATK 520)から、STR10分+ボーナス分が減少 -->
     <div class="bonus-section" style="margin-top: 10px;">
-<!-- STRセクションの修正 -->
+<!-- STR（攻撃力）セクション -->
 <strong>STR（攻撃力）</strong>
 <div class="formula-box">
-    <strong>【算出規則】</strong> 合計STRにつきATK+1。さらに10の倍数でボーナス加算。<br>
-    <span class="highlight">※追加加算：STRが10の倍数に達するたびに、(合計STR / 10) の値がボーナスとして多く増える。</span><br>
-    ・実測例：ロイヤルガード（合計171） ＝ <span class="highlight">ATK 461</span><br>
+    <strong>【算出規則】</strong> 合計STR 1につき <strong>ATK +1</strong>。<br>
+    さらに、10の倍数に達するごとに以下の<strong>追加ボーナス</strong>が加算される。<br>
+    <span class="highlight">ボーナス式：合計STR / 10</span><br>
     
     <div class="bonus-section" style="margin-top: 10px;">
-        <strong>【STR合計値と増加ボーナス】</strong>
         <table class="bonus-check-table" style="width: auto; text-align: center; border-collapse: collapse; margin-top: 5px;">
             <thead>
                 <tr style="background-color: #fce4ec;">
-                    <th style="padding: 8px 15px; border: 1px solid #f8bbd0;">合計STR</th>
+                    <th style="padding: 8px 15px; border: 1px solid #f8bbd0;">到達STR</th>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">10</td>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">20</td>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">30</td>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">40</td>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">50</td>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">...</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">160</td>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <th style="padding: 8px 15px; border: 1px solid #f8bbd0; background-color: #fce4ec;">ATK増加値</th>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+11</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+13</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+15</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+17</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+19</td>
+                    <th style="padding: 8px 15px; border: 1px solid #f8bbd0; background-color: #fce4ec;">追加ボーナス</th>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+1</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+2</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+3</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+4</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+5</td>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">...</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+41</td>
                 </tr>
             </tbody>
         </table>
+<p style="font-size: 11px; color: #8b5a5a; margin-top: 8px;">
+    <strong>【到達時の加算イメージ】</strong><br>
+    ・STR 9の時 ＝ <strong>ATK +1</strong> (通常加算)<br>
+    ・STR 10到達 ＝ 1 ＋ (10/10) ＝ <strong>ATK +2</strong> 加算<br>
+    ・STR 20到達 ＝ 1 ＋ (20/10) ＝ <strong>ATK +3</strong> 加算<br>
+    ・STR 30到達 ＝ 1 ＋ (30/10) ＝ <strong>ATK +4</strong> 加算
+</p>
     </div>
 </div>
 
-<!-- INTセクションの修正 -->
+<!-- INT（魔法攻撃力）セクション -->
 <strong>INT（魔法攻撃力・SP）</strong>
 <div class="formula-box">
-    <strong>【MATK算出規則】</strong> 7の倍数時にボーナス加算。<br>
-    <span class="highlight">※追加加算：INTが7の倍数に達するたびに、(合計INT / 7 × 2) の値がボーナスとして多く増える。</span><br>
-    ・実測：合計INT 171 ＝ <span class="highlight">MATK 747</span><br>
+    <strong>【算出規則】</strong> 合計INT 1につき <strong>MATK +1</strong>。<br>
+    さらに、7の倍数に達するごとに以下の<strong>追加ボーナス</strong>が加算される。<br>
+    <span class="highlight">ボーナス式：(合計INT / 7) × 2</span><br>
 
-    <div class="bonus-section" style="margin-top: 20px;">
-        <strong>【INT合計値と増加ボーナス】</strong>
+    <div class="bonus-section" style="margin-top: 10px;">
         <table class="bonus-check-table" style="width: auto; text-align: center; border-collapse: collapse; margin-top: 5px;">
             <thead>
                 <tr style="background-color: #fce4ec;">
-                    <th style="padding: 8px 15px; border: 1px solid #f8bbd0;">合計INT</th>
+                    <th style="padding: 8px 15px; border: 1px solid #f8bbd0;">到達INT</th>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">7</td>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">14</td>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">21</td>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">28</td>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">35</td>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">...</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">161</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">168</td>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <th style="padding: 8px 15px; border: 1px solid #f8bbd0; background-color: #fce4ec;">MATK増加値</th>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+11</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+13</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+15</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+17</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+19</td>
+                    <th style="padding: 8px 15px; border: 1px solid #f8bbd0; background-color: #fce4ec;">追加ボーナス</th>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+2</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+4</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+6</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+8</td>
+                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+10</td>
                     <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">...</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+42</td>
-                    <td style="padding: 8px 12px; border: 1px solid #f8bbd0;">+43</td>
                 </tr>
             </tbody>
         </table>
+<p style="font-size: 11px; color: #8b5a5a; margin-top: 8px;">
+    <strong>【到達時の加算イメージ】</strong><br>
+    ・INT 6の時 ＝ <strong>MATK +1</strong> (通常加算)<br>
+    ・INT 7到達 ＝ 1 ＋ (7/7×2) ＝ <strong>MATK +3</strong> 加算<br>
+    ・INT 14到達 ＝ 1 ＋ (14/7×2) ＝ <strong>MATK +5</strong> 加算<br>
+    ・INT 21到達 ＝ 1 ＋ (21/7×2) ＝ <strong>MATK +7</strong> 加算
+</p>
     </div>
+</div>
     <!-- 以下のSP比較などは継続 -->
 </div>
     <br>
