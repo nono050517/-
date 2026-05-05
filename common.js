@@ -32,6 +32,7 @@ async function loadSidebar() {
                 if (item.page_id === 'status-page') link = 'status.html';
                 if (item.page_id === 'job-change') link = 'job_change.html';
                 if (item.page_id === 'exp-page') link = 'experience.html';
+                if (item.page_id === 'swordman') link = '1job_swordman.html';
                 html += `<li><a href="${link}">${item.display_name}</a></li>`;
             });
             html += `</ul>`;
