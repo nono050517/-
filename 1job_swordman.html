@@ -64,7 +64,7 @@
             const { data, error } = await client
                 .from('skills_list')
                 .select('*')
-                .eq('job_id', 1) 
+                .eq('job_id', 9) 
                 .order('required_level', { ascending: true });
 
             if (error) {
