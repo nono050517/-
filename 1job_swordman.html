@@ -61,11 +61,11 @@
             // ...以下略
             // skills_listテーブルからソードマン(job_id: 1と仮定)のスキルを取得
             // 取得レベル(required_level)の昇順でソート
-            const { data, error } = await client
-                .from('skill_status_changes').select('*, skills_list(*)')
-.select('*, skill_status_changes(習得レベル)')
-                .eq('job_id', 9) 
-                .order('required_level', { ascending: true });
+const { data, error } = await supabase
+    .from('skills_list')
+    .select('*, skill_status_changes(習得レベル)') // 習得レベルを含めて取得
+    .eq('job_id', 9)
+    .order('No', { ascending: true });
 
             if (error) {
                 console.error("Error fetching skills:", error);
@@ -75,10 +75,10 @@
             const tbody = document.getElementById('skill-body');
             if (data && data.length > 0) {
 tbody.innerHTML = data.map(skill => {
-    // 【重要】skill_status_changes は配列として届くので、その0番目を取得する
-    const statusArray = skill.skill_status_changes;
-    const level = (statusArray && statusArray.length > 0) 
-                  ? statusArray[0].習得レベル 
+    // 習得レベルを取り出す処理
+    const statusData = skill.skill_status_changes;
+    const level = (statusData && statusData.length > 0) 
+                  ? statusData[0].習得レベル 
                   : '-';
 
     return `
