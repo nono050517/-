@@ -75,10 +75,10 @@
             const tbody = document.getElementById('skill-body');
             if (data && data.length > 0) {
 tbody.innerHTML = data.map(skill => {
-    // 紐付いたデータがあるかチェックし、0番目のデータの「習得レベル」を取得
-    const statusData = skill.skill_status_changes;
-    const level = (statusData && statusData.length > 0) 
-                  ? statusData[0].習得レベル 
+    // 【重要】skill_status_changes は配列として届くので、その0番目を取得する
+    const statusArray = skill.skill_status_changes;
+    const level = (statusArray && statusArray.length > 0) 
+                  ? statusArray[0].習得レベル 
                   : '-';
 
     return `
