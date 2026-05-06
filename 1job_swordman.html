@@ -1,117 +1,111 @@
 <!DOCTYPE html>
-<!-- saved from url=(0063)file:///C:/Users/cinry/Downloads/gemini-code-1778022551315.html -->
 <html lang="ja">
-    <head>
+<head>
     <meta charset="UTF-8">
     <title>ソードマン - エリシア・アーカイブス</title>
-    <link rel="stylesheet" href="style.css"> <!-- 修正 -->
-        <style>
-        /* サイドバー全体の見た目 */
-        #sidebar-nav {
-            width: 220px;
-            padding: 20px;
-            background-color: #fdf5e6; /* 柔らかなベージュ */
-            min-height: 100vh;
-        }
-
-        /* サイトタイトル */
-        .site-title {
-            font-size: 1.2em;
-            color: #5d4037;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #d48d8d;
-        }
-
-        /* メニュー項目 */
-        #sidebar-nav ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        #sidebar-nav ul li {
-            margin-bottom: 15px;
-        }
-
-        #sidebar-nav ul li a {
-            text-decoration: none;
-            color: #5d4037;
-            font-weight: bold;
-            display: block;
-            padding: 5px;
-        }
-
-        #sidebar-nav ul li a:hover {
-            color: #d48d8d;
-            background-color: #fff;
-        }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> <!-- 修正 -->
+    <!-- サイト全体の共通デザイン（これが消えていたためレイアウトが崩れていました） -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- もしサイドバーを共通のJSで読み込んでいる場合は、これが必要です（不要なら無視されます） -->
+    <script src="script.js"></script> 
+    
+    <!-- Supabaseライブラリの読み込み -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="wrapper">
-    <div class="container">
-        <!-- 消えていたナビゲーション部分を復活させます -->
-<nav id="sidebar-nav">
-    <h1 class="site-title">エリシア・アーカイブ</h1>
-    <!-- ↓ ここから下の項目が消えていました -->
-    <ul>
-        <li><a href="index.html">TOP</a></li>
-        <li><a href="job_list.html">職業一覧</a></li>
-        <li><a href="skill_search.html">スキル検索</a></li>
-        <!-- 他に必要なメニューがあればここに追加してください -->
-    </ul>
-</nav>
-        
-        <main>
-            <h2 class="page-title">職業詳細：ソードマン (Swordman)</h2>
-            <!-- ここから下の内容は今のままで大丈夫です -->
-                
-                <div class="section-category">1. 職能と役割</div>
-                <div class="item-content">
-                    体力と防御力に優れた近接戦闘のスペシャリストです。高い防御性能を誇る重装備や盾を扱えるため、パーティでは壁役（タンク）として活躍します。また、攻撃力の高い武器を選択することで、二次職のウォリアーなどのようにアタッカーとしての役割を担うことも可能です。
+    <div class="wrapper">
+        <div class="container">
+            <!-- 
+              サイドバー：
+              以前の「完全な状態（edited-image.png）」の項目を直接記述しました。
+              style.cssが読み込まれることで、自動的に元の綺麗なデザインになります。
+            -->
+            <nav id="sidebar-nav">
+                <div class="sidebar-section">
+                    <h3>■はじめに</h3>
+                    <ul>
+                        <li><a href="#">FrontPage</a></li>
+                        <li><a href="#">よくある質問 (FAQ)</a></li>
+                    </ul>
                 </div>
-
-                <div class="section-category">2. 育成のメリット</div>
-                <div class="item-content">
-                    習得スキルのうち、<strong>『耐久力（HP増加）』</strong>や<strong>『心眼（命中率上昇）』</strong>は非常に汎用性が高く、二次職以降や他の職業に転職した後でも長く重宝されます。そのため、まずはソードマンでこれらの熟練度を優先的に上げておくことが推奨されます。
+                <div class="sidebar-section">
+                    <h3>■基本知識</h3>
+                    <ul>
+                        <li><a href="#">ステータスについて</a></li>
+                        <li><a href="#">転職について</a></li>
+                        <li><a href="#">経験値について</a></li>
+                        <li><a href="#">転生について</a></li>
+                        <li><a href="#">操作方法について</a></li>
+                    </ul>
                 </div>
-
-                <div class="section-category">3. 転職ルート</div>
-                <div class="item-content">
-                    <strong>■見習いからの転職</strong><br>
-                    JobLv10で試験を受けることができ、特定のエリアでモンスターを全滅させることで正規のソードマンになれます。<br><br>
-                    
-                    <strong>■他職からの転職</strong><br>
-                    大量のモンスターが配置されたコースを制限内に走り抜ける試験が課されます。<br><br>
-                    
-                    <strong>■主な派生二次職</strong><br>
-                    ウォリアー、テンペレシオン、シードランサー、フェンサーなど、BaseLv50および指定の職業JobLv40を満たすことで転職可能です。
+                <div class="sidebar-section">
+                    <h3>■ジョブ</h3>
+                    <ul>
+                        <li><a href="#">一次職</a></li>
+                        <li><a href="1job_swordman.html">ソードマン</a></li>
+                        <li><a href="#">アーチャー</a></li>
+                        <li><a href="#">ローグ</a></li>
+                        <li><a href="#">ウィザード</a></li>
+                        <li><a href="#">プリースト</a></li>
+                    </ul>
                 </div>
-
-                <div class="section-category">4. 習得可能スキル（取得レベル順）</div>
-                <div class="item-content">
-                    <table id="skill-table">
-<thead>
-    <tr>
-        <th style="width: 10%;">取得Lv</th>
-        <th style="width: 15%;">タイプ</th>
-        <th style="width: 25%;">スキル名</th>
-        <th style="width: 50%;">スキル説明</th> <!-- 前提条件から変更 -->
-    </tr>
-</thead>
-<tbody id="skill-body">
-    <script>
-        // 名前がぶつからないように実行する
-        (async () => {
-            const url = 'https://djfklvgrpdehqzhhodyg.supabase.co';
-            const key = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
+            </nav>
             
-            // supabaseの名前がぶつからないように「sp」という名前にしています
-            const sp = supabase.createClient(url, key);
+            <main>
+                <header>
+                    <h2 class="page-title">職業詳細：ソードマン (Swordman)</h2>
+                </header>
+
+                <section class="job-intro">
+                    <h3 class="section-title">■ 1. 職能と役割</h3>
+                    <p>体力と防御力に優れた近接戦闘のスペシャリストです。高い防御性能を誇る重装備や盾を扱えるため、パーティでは壁役（タンク）として活躍します。また、攻撃力の高い武器を選択することで、二次職のウォリアーなどのようにアタッカーとしての役割を担うことも可能です。</p>
+                </section>
+
+                <section class="job-merit">
+                    <h3 class="section-title">■ 2. 育成のメリット</h3>
+                    <p>習得スキルのうち、『耐久力（HP増加）』や『心眼（命中率上昇）』は非常に汎用性が高く、二次職以降や他の職業に転職した後でも長く重宝されます。そのため、まずはソードマンでこれらの熟練度を優先的に上げておくことが推奨されます。</p>
+                </section>
+
+                <section class="job-route">
+                    <h3 class="section-title">■ 3. 転職ルート</h3>
+                    <p><strong>■見習いからの転職</strong><br>
+                    JobLv10で試験を受けることができ、特定のエリアでモンスターを全滅させることで正規のソードマンになれます。</p>
+                    <p><strong>■他職からの転職</strong><br>
+                    大量のモンスターが配置されたコースを制限内に走り抜ける試験が課されます。</p>
+                    <p><strong>■主な派生二次職</strong><br>
+                    ウォリアー、テンペレション、シードランサー、フェンサーなど、BaseLv50および指定の職業JobLv40を満たすことで転職可能です。</p>
+                </section>
+
+                <section class="job-skills">
+                    <h3 class="section-title">■ 4. 習得可能スキル（取得レベル順）</h3>
+                    <table class="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">タイプ</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">スキル説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <!-- プログラムがここにデータを流し込みます -->
+                        </tbody>
+                    </table>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // 他のシステム（変数）と衝突しないよう、安全なブロックで囲んで実行
+        (async () => {
+            const SUPABASE_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co';
+            const SUPABASE_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
+            const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
             try {
-                const { data, error } = await sp
+                // スキルリストと「習得レベル」を安全に取得
+                const { data, error } = await client
                     .from('skills_list')
                     .select('*, skill_status_changes(習得レベル)')
                     .eq('job_id', 9)
@@ -122,20 +116,23 @@
                 const tbody = document.getElementById('skill-body');
                 if (data) {
                     tbody.innerHTML = data.map(skill => {
+                        // 取得Lvが存在しない場合はハイフンにする安全処理
                         const rel = skill.skill_status_changes;
                         const lv = (rel && rel.length > 0) ? rel[0].習得レベル : '-';
+                        
                         return `
                             <tr>
                                 <td style="text-align:center; font-weight:bold; color:#d48d8d;">${lv}</td>
-                                <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                                <td style="text-align:center;">[${skill['PSV/ACT'] || '-'}]</td>
                                 <td class="row-skill" style="font-weight:bold;">${skill.スキル名}</td>
                                 <td style="text-align: left; padding-left: 10px; font-size: 0.85em; color: #666; line-height: 1.4;">${skill.説明 || ''}</td>
                             </tr>`;
                     }).join('');
                 }
-            } catch (e) {
-                console.error("表示エラー:", e);
+            } catch (err) {
+                console.error("データ取得エラー:", err);
             }
         })();
     </script>
-</tbody>
+</body>
+</html>
