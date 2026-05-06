@@ -4,7 +4,21 @@
     <meta charset="UTF-8">
     <title>ソードマン - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Supabaseの読み込み（外部URL） -->
+    <style>
+        /* インデントを揃えるための設定 */
+        .indent-text {
+            display: block;
+            padding-left: 1em; /* 1文字分右にずらす */
+            text-indent: -1em; /* 最初の行だけ左に戻して揃える */
+        }
+        
+        /* リストの2行目以降を揃える設定 */
+        ul li {
+            list-style-position: outside;
+            margin-left: 1.5em; /* リスト全体の余白 */
+            margin-bottom: 0.5em;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -16,7 +30,7 @@
                 
                 <h3 class="section-category"> 1．職能と役割</h3>
                 <div class="item-content">
-                    高い体力と防御性能を誇る近接戦闘のスペシャリストです。<BR>
+                    高い体力と防御性能を誇る近接戦闘のスペシャリストです。<br>
                     本来の役割はパーティの壁役（タンク）であり、スキル「耐久力」や「心眼」は現在でも壁職をこなす上では欠かせません。<br>
                     レベリング環境下では「HPや命中が足りない」と感じた際に、必要に応じてこれらを使用し生存率を確保するのがよいと思います。
                 </div>
@@ -39,8 +53,8 @@
                     <p>現在の環境では、パワーレベリング（引率）と「熟練・研鑽」スキルの活用が前提となります。</p>
                     
                     <p><strong>レベリング必須スキル:</strong><br>
-                    Lv85習得の「熟練の知恵」とLv91習得の「研鑽の導き」が不可欠です。<BR>
-                        両スキルLv10で経験値は2.25倍まで増加します。</p>
+                    Lv85習得の「熟練の知恵」とLv91習得の「研鑽の導き」が不可欠です。<br>
+                    両スキルLv10で経験値は2.25倍まで増加します。</p>
                     <ul>
                         <li><strong>熟練の知恵:</strong> 全職業で習得・使用が可能。</li>
                         <li><strong>研鑽の導き:</strong> ソードマン、ウィザード、プリースト、武士の4職(全一次職９職中）でのみ習得可能。<br>取得には、これら対象職業のいずれかをLv91まで上げる必要があります。</li>
@@ -65,8 +79,8 @@
                     <p>※狩場が固定できるのであれば、その狩場の特攻に合わせて片手剣やメイスなど、全職装備可能な武器を育てて使用するのも有効な選択肢です。</p>
                     
                     <p><strong>防具・生存戦略:</strong> 格上狩場での居座りには、回避補正がついた装備や回復スキルの用意に加え、カット装備が極めて重要です。</p>
-                    <p>※カット装備：防具に「〇〇種族からの攻撃を〇〇％減少させる」等の効果を持つスフィアを付けた防具。<br>
-                        　特に死祭り会場などの高難易度マップでは、このカット装備がほぼ必須となります。</p>
+                    <p class="indent-text">※カット装備：防具に「〇〇種族からの攻撃を〇〇％減少させる」等の効果を持つスフィアを付けた防具。<br>
+                    特に死祭り会場などの高難易度マップでは、このカット装備がほぼ必須となります。</p>
                 </div>
 
                 <h3 class="section-category"> 5．習得可能スキル（取得レベル順）</h3>
@@ -91,13 +105,9 @@
         </div>
     </div>
 
-    <!-- 共通処理（サイドバーとSupabaseクライアント作成） -->
     <script src="common.js"></script>
-
-    <!-- このページ専用のデータ取得処理 -->
     <script>
         async function loadSwordmanSkills() {
-            // common.jsで定義された client を使用
             const { data, error } = await client
                 .from('skills_list')
                 .select('*')
@@ -121,7 +131,6 @@
                 `).join('');
             }
         }
-
         window.addEventListener('DOMContentLoaded', loadSwordmanSkills);
     </script>
 </body>
