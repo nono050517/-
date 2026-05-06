@@ -63,7 +63,7 @@
             // 取得レベル(required_level)の昇順でソート
 const { data, error } = await supabase
     .from('skills_list')
-    .select('*, skill_status_changes(習得レベル)') // 習得レベルを含めて取得
+    .select('*') // ここをシンプルに戻す
     .eq('job_id', 9)
     .order('No', { ascending: true });
 
@@ -75,11 +75,8 @@ const { data, error } = await supabase
             const tbody = document.getElementById('skill-body');
             if (data && data.length > 0) {
 tbody.innerHTML = data.map(skill => {
-    // 習得レベルを取り出す処理
-    const statusData = skill.skill_status_changes;
-    const level = (statusData && statusData.length > 0) 
-                  ? statusData[0].習得レベル 
-                  : '-';
+    // 習得レベルの取得処理を一旦消して、固定のハイフンに戻す
+    const level = '-'; 
 
     return `
         <tr>
