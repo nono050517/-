@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>プリースト - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：プリースト (Priest)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    回復や補助系の魔法スキルに特化した、パーティの生命線を担う職業です。<br>
+                    物理攻撃は苦手としていますが、アンデッドや霊属性の敵に対しては強力な対抗手段を持ちます。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■見習いからの転職: JobLv10で試験開始。「冒険者協会長による道徳的資質を問う試問試験」が行われます。</p>
+                    
+                    <p><strong>■主な派生二次職:</strong> BaseLv50および指定職業のJobLv40で転職可能。</p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>テンペレシオン:</strong> プリースト ＆ ソードマン (各JobLv40)</li>
+                        <li><strong>セージ:</strong> プリースト ＆ ウィザード (各JobLv40)</li>
+                    </ul>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>「ヒール」は全職業において生存率を高める必須スキルのため、どのようなキャラクタータイプでも一度は経由すべき職業です。</p>
+                    
+                    <p><strong>ステータス配分:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>INT:</strong> 魔法火力・回復量を重視し、基本的にはINT一択での育成が推奨されます。セージを目指す場合もINTを最大まで上げることが定石です。</li>
+                        <li><strong>耐久・回避:</strong> 余ったポイントは、ボスの範囲攻撃に耐えるためのVITや、ソロ時の生存圏を広げるためのAGI、詠唱速度に関わるDEXへ振り分けます。</li>
+                    </ul>
+
+                    <p><strong>レベル上げのコツ:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>序盤:</strong> ジャッジメントを使用し、ルッカ森（西）の闇属性敵を狙うのが効率的です。ただし、威力のためにSTRへ振ることは推奨されません。</li>
+                        <li><strong>中盤以降:</strong> 「エクソシズム」習得後は、霊属性の敵（かまいたち、鎌風、アルグール等）をターゲットにすることで効率が劇的に向上します。イズモ地方が最適です。</li>
+                        <li><strong>他職スキルの活用:</strong> ソードマンの「サイコスラッシュ」はMATK依存のため、プリザーブスキルとして非常に相性が良いです。</li>
+                    </ul>
+
+                    <p><strong>重要スキルの運用:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>ブレッシング:</strong> 定番の補助スキルのため、パーティプレイ時は常時付与を心がけます。</li>
+                        <li><strong>サイレンス:</strong> 一部のボス戦で決定的な役割を果たすため、余裕がある時にレベルを上げておくことが推奨されます。</li>
+                        <li><strong>スピリチュアリティ:</strong> MATKを大幅に上げるため、INT型運用では併用が不可欠です。</li>
+                    </ul>
+                </div>
+
+                <h3 class="section-category"> 4．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadPriestSkills() {
+            // プリーストのjob_idである 11 で取得
+            const { data
