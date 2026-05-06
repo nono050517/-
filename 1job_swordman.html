@@ -3,7 +3,7 @@
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <title>ソードマン - エリシア・アーカイブス</title>
-    <link rel="stylesheet" href="file:///C:/Users/cinry/Downloads/style.css">
+    <link rel="stylesheet" href="style.css">
     <script src="./1job_swordman_files/supabase-js@2"></script>
 </head>
 <body>
@@ -54,7 +54,7 @@
             </main>
         </div>
     </div>
-    <script src="file:///C:/Users/cinry/Downloads/common.js"></script>
+    <script src="common.js"></script>
     <script>
         async function loadSwordmanSkills() {
             // skills_listテーブルからソードマン(job_id: 1と仮定)のスキルを取得
@@ -62,7 +62,7 @@
             const { data, error } = await client
                 .from('skills_list')
                 .select('*')
-                .eq('job_id', 1) 
+                .eq('job_id', 9) 
                 .order('required_level', { ascending: true });
 
             if (error) {
