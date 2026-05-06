@@ -11,7 +11,7 @@
         <div class="container">
             <nav id="sidebar-nav"></nav>
             <main>
-                <h2 class="page-title">職業詳細：ソードマン (Swordman)</h2>
+                <h2 class="page-title">職業詳細：ソードマン</h2>
                 
                 <div class="section-category">1. 職能と役割</div>
                 <div class="item-content">
@@ -37,19 +37,21 @@
 
                 <div class="section-category">4. 習得可能スキル（取得レベル順）</div>
                 <div class="item-content">
-                    <table id="skill-table">
-                        <thead>
-                            <tr>
-                                <th>取得Lv</th>
-                                <th>スキル名</th>
-                                <th>タイプ</th>
-                                <th>前提条件</th>
-                            </tr>
-                        </thead>
-                        <tbody id="skill-body">
-                            <!-- JSでここにスキルが流し込まれます -->
-                        </tbody>
-                    </table>
+<table id="skill-table">
+    <thead>
+        <tr>
+            <th style="width: 10%;">取得Lv</th>
+            <th style="width: 15%;">PSV/ACT</th>
+            <th style="width: 25%;">スキル名</th>
+            <th style="width: 50%;">説明</th>
+        </tr>
+    </thead>
+    <tbody id="skill-body">
+        <tr>
+            <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+        </tr>
+    </tbody>
+</table>
                 </div>
             </main>
         </div>
@@ -64,7 +66,7 @@
             const { data, error } = await client
                 .from('skills_list')
                 .select('*')
-                .eq('job_id', 1) 
+                .eq('job_id', 9) 
                 .order('required_level', { ascending: true });
 
             if (error) {
