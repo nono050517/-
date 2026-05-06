@@ -84,6 +84,7 @@ tbody.innerHTML = data.map(skill => {
         <tr>
             <td style="text-align:center; font-weight:bold; color:#d48d8d;">${level}</td>
             <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+            <td class="row-skill" style="font-weight:bold;">${skill.習得レベル}</td>
             <td class="row-skill" style="font-weight:bold;">${skill.スキル名}</td>
             <td style="text-align: left; padding-left: 10px; font-size: 0.85em; color: #666; line-height: 1.4;">${skill.説明 || ''}</td>
         </tr>
