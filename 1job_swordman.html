@@ -63,7 +63,7 @@
             // 取得レベル(required_level)の昇順でソート
             const { data, error } = await client
                 .from('skills_list')
-               .select('*')
+               .select('*, skill_status_changes(習得レベル)')
                 .eq('job_id', 9) 
                 .order('required_level', { ascending: true });
 
@@ -74,14 +74,21 @@
 
             const tbody = document.getElementById('skill-body');
             if (data && data.length > 0) {
-tbody.innerHTML = data.map(skill => `
-    <tr>
-        <td style="text-align:center; font-weight:bold; color:#d48d8d;">${skill.No || '-'}</td>
-        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td> <!-- タイプを表示 -->
-        <td class="row-skill" style="font-weight:bold;">${skill.スキル名}</td> <!-- 名前を表示 -->
-        <td style="font-size: 0.85em; color: #666; line-height: 1.4; text-align:left;">${skill.説明 || ''}</td> <!-- 説明を表示 -->
-    </tr>
-`).join('');
+tbody.innerHTML = data.map(skill => {
+    // 繋がったテーブルから「習得レベル」を取得。なければハイフンを表示。
+    const level = (skill.skill_status_changes && skill.skill_status_changes[0]) 
+                  ? skill.skill_status_changes[0].習得レベル 
+                  : '-';
+
+    return `
+        <tr>
+            <td style="text-align:center; font-weight:bold; color:#d48d8d;">${level}</td>
+            <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+            <td class="row-skill" style="font-weight:bold;">${skill.スキル名}</td>
+            <td style="text-align: left; padding-left: 10px; font-size: 0.85em; color: #666; line-height: 1.4;">${skill.説明 || ''}</td>
+        </tr>
+    `;
+}).join('');
             } else {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが登録されていません</td></tr>';
             }
