@@ -76,14 +76,14 @@
 
             const tbody = document.getElementById('skill-body');
             if (data && data.length > 0) {
-                tbody.innerHTML = data.map(skill => `
-                    <tr>
-                        <td style="text-align:center;">${skill.required_level || '-'}</td>
-                        <td class="row-skill">${skill.skill_name}</td>
-                        <td>${skill.skill_type || '-'}</td>
-                        <td>${skill.prerequisite_skill_name || 'なし'}</td>
-                    </tr>
-                `).join('');
+ tbody.innerHTML = data.map(skill => `
+    <tr>
+        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+        <td class="row-skill">${skill.スキル名}</td>
+        <td>${skill.説明 || '-'}</td>
+    </tr>
+`).join('');
             }
         }
 
