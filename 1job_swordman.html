@@ -1,107 +1,91 @@
 <!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
+<!-- saved from url=(0063)file:///C:/Users/cinry/Downloads/gemini-code-1778022551315.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <title>ソードマン - エリシア・アーカイブス</title>
-    <!-- 【重要】元のデザインを読み込む -->
-    <link rel="stylesheet" href="style.css">
-    <!-- 【重要】Supabaseライブラリ -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- 
-       【重要】サイドバーを全ページ共通で表示させていたJSをここに読み込みます。
-       ファイル名が common.js や sidebar.js など、以前使っていたものに合わせて修正してください。
-    -->
-    <script src="js/common.js" defer></script> 
+    <link rel="stylesheet" href="file:///C:/Users/cinry/Downloads/style.css">
+    <script src="./1job_swordman_files/supabase-js@2"></script>
 </head>
 <body>
     <div class="wrapper">
         <div class="container">
-            <!-- 
-               サイドバーの中身は空で正解です。
-               common.jsがここに自動でメニューを流し込みます。
-            -->
             <nav id="sidebar-nav"></nav>
-            
             <main>
-                <header>
-                    <h1 class="page-title">職業詳細：ソードマン (Swordman)</h1>
-                </header>
+                <h2 class="page-title">職業詳細：ソードマン (Swordman)</h2>
+                
+                <div class="section-category">1. 職能と役割</div>
+                <div class="item-content">
+                    体力と防御力に優れた近接戦闘のスペシャリストです。高い防御性能を誇る重装備や盾を扱えるため、パーティでは壁役（タンク）として活躍します。また、攻撃力の高い武器を選択することで、二次職のウォリアーなどのようにアタッカーとしての役割を担うことも可能です。
+                </div>
 
-                <section class="job-intro">
-                    <h2 class="section-title">1. 職能と役割</h2>
-                    <p>体力と防御力に優れた近接戦闘のスペシャリストです。高い防御性能を誇る重装備や盾を扱えるため、パーティでは壁役（タンク）として活躍します。また、攻撃力の高い武器を選択することで、二次職のウォリアーなどのようにアタッカーとしての役割を担うことも可能です。</p>
-                </section>
+                <div class="section-category">2. 育成のメリット</div>
+                <div class="item-content">
+                    習得スキルのうち、<strong>『耐久力（HP増加）』</strong>や<strong>『心眼（命中率上昇）』</strong>は非常に汎用性が高く、二次職以降や他の職業に転職した後でも長く重宝されます。そのため、まずはソードマンでこれらの熟練度を優先的に上げておくことが推奨されます。
+                </div>
 
-                <section class="job-merit">
-                    <h2 class="section-title">2. 育成のメリット</h2>
-                    <p>習得スキルのうち、『耐久力（HP増加）』や『心眼（命中率上昇）』は非常に汎用性が高く、二次職以降や他の職業に転職した後でも長く重宝されます。そのため、まずはソードマンでこれらの熟練度を優先的に上げておくことが推奨されます。</p>
-                </section>
+                <div class="section-category">3. 転職ルート</div>
+                <div class="item-content">
+                    <strong>■見習いからの転職</strong><br>
+                    JobLv10で試験を受けることができ、特定のエリアでモンスターを全滅させることで正規のソードマンになれます。<br><br>
+                    
+                    <strong>■他職からの転職</strong><br>
+                    大量のモンスターが配置されたコースを制限内に走り抜ける試験が課されます。<br><br>
+                    
+                    <strong>■主な派生二次職</strong><br>
+                    ウォリアー、テンペレシオン、シードランサー、フェンサーなど、BaseLv50および指定の職業JobLv40を満たすことで転職可能です。
+                </div>
 
-                <section class="job-route">
-                    <h2 class="section-title">3. 転職ルート</h2>
-                    <p><strong>■見習いからの転職</strong><br>
-                    JobLv10で試験を受けることができ、特定のエリアでモンスターを全滅させることで正規のソードマンになれます。</p>
-                    <p><strong>■他職からの転職</strong><br>
-                    大量のモンスターが配置されたコースを制限内に走り抜ける試験が課されます。</p>
-                    <p><strong>■主な派生二次職</strong><br>
-                    ウォリアー、テンペレション、シードランサー、フェンサーなど、BaseLv50および指定の職業JobLv40を満たすことで転職可能です。</p>
-                </section>
-
-                <section class="job-skills">
-                    <h2 class="section-title">4. 習得可能スキル（取得レベル順）</h2>
-                    <table class="skill-table">
+                <div class="section-category">4. 習得可能スキル（取得レベル順）</div>
+                <div class="item-content">
+                    <table id="skill-table">
                         <thead>
                             <tr>
-                                <th style="width: 10%;">取得Lv</th>
-                                <th style="width: 15%;">タイプ</th>
-                                <th style="width: 25%;">スキル名</th>
-                                <th style="width: 50%;">スキル説明</th>
+                                <th>取得Lv</th>
+                                <th>スキル名</th>
+                                <th>タイプ</th>
+                                <th>前提条件</th>
                             </tr>
                         </thead>
                         <tbody id="skill-body">
-                            <!-- JSでデータが入ります -->
+                            <!-- JSでここにスキルが流し込まれます -->
                         </tbody>
                     </table>
-                </section>
+                </div>
             </main>
         </div>
     </div>
-
+    <script src="file:///C:/Users/cinry/Downloads/common.js"></script>
     <script>
-        // スキル表のデータ取得のみを行うJS
-        (async () => {
-            const SUPABASE_URL = 'https://djfklvgrpdehqzhhodyg.supabase.co';
-            const SUPABASE_KEY = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
-            const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        async function loadSwordmanSkills() {
+            // skills_listテーブルからソードマン(job_id: 1と仮定)のスキルを取得
+            // 取得レベル(required_level)の昇順でソート
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 1) 
+                .order('required_level', { ascending: true });
 
-            try {
-                const { data, error } = await client
-                    .from('skills_list')
-                    .select('*, skill_status_changes(習得レベル)')
-                    .eq('job_id', 9)
-                    .order('No', { ascending: true });
-
-                if (error) throw error;
-
-                const tbody = document.getElementById('skill-body');
-                if (data) {
-                    tbody.innerHTML = data.map(skill => {
-                        const rel = skill.skill_status_changes;
-                        const lv = (rel && rel.length > 0) ? rel[0].習得レベル : '-';
-                        
-                        return `
-                            <tr>
-                                <td style="text-align:center; font-weight:bold; color:#d48d8d;">${lv}</td>
-                                <td style="text-align:center;">[${skill['PSV/ACT'] || '-'}]</td>
-                                <td class="row-skill" style="font-weight:bold;">${skill.スキル名}</td>
-                                <td style="text-align: left; padding-left: 10px; font-size: 0.85em; color: #666; line-height: 1.4;">${skill.説明 || ''}</td>
-                            </tr>`;
-                    }).join('');
-                }
-            } catch (err) {
-                console.error("表示エラー:", err);
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
             }
-        })();
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.required_level || '-'}</td>
+                        <td class="row-skill">${skill.skill_name}</td>
+                        <td>${skill.skill_type || '-'}</td>
+                        <td>${skill.prerequisite_skill_name || 'なし'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが登録されていません</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadSwordmanSkills);
     </script>
-</body>
-</html>
+
+</body></html>
