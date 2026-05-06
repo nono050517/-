@@ -16,42 +16,42 @@
                 
                 <h3 class="section-category"> 1．職能と役割</h3>
                 <div class="item-content">
-                    イズモ系の武装を自在に操り、素早い攻撃に特化した物理戦闘職です。 <br>
-                    手数と回避を活かした独自の戦闘スタイルを持ち、物理アタッカーとしての爆発力も秘めています。
+                    イズモ系の武装を自在に操り、素早い攻撃に特化した物理戦闘職です。 [cite: 1] <br>
+                    手数と回避を活かした独自の戦闘スタイルを持ち、物理アタッカーとしての爆発力も秘めています。 [cite: 1]
                 </div>
 
                 <h3 class="section-category"> 2．転職データ</h3>
                 <div class="item-content">
-                    <p><strong>■見習いからの転職:</strong> JobLv10で試験開始。訓練エリアの敵5体を5分以内に討伐。</p>
-                    <p><strong>■他職からの転職:</strong> イズモの「くれない」との戦闘に勝利する必要がある。</p>
+                    <p><strong>■見習いからの転職:</strong> JobLv10で試験開始。訓練エリアの敵5体を5分以内に討伐。 [cite: 1]</p>
+                    <p><strong>■他職からの転職:</strong> イズモの「くれない」との戦闘に勝利する必要がある。 [cite: 1]</p>
                     <p><strong>■主な派生二次職:</strong></p>
                     <ul class="job-list">
-                        <li>シードランサー：BaseLv50、および指定職のJobLv40が必要。</li>
-                        <li>忍者：BaseLv50、および指定職のJobLv40が必要。</li>
+                        <li><strong>シードランサー:</strong> 武士 ＆ ソードマン (各JobLv40)</li>
+                        <li><strong>忍者:</strong> 武士 ＆ ローグ (各JobLv40)</li>
                     </ul>
                 </div>
 
                 <h3 class="section-category"> 3．育成・運用の手引き</h3>
                 <div class="item-content">
-                    物理職ながらSP管理が重要となるため、ステータス配分には工夫が必要です。
+                    物理職ながらSP管理が重要となるため、ステータス配分には工夫が必要です。 [cite: 1]
                     
                     <p><strong>■ステータス配分:</strong></p>
                     <ul class="job-list">
-                        <li>STR/AGI型: 攻撃力と手数を両立。極STR型や極AGI型も存在するが、STR補正付きの片手剣確保が鍵。</li>
-                        <li>INTの調整: SP不足対策として、初期職ならINT(7か14)の確保やウィッチリング等の装備補強を推奨。</li>
+                        <li>STR/AGI型: 攻撃力と手数を両立。極STR型や極AGI型も存在するが、STR補正付きの片手剣確保が鍵。 [cite: 1]</li>
+                        <li>INTの調整: SP不足対策として、初期職ならINT(7か14)の確保やウィッチリング等の装備補強を推奨。 [cite: 1]</li>
                     </ul>
 
                     <p><strong>■スキルの活用と継承:</strong></p>
                     <ul class="job-list">
-                        <li>鬼神降臨: 物理火力を大きく底上げする最重要スキル。</li>
-                        <li>修羅気孔: 自力でSPを回復可能。活用すればINTを抑えられるが、回復アイテムの消費は増える。</li>
-                        <li>低レベルスキル: 「颯の構え」等で序盤はスムーズだが、多くが片手剣・片手斧専用のため継承先は限定的。</li>
+                        <li>鬼神降臨: 物理火力を大きく底上げする最重要スキル。 [cite: 1]</li>
+                        <li>修羅気孔: 自力でSPを回復可能。活用すればINTを抑えられるが、回復アイテムの消費は増える。 [cite: 1]</li>
+                        <li>低レベルスキル: 「颯の構え」等で序盤はスムーズだが、多くが片手剣・片手斧専用のため継承先は限定的。 [cite: 1]</li>
                     </ul>
 
                     <p><strong>■レベル上げのコツ:</strong></p>
                     <ul class="job-list">
-                        <li>極INT型運用: ソードマンの「サイコスラッシュ」等をプリザーブし、魔法職のように育てる手法も有用。</li>
-                        <li>転職タイミング: 基礎を固めるため、早めにソードマン等を経由するルートが効率的。</li>
+                        <li>極INT型運用: ソードマンの「サイコスラッシュ」等をプリザーブし、魔法職のように育てる手法も有用。 [cite: 1]</li>
+                        <li>転職タイミング: 基礎を固めるため、早めにソードマン等を経由するルートが効率的。 [cite: 1]</li>
                     </ul>
                 </div>
 
@@ -85,7 +85,7 @@
             const { data, error } = await client
                 .from('skills_list')
                 .select('*')
-                .eq('job_id', 14) 
+                .eq('job_id', 13) 
                 .order('習得レベル', { ascending: true });
 
             if (error) {
@@ -97,4 +97,18 @@
             if (data && data.length > 0) {
                 tbody.innerHTML = data.map(skill => `
                     <tr>
-                        <td style="text
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">現在、スキルデータは登録されていません。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadSamuraiSkills);
+    </script>
+</body>
+</html>
