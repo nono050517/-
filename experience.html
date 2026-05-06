@@ -7,22 +7,27 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 表の幅を制限し、中央に寄せる設定 */
+        /* 表の幅をコンテンツに合わせ、中央に寄せる設定 */
         .exp-table {
             width: auto;
-            min-width: 60%;
-            max-width: 100%;
             margin: 10px 0;
             border-collapse: collapse;
+            font-size: 13px;
         }
-        /* 文字は中央揃え */
+        /* 基本は中央揃え */
         .exp-table th, .exp-table td {
             text-align: center;
-            padding: 8px;
+            padding: 8px 12px;
+            border: 1px solid #d7ccc8;
         }
-        /* 数値が入るセルは右揃えに上書き */
-        .exp-table td.num-right {
-            text-align: right;
+        /* 数値が入るセルは右揃え */
+        .num-right {
+            text-align: right !important;
+        }
+        /* スクロールコンテナ */
+        .table-scroll {
+            overflow-x: auto;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -35,13 +40,14 @@
                 <h2 class="page-title">経験値について</h2>
 
                 <div class="item-content">
-                    <p style="font-size: 13px; color: #5d4037; margin-bottom: 15px;">
-                        MMORPGエリシアオンラインは様々なものがレベルで管理されています。
-                    </p>
+
                 </div>
 
                 <h3 class="section-category"> 1．経験値の種類</h3>
                 <div class="item-content">
+                    <p style="font-size: 13px; color: #5d4037; margin-bottom: 15px;">
+                        MMORPGエリシアオンラインは様々なものがレベルで管理されています。
+                    </p>
                     <ul style="list-style-position: outside; margin-left: 1.5em; font-size: 13px; color: #5d4037;">
                         <li><strong>BaseLv：</strong> キャラクターの基礎能力に影響し、装備の制限に関わります。</li>
                         <li><strong>JobLv：</strong> 職の専門性に影響し、上位職への転職条件や、スキルの取得にも影響してきます。</li>
@@ -57,7 +63,7 @@
                                 <tr>
                                     <th rowspan="2">Lv</th>
                                     <th colspan="5">BaseExp（次Lvまで）</th>
-                                    <th colspan="1">JobExp</th>
+                                    <th colspan="1">JobExp（次Lvまで）</th>
                                 </tr>
                                 <tr>
                                     <th>初回</th>
@@ -82,6 +88,8 @@
                                 <tr><td class="num-right">100</td><td>-</td><td class="num-right">108,500,500</td><td class="num-right">86,800,000</td><td class="num-right">65,100,000</td><td class="num-right">434,000,000</td><td>-</td></tr>
                                 <tr><td class="num-right">110</td><td>-</td><td>-</td><td>-</td><td class="num-right">96,000,000</td><td class="num-right">640,000,000</td><td>-</td></tr>
                                 <tr><td class="num-right">120</td><td>-</td><td>-</td><td>-</td><td>-</td><td class="num-right">2,000,000,000</td><td>-</td></tr>
+                                <tr><td class="num-right">130</td><td>-</td><td>-</td><td>-</td><td>-</td><td class="num-right">2,000,000,000</td><td>-</td></tr>
+                                <tr><td class="num-right">140</td><td>-</td><td>-</td><td>-</td><td>-</td><td class="num-right">2,000,000,000</td><td>-</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -119,13 +127,19 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="inner-note-box" style="font-size: 13px; width: fit-content;">
+                        <ul style="list-style:none; padding:0; margin:0;">
+                            <li style="margin-bottom: 2px;">● <span class="highlight">生産職熟練地：</span> モンスターの討伐で経験値を得られることはありません。</li>
+                            <li>● <span class="highlight">経験値余剰分：</span> 熟練値が１上がるための必要経験値以上の経験値を取得しても余剰分は切り捨てになります。（全職共通）</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <h3 class="section-category"> 4．獲得経験値の減衰</h3>
                 <div class="item-content">
                     <p><strong>レベル差による減衰（BaseExp）</strong></p>
                     <p style="padding-left: 1em;">ソロでの獲得経験値は、自分のベースレベルが敵より高い場合には以下の通り減衰します。</p>
-                    <table class="exp-table" style="width: auto; min-width: 280px; margin-top: 10px;">
+                    <table class="exp-table">
                         <thead>
                             <tr><th>レベル差</th><th>取得できる経験値</th></tr>
                         </thead>
@@ -144,10 +158,11 @@
                     <p style="padding-left: 1em;">一言でいうと、<b>「強い人が、レベルの低い友達に合わせて自分のレベルを一時的に下げる機能」</b>のことです。</p>
 
                     <p><strong>2. なんでレベルを下げるの？</strong></p>
-                    <p style="padding-left: 1em;">最大の理由は、<b>「みんなが経験値をちゃんともらうため」</b>です。</p>
-                    <div class="inner-note-box" style="font-size: 13px;">
+                    <div class="inner-note-box" style="font-size: 13px; margin-top: 10px;">
                         <ul style="list-style:none; padding:0; margin:0;">
+                            <li style="margin-bottom:8px;">● <span class="highlight">レベル差がありすぎると損をする：</span> パーティ内で一番レベルが高い人と低い人の差が開きすぎると、低い方の人がもらえる経験値がグッと減ってしまいます。</li>
                             <li style="margin-bottom:8px;">● <span class="highlight">「10の差」が目安：</span> レベル差が10以内なら「公平」に経験値が入りますが、11以上離れると減衰が始まると言われています。</li>
+                            <li>● <span class="highlight">だから調整する：</span> シンクロ機能でレベルを下げることで、効率よく稼げるようにします。</li>
                         </ul>
                     </div>
                 </div>
