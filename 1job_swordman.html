@@ -67,7 +67,7 @@
                 .from('skills_list')
                 .select('*')
                 .eq('job_id', 9) 
-                .order('required_level', { ascending: true });
+                .order('習得レベル', { ascending: true });
 
             if (error) {
                 console.error("Error fetching skills:", error);
