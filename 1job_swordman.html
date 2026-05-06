@@ -49,15 +49,16 @@
 </thead>
 <tbody id="skill-body">
     <script>
-        // ① Supabaseの設定（接続に必要な情報）
-        const supabaseUrl = 'https://djfklvgrpdehqzhhodyg.supabase.co';
-        const supabaseKey = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // 名前がぶつからないように実行する
+        (async () => {
+            const url = 'https://djfklvgrpdehqzhhodyg.supabase.co';
+            const key = 'sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC';
+            
+            // supabaseの名前がぶつからないように「sp」という名前にしています
+            const sp = supabase.createClient(url, key);
 
-        // ② データを取ってきて表を作る命令
-        async function loadSwordmanSkills() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await sp
                     .from('skills_list')
                     .select('*, skill_status_changes(習得レベル)')
                     .eq('job_id', 9)
@@ -66,31 +67,22 @@
                 if (error) throw error;
 
                 const tbody = document.getElementById('skill-body');
-                if (data && data.length > 0) {
+                if (data) {
                     tbody.innerHTML = data.map(skill => {
-                        // 習得レベルを取り出す（データがあればその数字、なければハイフン）
-                        const statusData = skill.skill_status_changes;
-                        const level = (statusData && statusData.length > 0) 
-                                      ? statusData[0].習得レベル 
-                                      : '-';
-
+                        const rel = skill.skill_status_changes;
+                        const lv = (rel && rel.length > 0) ? rel[0].習得レベル : '-';
                         return `
                             <tr>
-                                <td style="text-align:center; font-weight:bold; color:#d48d8d;">${level}</td>
+                                <td style="text-align:center; font-weight:bold; color:#d48d8d;">${lv}</td>
                                 <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
                                 <td class="row-skill" style="font-weight:bold;">${skill.スキル名}</td>
                                 <td style="text-align: left; padding-left: 10px; font-size: 0.85em; color: #666; line-height: 1.4;">${skill.説明 || ''}</td>
-                            </tr>
-                        `;
+                            </tr>`;
                     }).join('');
                 }
-            } catch (err) {
-                console.error("エラーが発生しました:", err);
+            } catch (e) {
+                console.error("表示エラー:", e);
             }
-        }
-
-        // ③ 命令を実行する
-        loadSwordmanSkills();
+        })();
     </script>
-    <!-- ここにデータが流し込まれます -->
 </tbody>
