@@ -37,6 +37,7 @@ async function loadSidebar() {
                 if (item.page_id === 'rogue') link = '1job_rogue.html'; 
                 if (item.page_id === 'wizard') link = '1job_wizard.html';
                 if (item.page_id === 'priest') link = '1job_priest.html';
+                if (item.page_id === 'samurai') link = '1job_samurai.html';
                 html += `<li><a href="${link}">${item.display_name}</a></li>`;
             });
             html += `</ul>`;
