@@ -6,6 +6,25 @@
     <title>経験値について - エリシアオンライン アーカイブス</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* 表の幅を制限し、中央に寄せる設定 */
+        .exp-table {
+            width: auto;
+            min-width: 60%;
+            max-width: 100%;
+            margin: 10px 0;
+            border-collapse: collapse;
+        }
+        /* 文字は中央揃え */
+        .exp-table th, .exp-table td {
+            text-align: center;
+            padding: 8px;
+        }
+        /* 数値が入るセルは右揃えに上書き */
+        .exp-table td.num-right {
+            text-align: right;
+        }
+    </style>
 </head>
 <body>
     <div class="wrapper">
@@ -38,7 +57,7 @@
                                 <tr>
                                     <th rowspan="2">Lv</th>
                                     <th colspan="5">BaseExp（次Lvまで）</th>
-                                    <th colspan="4">JobExp（次Lvまで）</th>
+                                    <th colspan="1">JobExp</th>
                                 </tr>
                                 <tr>
                                     <th>初回</th>
@@ -46,105 +65,12 @@
                                     <th>転生2</th>
                                     <th>転生3</th>
                                     <th>転生4</th>
-                                    <th colspan="4">全職共通</th>
+                                    <th>全職共通</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td class="lv-col">1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>2</td><td colspan="4">1</td></tr>
-                                <tr><td class="lv-col">10</td><td>1,600</td><td>800</td><td>640</td><td>480</td><td>3,200</td><td colspan="4">1,600</td></tr>
-                                <tr><td class="lv-col">20</td><td>37,000</td><td>18,500</td><td>14,800</td><td>11,100</td><td>74,000</td><td colspan="4">37,000</td></tr>
-                                <tr><td class="lv-col">30</td><td>700,000</td><td>350,000</td><td>280,000</td><td>210,000</td><td>1,400,000</td><td colspan="4">700,000</td></tr>
-                                <tr><td class="lv-col">40</td><td>4,000,000</td><td>2,000,000</td><td>1,600,000</td><td>1,200,000</td><td>8,000,000</td><td colspan="4">4,000,000</td></tr>
-                                <tr><td class="lv-col">50</td><td>10,000,000</td><td>5,000,000</td><td>4,000,000</td><td>3,000,000</td><td>20,000,000</td><td colspan="4">10,000,000</td></tr>
-                                <tr><td class="lv-col">60</td><td>15,000,000</td><td>7,500,000</td><td>6,000,000</td><td>4,500,000</td><td>30,000,000</td><td colspan="4">15,000,000</td></tr>
-                                <tr><td class="lv-col">70</td><td>40,000,000</td><td>20,000,000</td><td>16,000,000</td><td>12,000,000</td><td>80,000,000</td><td colspan="4">30,000,000</td></tr>
-                                <tr><td class="lv-col">80</td><td>86,000,000</td><td>43,000,000</td><td>34,400,000</td><td>25,800,000</td><td>172,000,000</td><td colspan="4">400,000,000</td></tr>
-                                <tr><td class="lv-col">90</td><td>144,000,000</td><td>72,000,000</td><td>57,600,000</td><td>43,200,000</td><td>288,000,000</td><td colspan="4">500,000,000</td></tr>
-                                <tr><td class="lv-col">100</td><td>-</td><td>108,500,500</td><td>86,800,000</td><td>65,100,000</td><td>434,000,000</td><td colspan="4">-</td></tr>
-                                <tr><td class="lv-col">110</td><td>-</td><td>-</td><td>-</td><td>96,000,000</td><td>640,000,000</td><td colspan="4">-</td></tr>
-                                <tr><td class="lv-col">120</td><td>-</td><td>-</td><td>-</td><td>-</td><td>2,000,000,000</td><td colspan="4">-</td></tr>
-                                <tr><td class="lv-col">130</td><td>-</td><td>-</td><td>-</td><td>-</td><td>2,000,000,000</td><td colspan="4">-</td></tr>
-                                <tr><td class="lv-col">140</td><td>-</td><td>-</td><td>-</td><td>-</td><td>2,000,000,000</td><td colspan="4">-</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <h3 class="section-category"> 3．スキルの必要熟練度</h3>
-                <div class="item-content">
-                    <div class="table-scroll">
-                        <table class="exp-table">
-                            <thead>
-                                <tr>
-                                    <th rowspan="2">ランク</th>
-                                    <th rowspan="2">必要熟練度</th>
-                                    <th colspan="2">戦闘スキル</th>
-                                    <th colspan="2">生産スキル</th>
-                                </tr>
-                                <tr>
-                                    <th>名称</th>
-                                    <th>必要JobExp</th>
-                                    <th>名称</th>
-                                    <th>必要JobExp</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td class="lv-col">Lv1</td><td>1</td><td style="text-align:left;">見習い</td><td>1</td><td style="text-align:left;">見習い</td><td>1</td></tr>
-                                <tr><td class="lv-col">Lv2</td><td>21</td><td style="text-align:left;">ビギナー</td><td>20</td><td style="text-align:left;">徒弟</td><td>20</td></tr>
-                                <tr><td class="lv-col">Lv3</td><td>51</td><td style="text-align:left;">練習生</td><td>200</td><td style="text-align:left;">補助士</td><td>200</td></tr>
-                                <tr><td class="lv-col">Lv4</td><td>121</td><td style="text-align:left;">初級者</td><td>4,000</td><td style="text-align:left;">初級工</td><td>3,000</td></tr>
-                                <tr><td class="lv-col">Lv5</td><td>201</td><td style="text-align:left;">中級者</td><td>65,000</td><td style="text-align:left;">中級工</td><td>45,000</td></tr>
-                                <tr><td class="lv-col">Lv6</td><td>301</td><td style="text-align:left;">上級者</td><td>100,000</td><td style="text-align:left;">上級工</td><td>75,000</td></tr>
-                                <tr><td class="lv-col">Lv7</td><td>451</td><td style="text-align:left;">プロ</td><td>250,000</td><td style="text-align:left;">熟練工</td><td>100,000</td></tr>
-                                <tr><td class="lv-col">Lv8</td><td>601</td><td style="text-align:left;">エキスパート</td><td>1,500,000</td><td style="text-align:left;">エキスパート</td><td>800,000</td></tr>
-                                <tr><td class="lv-col">Lv9</td><td>751</td><td style="text-align:left;">達人</td><td>3,000,000</td><td style="text-align:left;">達人工</td><td>2,000,000</td></tr>
-                                <tr><td class="lv-col">Lv10</td><td>1,000</td><td style="text-align:left;">マスター</td><td>上限</td><td style="text-align:left;">マイスター</td><td>上限</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="inner-note-box" style="font-size: 13px; width: fit-content;">
-                        <ul style="list-style:none; padding:0; margin:0;">
-                            <li style="margin-bottom: 2px;">● <span class="highlight">生産職熟練地：</span> モンスターの討伐で経験値を得られることはありません。</li>
-                            <li>● <span class="highlight">経験値余剰分：</span> 熟練値が１上がるための必要経験値以上の経験値を取得しても余剰分は切り捨てになります。（全職共通）</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <h3 class="section-category"> 4．獲得経験値の減衰</h3>
-                <div class="item-content">
-                    <p><strong>レベル差による減衰（BaseExp）</strong></p>
-                    <p style="padding-left: 1em;">ソロでの獲得経験値は、自分のベースレベルが敵より高い場合には以下の通り減衰します。</p>
-                    <table class="exp-table" style="width: auto; min-width: 280px; margin-top: 10px;">
-                        <thead>
-                            <tr><th>レベル差</th><th>取得できる経験値</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr><td class="lv-col">6～10 高い</td><td style="text-align:center;">70％取得</td></tr>
-                            <tr><td class="lv-col">11～15 高い</td><td style="text-align:center;">30％取得</td></tr>
-                            <tr><td class="lv-col">16～20 高い</td><td style="text-align:center;">5％取得</td></tr>
-                            <tr><td class="lv-col">21以上 高い</td><td style="text-align:center;">固定 1 取得</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <h3 class="section-category"> 5．レベルシンクロ</h3>
-                <div class="item-content">
-                    <p><strong>1. レベルシンクロってなに？</strong></p>
-                    <p style="padding-left: 1em;">一言でいうと、<b>「強い人が、レベルの低い友達に合わせて自分のレベルを一時的に下げる機能」</b>のことです。主に、レベル差があるプレイヤー同士でパーティを組んで、一緒にレベル上げをするときに使われます。</p>
-
-                    <p><strong>2. なんでレベルを下げるの？</strong></p>
-                    <p style="padding-left: 1em;">最大の理由は、<b>「みんなが経験値をちゃんともらうため」</b>です。</p>
-                    <div class="inner-note-box" style="font-size: 13px;">
-                        <ul style="list-style:none; padding:0; margin:0;">
-                            <li style="margin-bottom:8px;">● <span class="highlight">レベル差がありすぎると損をする：</span> パーティ内で一番レベルが高い人と低い人の差が開きすぎると、低い方の人がもらえる経験値がグッと減ってしまいます。</li>
-                            <li style="margin-bottom:8px;">● <span class="highlight">「10の差」が目安：</span> レベル差が10以内なら「公平」に経験値が入りますが、11以上離れると減衰が始まると言われています。</li>
-                            <li>● <span class="highlight">だから調整する：</span> シンクロ機能でレベルを下げることで、この「10以内の差」に収め、効率よく稼げるようにします。</li>
-                        </ul>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-    <script src="common.js"></script>
-</body>
-</html>
+                                <tr><td class="num-right">1</td><td class="num-right">1</td><td class="num-right">1</td><td class="num-right">1</td><td class="num-right">1</td><td class="num-right">2</td><td class="num-right">1</td></tr>
+                                <tr><td class="num-right">10</td><td class="num-right">1,600</td><td class="num-right">800</td><td class="num-right">640</td><td class="num-right">480</td><td class="num-right">3,200</td><td class="num-right">1,600</td></tr>
+                                <tr><td class="num-right">20</td><td class="num-right">37,000</td><td class="num-right">18,500</td><td class="num-right">14,800</td><td class="num-right">11,100</td><td class="num-right">74,000</td><td class="num-right">37,000</td></tr>
+                                <tr><td class="num-right">30</td><td class="num-right">700,000</td><td class="num-right">350,000</td><td class="num-right">280,000</td><td class="num-right">210,000</td><td class="num-right">1,400,000</td><td class="num-right">700,000</td></tr>
+                                <tr><td class="num-right">40</td><td class="num-right">4,000,000</td><td class="num-right">2,000,000</td><td class="num-right">1,600,000</td><td class="num-right">1,200,000</td><td
