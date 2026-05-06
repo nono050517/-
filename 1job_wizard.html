@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ウィザード - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：ウィザード (Wizard)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    遠距離からの強力な魔法攻撃を得意とする職業です。<br>
+                    装備の特性上、防御力や体力が非常に低く設定されているため、敵に接近される前の殲滅や、距離を保った立ち回りが不可欠となります。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■見習いからの転職: JobLv10で試験開始。「冒険者協会長による口頭試験」が行われます。</p>
+                    <p style="padding-left: 2em; text-indent: -1em;">※攻略のコツ: 試験で問われる知識の多くは、公式サイトを隅々まで読み込むことで解答が得られます。</p>
+                    
+                    <p><strong>■主な派生二次職:</strong> BaseLv50および指定職業のJobLv40で転職可能。</p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>セージ:</strong> ウィザード ＆ プリースト (各JobLv40)</li>
+                        <li><strong>グレネディア:</strong> ウィザード ＆ アーチャー (各JobLv40)</li>
+                        <li><strong>ストライカー:</strong> ウィザード ＆ ローグ (各JobLv40)</li>
+                    </ul>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>魔法詠唱時間の長さや耐久面の低さから、計画的なステータス配分とスキル選択が求められます。</p>
+                    
+                    <p><strong>ステータス配分:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>INT:</strong> 最優先で振るべきステータスです。INTが7の倍数に達するごとに「MATKボーナス」が発生するため、効率を考えるなら7の倍数を意識した調整が有効です。</li>
+                        <li><strong>カンスト後の展望:</strong> INTが99でカンストした後は、目指す二次職やプレイスタイルに合わせてDEX（詠唱速度）、VIT（耐久）、AGI（回避）へ振り分けていきます。</li>
+                    </ul>
+
+                    <p><strong>重要スキルの活用:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>スピリチュアリティ:</strong> MATKだけでなく魔法防御も大幅に上昇させる超重要スキルです。魔法職はもちろん、壁役を目指す場合も魔法耐性の確保や回復力の向上のために習得が推奨されます。</li>
+                    </ul>
+
+                    <p style="padding-left: 1em; text-indent: -1em;">・レベル上げのコツ: ウィザード単体ではレベル上げの難易度が高いため、初期職業としての選択は推奨されません。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・効率的な運用: プリーストの「エクソシズム」をプリザーブに設定して狩りを行うのが最もスムーズです。高いINTと「エクソシズム」の組み合わせが、どの二次職を目指す場合もレベリングの主流となります。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・運用上の注意: 魔法は詠唱が長く、発動前にターゲットが倒されたり移動したりすることが多いため、パーティプレイや狩り場選びには工夫が必要です。</p>
+                </div>
+
+                <h3 class="section-category"> 4．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadWizardSkills() {
+            // ウィザードのjob_idである 12 で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 12) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadWizardSkills);
+    </script>
+</body>
+</html>
