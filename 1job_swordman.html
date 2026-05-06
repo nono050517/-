@@ -75,13 +75,13 @@
             const tbody = document.getElementById('skill-body');
             if (data && data.length > 0) {
 tbody.innerHTML = data.map(skill => `
-            <tr>
-                <td style="text-align:center; font-weight:bold; color:#d48d8d;">${skill.No || '-'}</td>
-                <td style="text-align:center; font-size: 0.9em;">${skill['PSV/ACT'] || '-'}</td>
-                <td class="row-skill" style="font-weight:bold;">${skill.スキル名}</td>
-                <td style="font-size: 0.85em; color: #666; line-height: 1.4; text-align:left;">${skill.説明 || ''}</td>
-            </tr>
-        `).join('');
+    <tr>
+        <td style="text-align:center; font-weight:bold; color:#d48d8d;">${skill.No || '-'}</td>
+        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td> <!-- タイプを表示 -->
+        <td class="row-skill" style="font-weight:bold;">${skill.スキル名}</td> <!-- 名前を表示 -->
+        <td style="font-size: 0.85em; color: #666; line-height: 1.4; text-align:left;">${skill.説明 || ''}</td> <!-- 説明を表示 -->
+    </tr>
+`).join('');
             } else {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが登録されていません</td></tr>';
             }
