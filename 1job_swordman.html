@@ -62,7 +62,7 @@
             // skills_listテーブルからソードマン(job_id: 1と仮定)のスキルを取得
             // 取得レベル(required_level)の昇順でソート
             const { data, error } = await client
-                .from('skills_list')
+                .from('skill_status_changes').select('*, skills_list(*)')
 .select('*, skill_status_changes(習得レベル)')
                 .eq('job_id', 9) 
                 .order('required_level', { ascending: true });
