@@ -5,6 +5,47 @@
     <meta charset="UTF-8">
     <title>ソードマン - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css"> <!-- 修正 -->
+        <style>
+        /* サイドバー全体の見た目 */
+        #sidebar-nav {
+            width: 220px;
+            padding: 20px;
+            background-color: #fdf5e6; /* 柔らかなベージュ */
+            min-height: 100vh;
+        }
+
+        /* サイトタイトル */
+        .site-title {
+            font-size: 1.2em;
+            color: #5d4037;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #d48d8d;
+        }
+
+        /* メニュー項目 */
+        #sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #sidebar-nav ul li {
+            margin-bottom: 15px;
+        }
+
+        #sidebar-nav ul li a {
+            text-decoration: none;
+            color: #5d4037;
+            font-weight: bold;
+            display: block;
+            padding: 5px;
+        }
+
+        #sidebar-nav ul li a:hover {
+            color: #d48d8d;
+            background-color: #fff;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> <!-- 修正 -->
 </head>
 <body>
