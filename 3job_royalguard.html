@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ロイヤルガード - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：ロイヤルガード (Royal Guard)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    ロイヤルガードは、テンペレシオンとバトルスミスの両職を極めた者のみが到達できる、防御のスペシャリストです。<br>
+                    最大の特徴は、<strong>テンペレシオンとバトルスミスで習得したすべてのスキルを使用できる</strong>点にあります。<br>
+                    強固な防御性能に加え、敵の注意を引きつける能力や、自身のVITを上昇させるパッシブスキルを備えています。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv 70以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: テンペレシオン JobLv 70以上、かつバトルスミス JobLv 70以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■転職試験: なし。（条件を満たしていれば即時転職可能です）</p>
+                </div>
+
+                <h3 class="section-category"> 3．スキルクエスト</h3>
+                <div class="item-content">
+                    <p>スキルの習得には、王宮前広場にいる「？？？」から受注する一連の納品クエストを達成する必要があります。</p>
+                    
+                    <table style="margin-bottom: 15px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">対象JobLv</th>
+                                <th style="width: 75%;">必要納品アイテム</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align:center;">Job 40～</td>
+                                <td>盾の破片 500個</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">Job 75～</td>
+                                <td>部族の紋章 999個、ウッドゴーレムスフィア 3個</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">Job 91～</td>
+                                <td>仙薬 200個</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">Job 99～</td>
+                                <td>血影の鎧片 300個</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="font-size: 10px; color: #8b5a5a;">※上位スキルの習得には、特定スキルの熟練度（プロテクションスタイルや重騎士の枷のマスター）が必須条件となります。</p>
+                </div>
+
+                <h3 class="section-category"> 4．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>VITの向上やヘイト管理など、パーティーの「盾」としての完成度が極めて高い職業です。</p>
+                    
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>鉄壁の守り:</strong> 重騎士心得によるVIT上昇により、他職の追随を許さない圧倒的な耐久力を獲得します。</li>
+                        <li><strong>ヘイトコントロール:</strong> 魔法スキル「アタンシオン」は、霊属性ダメージを与えつつ敵の注目を自身に固定できるため、乱戦でのタゲ取りに非常に優秀です。</li>
+                        <li><strong>スキルの継承:</strong> テンペレシオンの防御バフとバトルスミスの装備強化を両立できるため、パーティー全体の生存能力を底上げできます。</li>
+                    </ul>
+                </div>
+
+                <h3 class="section-category"> 5．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadRoyalGuardSkills() {
+            // ロイヤルガードのjob_id（仮に42と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 42) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadRoyalGuardSkills);
+    </script>
+</body>
+</html>
