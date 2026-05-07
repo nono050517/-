@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>シードランサー - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：シードランサー (Seed Lancer)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    攻撃時に特殊効果を発揮する槍を装備できるほか、両手槍やナックルなどの多彩な武器も扱えます。<br>
+                    最大の特徴は、アイテム「シード」を消費して放つ強力な属性範囲攻撃です。<br>
+                    命中補正が優秀なため、物理職が陥りやすい命中不足を解消しつつ、様々な属性攻撃を使い分けられる利便性の高いジョブです。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv 50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: ソードマン JobLv 40以上、かつ武士 JobLv 40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■転職試験: 5分以内に制限エリア内の全モンスターを討伐する実戦形式の試験です。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: ベルセルク（BaseLv 70＋シードランサー Job 70＋ウォリアー Job 70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>範囲攻撃に特化している一方で、単体火力やスキルの燃費に課題があります。</p>
+                    
+                    <p><strong>ステータス配分とSP管理:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>消費SPがかなり高めに設定されているため、ウォリアーよりも多めにINTを振る構成、あるいはストライカーのような配分が適しています。</li>
+                    </ul>
+
+                    <p><strong>攻撃の特性:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>範囲攻撃:</strong> 主要スキルの多くが円形範囲で、発動周期も速いため雑魚狩りの効率が非常に良いのが利点です。</li>
+                        <li><strong>命中率:</strong> 優れた命中補正があるため、DEXを抑えてAGIにポイントを回すことも可能です。</li>
+                        <li><strong>単体火力:</strong> JobLv 65のスキルは威力・速度ともに控えめで、武器のエンチャント制限もあり、ボス戦の単体火力役には不向きです。</li>
+                    </ul>
+
+                    <p><strong>アイテム「シード」の入手とソロ活動:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・スキル発動に必要なシードは、商人から購入（200イデア）するか、アルケミストによる生産で入手します。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・命中と回避（AGI）を両立させやすく、「身体能力」をプリザーブすることで、ソロ狩りにおいて高い適性を発揮します。</p>
+                </div>
+
+                <h3 class="section-category"> 4．推奨プリザーブスキル</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■火力・強化: 野伏せ、プロスフォラ</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■生存・回避: 身体能力</p>
+                </div>
+
+                <h3 class="section-category"> 5．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadSeedLancerSkills() {
+            // シードランサーのjob_id（仮に30と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 30) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadSeedLancerSkills);
+    </script>
+</body>
+</html>
