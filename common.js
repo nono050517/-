@@ -53,6 +53,7 @@ async function loadSidebar() {
                 if (item.page_id === 'striker') link = '2job_striker.html';
                 if (item.page_id === 'seedlancer') link = '2job_seedlancer.html';
                 if (item.page_id === 'fencer') link = '2job_fencer.html';
+                if (item.page_id === 'battlesmith') link = '2job_battlesmith.html';
                 html += `<li><a href="${link}">${item.display_name}</a></li>`;
             });
             html += `</ul>`;
