@@ -49,6 +49,7 @@ async function loadSidebar() {
                 if (item.page_id === 'meister') link = '2job_meister.html';
                 if (item.page_id === 'alchemist') link = '2job_alchemist.html';
                 if (item.page_id === 'musketeer') link = '2job_musketeer.html';
+                if (item.page_id === 'ninja') link = '2job_ninja.html';
                 html += `<li><a href="${link}">${item.display_name}</a></li>`;
             });
             html += `</ul>`;
