@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>シェフ - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：シェフ (Chef)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    ステータス上昇効果を持つ「料理」を作り出すことができる生産職です。<br>
+                    料理の効果時間は初級のものでも30分と長く、冒険のサポートに長けています。<br>
+                    一方で、戦闘に関するパッシブスキルが一切ないため、単独での戦闘やレベリングは非常に困難な職業です。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■見習いからの転職: 指定された食材を集めてくる試験が行われます。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■他職からの転職: 「シェフへの道！」という試験が課されます。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生二次職: アルケミスト。BaseLv50および指定の職業（シェフ・ファーマシスト）をJob40まで上げることで転職可能です。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>ブラックスミスと同様に、初期職業として選択するには非常に難易度が高いジョブです。</p>
+                    
+                    <p><strong>戦闘とスキルの特性:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>戦闘用アクティブスキル「炎のスパイス」などは威力が控えめで発動媒体も必要なため、主力としては頼り切りにくい性能です。</li>
+                        <li>生産成功率にボーナスを与えるステータスが AGI であるため、武器による火力アップと生産能力の両立が難しいという課題があります。</li>
+                        <li>装備関連のパッシブを持つ戦闘職から転職して始めるのが、最も現実的な育成ルートです。</li>
+                    </ul>
+
+                    <p><strong>レベリングのコツ:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>自力での狩りが大変なため、狩り用の別キャラクターを用意するか、生産職を支援してくれるギルドに所属することが推奨されます。</li>
+                        <li>資金（イデア）に余裕がある場合は、チック豆をミルクに、ミルクをチーズへ加工し続けることで生産経験値を稼ぐ手段もあります。</li>
+                    </ul>
+
+                    <p><strong>経済面での注意:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・料理の素材購入には多額の費用がかかります。序盤の生産品は需要が少なく、大半が赤字になる傾向があるため、販売で利益を出すのは困難です。</p>
+                </div>
+
+                <h3 class="section-category"> 4．生産に関わるステータス</h3>
+                <div class="item-content">
+                    <p>成功確率: 主に <strong>AGI</strong> が関係します。</p>
+                </div>
+
+                <h3 class="section-category"> 5．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadChefSkills() {
+            // シェフのjob_id（仮に12と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 12) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadChefSkills);
+    </script>
+</body>
+</html>
