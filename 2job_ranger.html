@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>レンジャー - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：レンジャー (Ranger)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    弓、両手剣、ナックルなど多様な武器を使い分けることができ、非常に幅広い戦い方が可能な職業です。<br>
+                    ボス戦での単体火力役、状態異常付与による補助、さらには「スティーリング」による素材集めなど、状況に応じて臨機応変に役割を変える「器用さ」が最大の特徴です。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: アーチャーJobLv40以上、かつローグJobLv40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■転職試験: 指定された素材（たまはがね10、溶岩の欠片30、亀の甲羅30、木の枝30、はなびら30）を持参する納品試験です。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: ペネトレイター（BaseLv70＋レンジャーJob70＋フェンサーJob70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>多くの武器を扱える反面、それぞれのスキルの特性や属性相性を深く理解して運用する必要があります。</p>
+                    
+                    <p><strong>攻撃スキルの特性:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>トリプルリリース: 極めて優秀な単体遠距離攻撃スキルです。敵の弱点に合わせた属性弓の準備とスフィアによる補強が不可欠です。</li>
+                        <li>旋風斬り: ハリケーンスラッシュと比較すると火力が劣るため、範囲攻撃としての過信は禁物です。</li>
+                        <li>補完の重要性: 習得パッシブが他職に劣る場合があるため、「身体能力」や「心眼」などをプリザーブして補うことが重要です。</li>
+                    </ul>
+
+                    <p><strong>パーティーでの立ち回り:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>状況判断: 火力役として不十分な場合は、麻痺役、補助、蘇生役など、自身の立ち位置を素早く切り替えるプレイヤースキルが求められます。</li>
+                        <li>移動補助: 「スピードスター」による移動補助は、壁役が敵を釣る際などに重宝されます。</li>
+                    </ul>
+
+                    <p><strong>レベリングと素材集め:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・範囲スキルが控えめなため、効率重視のパーティーより、ソロでの単体狩りや素材集めに適性があります。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・「スティーリング」は素材入手率を微増させる効果がありますが、あくまで補助的なものとして捉えるのが賢明です。</p>
+                </div>
+
+                <h3 class="section-category"> 4．特殊スキルの注意点・運用</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>狂戦士の招宴:</strong> 発動に必要な「精霊酒」は製造難易度が高く非常に貴重なため、計画的な入手が必要です。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>ストライカー連携型:</strong> 「メレーマスタリ」を活用し、ストライカーのスキルをプリザーブして塔などの狩場に参加するスタイルが有効です。</p>
+                </div>
+
+                <h3 class="section-category"> 5．推奨プリザーブスキル</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■火力・強化: 鬼神降臨、プロスフォラ、コンバットフォース</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■攻撃: マスターナックル、グラヴィティラッシュ、マスターソード</p>
+                </div>
+
+                <h3 class="section-category"> 6．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadRangerSkills() {
+            // レンジャーのjob_id（仮に23と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 23) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadRangerSkills);
+    </script>
+</body>
+</html>
