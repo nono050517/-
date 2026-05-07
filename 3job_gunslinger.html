@@ -34,26 +34,35 @@
                     <table style="margin-bottom: 15px;">
                         <thead>
                             <tr>
-                                <th style="width: 25%;">対象JobLv</th>
-                                <th style="width: 75%;">必要納品アイテム</th>
+                                <th style="width: 15%;">対象JobLv</th>
+                                <th style="width: 15%;">習得スキル</th>
+                                <th style="width: 75%;">必要納品アイテム/習得条件</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td style="text-align:center;">Job 40～</td>
+                                <td>銃術士の心得</td>
                                 <td>石炭 100個</td>
                             </tr>
                             <tr>
                                 <td style="text-align:center;">Job 75～</td>
+                                <td>ビスマルクカノン</td>
                                 <td>ギルド章 999個、サブバットスフィア 3個</td>
                             </tr>
                             <tr>
                                 <td style="text-align:center;">Job 91～</td>
+                                <td>サドンデスブロー</td>
                                 <td>鷹の巻物 300個</td>
                             </tr>
                             <tr>
                                 <td style="text-align:center;">Job 99～</td>
+                                <td>銃術士の枷</td>
                                 <td>血影の弓片 300個</td>
+                            </tr><tr>
+                                <td style="text-align:center;">Job 99～</td>
+                                <td>超射程天啓弾</td>
+                                <td>サドンデスブローと銃術士の枷のマスター</td>
                             </tr>
                         </tbody>
                     </table>
@@ -76,10 +85,10 @@
                     <table id="skill-table">
                         <thead>
                             <tr>
-                                <th style="width: 10%;">取得Lv</th>
-                                <th style="width: 15%;">PSV/ACT</th>
-                                <th style="width: 25%;">スキル名</th>
-                                <th style="width: 50%;">説明</th>
+                                <th style="width: 7%;">取得Lv</th>
+                                <th style="width: 7%;">PSV/ACT</th>
+                                <th style="width: 16%;">スキル名</th>
+                                <th style="width: 70%;">説明</th>
                             </tr>
                         </thead>
                         <tbody id="skill-body">
@@ -101,7 +110,7 @@
             const { data, error } = await client
                 .from('skills_list')
                 .select('*')
-                .eq('job_id', 45) 
+                .eq('job_id', 39) 
                 .order('習得レベル', { ascending: true });
 
             if (error) {
