@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ペネトレイター - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：ペネトレイター (Penetrator)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    ペネトレイターは、レンジャーとフェンサーの両職を極めた者のみが到達できる、貫通と狙撃のスペシャリストです。<br>
+                    最大の特徴は、<strong>レンジャーとフェンサーで習得したすべてのスキルを使用できる</strong>点にあります。<br>
+                    DEXとAGIを活かした遠近両用の戦闘スタイルに加え、対象を遠距離から撃ち抜く強力な固有スキルを操ります。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv 70以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: レンジャー JobLv 75以上、かつフェンサー JobLv 75以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■転職試験: なし。（条件を満たしていれば即時転職可能です）</p>
+                </div>
+
+                <h3 class="section-category"> 3．スキルクエスト</h3>
+                <div class="item-content">
+                    <p>専用スキルの習得には、エリシア南地区にいる「？？？」から受注する一連の納品クエストを達成する必要があります。</p>
+                    
+                    <table style="margin-bottom: 15px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">対象JobLv</th>
+                                <th style="width: 75%;">必要納品アイテム</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align:center;">Job 40～</td>
+                                <td>爪 300個</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">Job 75～</td>
+                                <td>魔族の毛皮 999個、Lv10マナストーン 100個</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">Job 91～</td>
+                                <td>深緑の甲角 300個</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">Job 99～</td>
+                                <td>血影の槍片 300個</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="font-size: 10px; color: #8b5a5a;">※上位スキルの習得には、特定スキルの熟練度（カドリールや侵入者の枷のマスター）が必須条件となります。</p>
+                </div>
+
+                <h3 class="section-category"> 4．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>DEXとAGIの向上に加え、習熟度によってダメージが飛躍的に上がる遠距離攻撃スキルを習得します。</p>
+                    
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>変幻自在のレンジ:</strong> レンジャーの弓による長距離攻撃と、フェンサーのレイピアによる近接回避戦闘をシームレスに切り替えて戦うことが可能です。</li>
+                        <li><strong>圧倒的な命中と回避:</strong> DEXとAGIがさらに強化されるため、格上の敵に対しても安定した命中率と回避率を維持できます。</li>
+                        <li><strong>固有攻撃スキルの威力:</strong> ペネトレイター固有の攻撃スキルは、スキルの習熟度（熟練Lv）に応じて威力が劇的に上昇するため、使い込むほど真価を発揮します。</li>
+                    </ul>
+                </div>
+
+                <h3 class="section-category"> 5．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadPenetratorSkills() {
+            // ペネトレイターのjob_id（仮に47と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 47) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadPenetratorSkills);
+    </script>
+</body>
+</html>
