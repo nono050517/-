@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>忍者 - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：忍者 (Ninja)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    二刀流や片手武器の扱いに長け、属性を帯びた「印」や強力な範囲攻撃を操る物理アタッカーです。<br>
+                    最大の特徴は、SPと引き換えに通常攻撃を極限まで強化する「阿修羅」にあり、驚異的な火力を発揮します。<br>
+                    ただし、防御面とHPが非常に低いため、プレイヤースキルが強く求められる上級者向けの職業です。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv 50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: ローグ JobLv 40以上、かつ武士 JobLv 40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■転職試験: イズモの国「くれない屋敷」に潜入し、5分以内に見張りに見つからず巻物を持ち帰るステルス試験が行われます。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: アサシン（BaseLv 70＋忍者 Job 70＋ストライカー Job 70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>二刀流の特性を理解し、命中率と火力のバランスを取ることが育成の鍵となります。</p>
+                    
+                    <p><strong>戦闘とレベリング:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>無双乱舞:</strong> 二刀専用の前方範囲攻撃です。周期が短く優秀ですが、二刀自体のATKが伸びにくいため属性合わせが重要です。</li>
+                        <li><strong>命中率の確保:</strong> 「二刀の構え」には命中補正がないため、DEX等での補填が必須です（上位の二刀神影で補正が追加されます）。</li>
+                        <li><strong>おすすめ狩場:</strong> ソロなら「月影の天守LV60」、パーティなら「フォルドエイクの塔下層部」が属性相性良く推奨されます。</li>
+                    </ul>
+
+                    <p><strong>特殊スキル「阿修羅」の運用:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・SP最大値を1にする代わりにATKとASPDを爆発的に高めます。クリティカル（CRI）が主要なダメージ源となるため、スフィアでの補強が有効です。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・終了後はSP回復専用装備（レギオニス等）やマクロを用いて迅速に復帰する準備が不可欠です。</p>
+
+                    <p><strong>生存戦略:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・「鬼神降臨」併用時は防御力がほぼ0になるため、即死のリスクが極めて高いです。ボス戦等で苦戦する場合は、ステータスが近いウォリアーへの転職も視野に入ります。</p>
+                </div>
+
+                <h3 class="section-category"> 4．ステータス配分と装備</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>阿修羅型:</strong> 極STR・極AGIをベースに、残りをDEXとINTに振り分ける構成が一般的です。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>装備:</strong> 属性は武器に依存するため、効率を求めるには各種属性武器を揃えるための多額の費用が必要となります。</p>
+                </div>
+
+                <h3 class="section-category"> 5．主要スキル・推奨プリザーブ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■パッシブ: 二刀の構え、忍者の心得、二刀神影</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■アクティブ: 空蝉（回避）、瞬歩（移動）、阿修羅（強化）、鬼神降臨（武士より継承）</p>
+                </div>
+
+                <h3 class="section-category"> 6．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadNinjaSkills() {
+            // 忍者のjob_id（仮に28と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 28) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadNinjaSkills);
+    </script>
+</body>
+</html>
