@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ファーマシスト - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：ファーマシスト (Pharmacist)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    薬品やバレット（弾丸）などの消耗品を作り出す生産職です。<br>
+                    戦闘能力は控えめですが、自己回復スキルの「メディスンケア」を持つため、他の生産職と比較して継戦能力に独自の特徴があります。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■転職試験: 文献に記された内容を答えて記憶力を試す口頭試験が行われます。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生二次職: マイスター、アルケミスト。BaseLv50および指定の職業（ブラックスミスまたはシェフ）をJob40まで上げることで転職可能です。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>他の生産職と同様、初期職として選択すると育成に非常に苦労するジョブです。</p>
+                    
+                    <p><strong>レベリングのコツ:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>「バレット」を作成することで、ジョブレベルを急速に上げることが可能です。</li>
+                        <li>ただし、作成成功率が100%に到達するまでは多額の出費を覚悟する必要があります。</li>
+                        <li>市場での競争が激しいため、成功率が安定した後でも大きな利益を得るのは難しいのが現状です。</li>
+                    </ul>
+
+                    <p><strong>スキルの特性:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>「メディスンケア」を習得できるため、他職の「ヒール」を必ずしも必要としません。</li>
+                        <li>JobLv10で習得する「マジックハンマー」が序盤の貴重な攻撃手段となります。</li>
+                    </ul>
+
+                    <p><strong>運用上の注意:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・生産効率を追求する場合、他職からの転職でステータスや装備を整えてから着手するのが定石です。</p>
+                </div>
+
+                <h3 class="section-category"> 4．生産に関わる項目</h3>
+                <div class="item-content">
+                    <p>主な製造物: 薬品（ブレンディング）、バレット（ディペンシング）など。</p>
+                </div>
+
+                <h3 class="section-category"> 5．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadPharmacistSkills() {
+            // ファーマシストのjob_id（仮に13と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id',
