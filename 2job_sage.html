@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>セージ - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：セージ (Sage)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    MATKを最大限に高めることに特化した魔法職のスペシャリストです。<br>
+                    強力な広範囲魔法攻撃を操るため、レベルアップの効率が非常に良いのが特徴です。<br>
+                    また、パーティーの安定に不可欠な蘇生魔法を習得できる唯一無二の役割を担います。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: プリーストJobLv40以上、かつウィザードJobLv40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: アークメイジ（BaseLv70＋セージJob70＋ビショップJob70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>魔法攻撃のスペシャリストとして、敵の弱点属性を突いたスキルの使い分けが重要です。</p>
+                    
+                    <p><strong>パーティーでの役割と蘇生:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>蘇生魔法: 迅速な蘇生が求められますが、蘇生後2分間はHP減少などのディレイが発生する点に注意が必要です。</li>
+                        <li>立ち回り: 壁役の動きに合わせ、詠唱中に敵が倒されないよう適切なタイミングで攻撃を開始する技術が求められます。</li>
+                    </ul>
+
+                    <p><strong>ステータス配分と型:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>INT極・DEX極型:</strong> 高火力と高速詠唱（SSPD）を両立した、パーティー狩りにおける理想的な型です。</li>
+                        <li><strong>ソロ型 (INT>AGI>VIT):</strong> 回避と火力を両立させ、高難易度エリアを単独で攻略する構成です。</li>
+                        <li><strong>初心者向け (INT極=STR極):</strong> 育成が楽で、転職後にストライカーとしても活動しやすい汎用的な型です。</li>
+                    </ul>
+
+                    <p><strong>スキルの特性と装備:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>範囲魔法:</strong> 広い攻撃範囲を持ちますが、不要な敵まで巻き込まない注意が必要です。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>マナストライク:</strong> ボス戦における主力の単体火力スキルとなります。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>装備補正:</strong> INTボーナスが高いため、防具にはINT増加スフィアが推奨されます。</p>
+                </div>
+
+                <h3 class="section-category"> 4．推奨レベル上げ装備例</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>ミスリルノーブルセット:</strong> 頭に古代の兵士、脚にエシュマなどのスフィアを装着する一般的な構成です。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>司祭の帽子＋ダーナノーブルセット:</strong> 生産やボスドロップ品を組み合わせた上位構成です。</p>
+                </div>
+
+                <h3 class="section-category"> 5．推奨プリザーブスキル</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■攻撃・補助: サイコスラッシュ、ディヴァインヒール、リティヤ</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■耐久・生存: 耐久力、身体能力、野生のカン、鋼の体</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■心得系: 銃士の心得、錬金の心得</p>
+                </div>
+
+                <h3 class="section-category"> 6．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadSageSkills() {
+            // セージのjob_id（仮に22と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 22) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadSageSkills);
+    </script>
+</body>
+</html>
