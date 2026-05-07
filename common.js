@@ -60,6 +60,8 @@ async function loadSidebar() {
                 if (item.page_id === 'archmage') link = '3job_archmage.html';
                 if (item.page_id === 'assassin') link = '3job_assassin.html';
                 if (item.page_id === 'gunslinger') link = '3job_gunslinger.html';
+                if (item.page_id === 'takumi') link = '3job_takumi.html';
+                if (item.page_id === 'penetrator') link = '3job_penetrator.html';
                 html += `<li><a href="${link}">${item.display_name}</a></li>`;
             });
             html += `</ul>`;
