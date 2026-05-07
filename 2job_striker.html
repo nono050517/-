@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ストライカー - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：ストライカー (Striker)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    ボクサースタイルを基本とした近接戦闘職です。<br>
+                    マッシブボディによる高い耐久力に加え、属性を伴う強力なラッシュ攻撃や自己強化スキルを操ります。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv 50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: ウィザード JobLv 40以上、かつローグ JobLv 40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■転職試験: 「つちかわれた知恵と忍耐力を試す試験」です。数字の迷宮の奥（7番の石碑）にいる試験官のもとへ到達する必要があります。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: アサシン（BaseLv 70＋ストライカー Job 70＋忍者 Job 70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>STRをメインとしつつ、スキルを連発するためのSP管理（INT）が重要となる職業です。</p>
+                    
+                    <p><strong>ステータス配分:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>STR（攻撃力）を極振りにし、SPが枯れない程度にINTを振り分けるのが基本です。</li>
+                        <li>残りのポイントは、生存率を高めるためのVIT、または回避のためのAGIに振り分けます。</li>
+                    </ul>
+
+                    <p><strong>レベリングのコツ:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>水属性の敵に対しては、特定のプリザーブスキルを組み合わせた「グラヴィティラッシュ」が非常に効果的です。</li>
+                        <li>近年、以前ほどパーティ募集（塔のノラ等）が多くないため、効率的な育成には工夫が求められます。</li>
+                    </ul>
+
+                    <p><strong>スキルの特性:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・「マスターナックル」によりナックルの性能を最大限に引き出します。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・「精神転換」や「不屈の精神」など、持久力や精神面を支えるパッシブ・アクティブスキルも充実しています。</p>
+                </div>
+
+                <h3 class="section-category"> 4．推奨プリザーブスキル</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■攻撃補助: メレーマスタリ（命中が十分なら鬼神降臨も可）</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■火力強化: 野伏せ、力の刻印（刻印がない場合は鬼神降臨で代用）</p>
+                </div>
+
+                <h3 class="section-category"> 5．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadStrikerSkills() {
+            // ストライカーのjob_id（仮に29と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 29) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadStrikerSkills);
+    </script>
+</body>
+</html>
