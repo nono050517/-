@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>テンペレシオン - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：テンペレシオン (Tempelion)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    頑強な肉体と高いHPを誇り、支援スキルを駆使して仲間を守ることに特化した聖騎士です。<br>
+                    ボス戦における壁役（タンク）として最も適した職業であり、重装備を活かした高い防御力と自己回復・補助能力を兼ね備えています。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: ソードマンJobLv40以上、かつプリーストJobLv40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: ロイヤルガード（BaseLv70＋テンペレシオンJob70＋バトルスミスJob70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>壁役としての性能は高い反面、ソロでの育成には戦略的なステータス・スキル構成が求められます。</p>
+                    
+                    <p><strong>壁役としての運用とステータス:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>ステータス配分: 伝統的な「VIT/AGI」の2点振りに加え、最近ではスキル多用によるSP不足を解消するため、INTへの振り分けも重要視されています。</li>
+                        <li>ヘイト管理: ターゲット固定には繊細な操作が求められます。物理範囲職がいる場合は、敵がまとまるように誘導する技術も必要です。</li>
+                    </ul>
+
+                    <p><strong>ソロ育成のスタイル:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>火力型テンペ: 極INT型の場合、スピリチュアリティやセージの心得をプリザーブすることで、魔法火力職に近い性能を発揮できます。</li>
+                        <li>育成手段: ステータスリセット（鏡）を使用しないならウォリアー系、使用するならプリースト系の育成手段が効率的です。</li>
+                    </ul>
+
+                    <p><strong>注目スキルの特性:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>プロスフォラ:</strong> ATKを割合（%）で大幅に増加させる優秀な補助スキルですが、デメリットもあるため使用時には注意が必要です。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>ディヴァインヒール:</strong> 1分間継続する強力な回復手段ですが、消費SPが大きく、補助スキルのため使用時にヘイトが発生する点に留意してください。</p>
+                </div>
+
+                <h3 class="section-category"> 4．推奨装備とスフィア例</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>中盤 (シルバーノーブル系):</strong> 頭にINT/VIT、体に烏大天狗、脚にAGI/AVOスフィアなどが推奨されます。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>上位 (ラピーム/エキテタス/シグルド系):</strong> VIT上昇やHP増加系、AGI/AVO増加スフィアで耐久面を極限まで高めます。</p>
+                </div>
+
+                <h3 class="section-category"> 5．ボス戦推奨プリザーブスキル</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■生存・回避: 身体能力、反射神経、瞬歩</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■耐久補強: マッシブボディ、スピリチュアリティ</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■緊急用: リザレクション、蘇生の秘薬</p>
+                </div>
+
+                <h3 class="section-category"> 6．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadTempelionSkills() {
+            // テンペレシオンのjob_id（仮に21と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 21) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadTempelionSkills);
+    </script>
+</body>
+</html>
