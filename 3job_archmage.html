@@ -34,30 +34,39 @@
                     <table style="margin-bottom: 15px;">
                         <thead>
                             <tr>
-                                <th style="width: 25%;">対象JobLv</th>
-                                <th style="width: 75%;">必要納品アイテム</th>
+                                <th style="width: 15%;">対象JobLv</th>
+                                <th style="width: 15%;">対象JobLv</th>
+                                <th style="width: 70%;">必要納品アイテム</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td style="text-align:center;">Job 40～</td>
+                                <td>大賢者の心得</td>
                                 <td>墓守スフィア 2個</td>
                             </tr>
                             <tr>
                                 <td style="text-align:center;">Job 75～</td>
+                                <td>エーテルストライク</td>
                                 <td>魔法のコア 500個、ブレイズフィッシャースフィア 3個</td>
                             </tr>
                             <tr>
                                 <td style="text-align:center;">Job 91～</td>
+                                <td>ウィズダムブルーム</td>
                                 <td>イニクタマギヴァスフィア（ノーマル） 5個</td>
                             </tr>
                             <tr>
                                 <td style="text-align:center;">Job 99～</td>
+                                <td>大賢者の枷</td>
                                 <td>血影の紋章 300個</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">Job 99～</td>
+                                <td>アークストライク</td>
+                                <td>ウィズダムブルームと大賢者の枷をマスター</td>
                             </tr>
                         </tbody>
                     </table>
-                    <p style="font-size: 10px; color: #8b5a5a;">※上位スキルの習得には、特定スキルの熟練度（ウィズダムブルームや大賢者の枷のマスター）が必須条件となります。</p>
                 </div>
 
                 <h3 class="section-category"> 4．育成・運用の手引き</h3>
@@ -76,10 +85,10 @@
                     <table id="skill-table">
                         <thead>
                             <tr>
-                                <th style="width: 10%;">取得Lv</th>
-                                <th style="width: 15%;">PSV/ACT</th>
-                                <th style="width: 25%;">スキル名</th>
-                                <th style="width: 50%;">説明</th>
+                                <th style="width: 7%;">取得Lv</th>
+                                <th style="width: 7%;">PSV/ACT</th>
+                                <th style="width: 16%;">スキル名</th>
+                                <th style="width: 70%;">説明</th>
                             </tr>
                         </thead>
                         <tbody id="skill-body">
@@ -101,7 +110,7 @@
             const { data, error } = await client
                 .from('skills_list')
                 .select('*')
-                .eq('job_id', 43) 
+                .eq('job_id', 35) 
                 .order('習得レベル', { ascending: true });
 
             if (error) {
