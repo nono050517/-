@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>マイスター - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：マイスター (Meister)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    ブラックスミスとファーマシストの特性を併せ持つ生産系二次職ですが、その実態は「戦う生産職」と評されるほど戦闘能力にも長けています。<br>
+                    生産職の中で最もHPが高く、メイスや一部の斧を装備して前線で立ち回ることが可能です。特に素材集めや雑魚狩りにおける効率の良さが最大の特徴です。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: ファーマシストJobLv40以上、かつブラックスミスJobLv40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: 匠（BaseLv70＋マイスターJob70＋アルケミストJob70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>生産スキルと戦闘スキルの両面を活かした独自のプレイスタイルが求められます。</p>
+                    
+                    <p><strong>戦闘とレベリング:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>テンペスト / ランペイジ:</strong> 円形範囲攻撃で狙いを定めるのが容易なため、素材収集に非常に重宝します。使い勝手の良さで効率をカバーできるスキルです。</li>
+                        <li><strong>斧とスキルの相性:</strong> ストライカーのスキルを斧で放つと高い火力を発揮しますが、SP消費が激しいため管理が重要です。</li>
+                        <li><strong>序盤のブースト:</strong> ファーマシストの能力を活かし、バレットを作成することでJobLv30程度までは短時間で到達可能です。</li>
+                    </ul>
+
+                    <p><strong>生産能力と継戦能力:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>製造スキル:</strong> ブラックスミスとファーマシスト両方のスキルを継承しています。特定のボスクエスト経験値を利用した熟練度上げも有効です。</li>
+                        <li><strong>自己回復:</strong> 「メディスンケア」による回復が可能なため、必ずしも「ヒール」をプリザーブする必要はありません。</li>
+                    </ul>
+                </div>
+
+                <h3 class="section-category"> 4．注目スキルの特性</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>スタンピード:</strong> 武器性能の差を補うメイン火力となります。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>属性武器の活用:</strong> 属性斧が使用可能なため、弱点を突いた戦略を立てやすいのが強みです。</p>
+                </div>
+
+                <h3 class="section-category"> 5．推奨プリザーブスキル</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■補助・強化: 幸運、ブレッシング、鍛えた筋肉、野生のカン、各種心得</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■戦闘・耐久: アックスマスタリ、野伏せ、マナの源泉、身体能力、耐久力</p>
+                </div>
+
+                <h3 class="section-category"> 6．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadMeisterSkills() {
+            // マイスターのjob_id（仮に25と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 25) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadMeisterSkills);
+    </script>
+</body>
+</html>
