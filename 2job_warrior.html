@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ウォリアー - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：ウォリアー (Warrior)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    高いHPを誇り、テンペレシオンと同等の重装備が可能な近接戦闘職です。<br>
+                    属性を帯びた両手斧や剣を用いた範囲攻撃を得意とし、装備やステータスの工夫次第で、火力役（アタッカー）としても回避壁（タンク）としても活躍できるポテンシャルを持っています。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: ソードマンJobLv40以上、かつローグJobLv40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: ベルセルク（BaseLv70＋ウォリアーJobLv70＋シードランサーJobLv70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>ウォリアーは強力な反面、命中率の低さやSP消費の激しさといった課題があり、プレイヤーの創意工夫が試される職業です。</p>
+                    
+                    <p><strong>攻撃と属性の運用:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>STRタイプ: 各種属性武器を揃えることが育成の第一歩となります。特に属性武器を使用した「シュトルムブレイク」はボス戦で強力な火力源となります。</li>
+                        <li>命中率の確保: 他職に比べ命中率が極端に低いため、DEXへの振分けや「心眼」以外のHIT確保手段が重要です。命中補正のある片手剣と「ソードマスタリ」を組み合わせる等の対策が有効です。</li>
+                        <li>スキルの特性: 「ハリケーンスラッシュ」は強力ですが、攻撃範囲の癖が強く、敵の真横や背後から当てる等の慣れが必要です。</li>
+                    </ul>
+
+                    <p><strong>SP管理（お座りたいむ）:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・SP増加率が非常に低いため、戦闘中もこまめに「座り回復」を挟む必要があります。攻撃のリズムに座り動作を組み込むことで、手数を維持しつつ戦う技術が求められます。</p>
+
+                    <p><strong>装備・耐久の確保:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>SP回復用、攻撃用、防御用、スキルディレイ用など、状況に応じて複数の装備や属性武器を持ち歩くスタイルが推奨されます。</li>
+                        <li>敵の範囲攻撃対策として、「ヴァイタルアップ」などで耐久性を底上げしておくことが推奨されます。</li>
+                    </ul>
+                </div>
+
+                <h3 class="section-category"> 4．ステータス配分の目安</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>極火力型:</strong> STRを最優先し、次いで命中確保のDEX、最低限のSPのためのINTを振る構成（STR>>DEX>>INT）が推奨されます。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>回避壁型:</strong> AGIを強化することで、テンペレシオンとは異なるスタイルの回避壁として運用可能です。</p>
+                </div>
+
+                <h3 class="section-category"> 5．推奨プリザーブスキル</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■補助: ヒール、ブレッシング、プロスフォラ</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■火力・強化: 野伏せ、獅子奮迅、コンバットフォース</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■攻撃: ランペイジ、グラヴィティラッシュ、トルネードラッシュ</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■パッシブ: ブラントマスタリ、マナの源泉</p>
+                </div>
+
+                <h3 class="section-category"> 6．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadWarriorSkills() {
+            // ウォリアーのjob_id（仮に20と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 20) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadWarriorSkills);
+    </script>
+</body>
+</html>
