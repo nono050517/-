@@ -58,6 +58,7 @@ async function loadSidebar() {
                 if (item.page_id === 'berserk') link = '3job_berserk.html';
                 if (item.page_id === 'royalguard') link = '3job_royalguard.html';
                 if (item.page_id === 'archmage') link = '3job_archmage.html';
+                if (item.page_id === 'assassin') link = '3job_assassin.html';
                 html += `<li><a href="${link}">${item.display_name}</a></li>`;
             });
             html += `</ul>`;
