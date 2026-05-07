@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>匠 - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：匠 (Takumi)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    匠は、マイスターとアルケミストの両職を極めた者のみが到達できる三次職です。<br>
+                    最大の特徴は、<strong>マイスターとアルケミストで習得したすべてのスキルを使用できる</strong>点にあります。<br>
+                    生産の専門家として、未知の素材を加工するための特殊なパッシブスキルを習得するほか、自己強化を攻撃に転じる独自の戦闘手段も備えています。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv 70以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: マイスター JobLv 70以上、かつアルケミスト JobLv 70以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■転職試験: なし。（条件を満たしていれば即時転職可能です）</p>
+                </div>
+
+                <h3 class="section-category"> 3．スキルクエスト</h3>
+                <div class="item-content">
+                    <p>専用スキルの習得には、エリシア北地区にいる「？？？」から受注する一連の納品クエストを達成する必要があります。</p>
+                    
+                    <table style="margin-bottom: 15px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">対象JobLv</th>
+                                <th style="width: 75%;">必要納品アイテム</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align:center;">Job 40～</td>
+                                <td>木の枝 500個</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">Job 75～</td>
+                                <td>丈夫な木 999個、銅 500個</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">Job 91～</td>
+                                <td>深緑の四肢 200個</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">Job 99～</td>
+                                <td>血影の矢・弓片・鎧片・槍片・剣片・紋章（各50個）</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="font-size: 10px; color: #8b5a5a;">※匠のスキル習得において、特定スキルの熟練度条件は現在設定されていません。</p>
+                </div>
+
+                <h3 class="section-category"> 4．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>INTとLUKの向上、特殊なアイテム消費攻撃など、生産職の枠を超えた多彩な能力を習得します。</p>
+                    
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>生産の極み:</strong> 高度な生産パッシブにより、成功率や加工効率が飛躍的に向上します。</li>
+                        <li><strong>ステータス補正:</strong> INTとLUKが底上げされるため、アルケミスト由来のバフや魔法火力、そして生産成功率のすべてにおいて恩恵を受けます。</li>
+                        <li><strong>ハイブリッドな戦術:</strong> マイスターの物理性能とアルケミストの魔法・バフ性能が完全に融合し、あらゆる局面でサポート・攻撃の両立が可能です。</li>
+                    </ul>
+                </div>
+
+                <h3 class="section-category"> 5．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadTakumiSkills() {
+            // 匠のjob_id（仮に46と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 46) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadTakumiSkills);
+    </script>
+</body>
+</html>
