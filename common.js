@@ -41,6 +41,7 @@ async function loadSidebar() {
                 if (item.page_id === 'blacksmith') link = '1job_blacksmith.html';
                 if (item.page_id === 'chef') link = '1job_chef.html';
                 if (item.page_id === 'pharmacist') link = '1job_pharmacist.html';
+                if (item.page_id === 'warrior') link = '2job_warrior.html';
                 html += `<li><a href="${link}">${item.display_name}</a></li>`;
             });
             html += `</ul>`;
