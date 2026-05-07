@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>フェンサー - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：フェンサー (Fencer)</h2>
+
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    レイピアの扱いに長けた、スピード感のある戦闘を得意とする職業です。<br>
+                    習得スキルには「アンガルド」や「フェザーステップ」といったフェンシングの動作を冠するものが多く、自己の構えや空間認識能力を高めるパッシブスキルも備えています。<br>
+                    高い回避性能とクリティカル発生率を活かし、敵の攻撃をいなしながら手数で削り切る、テクニカルな単体火力職です。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv 50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: ソードマン JobLv 40以上、かつアーチャー JobLv 40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■転職試験: 冒険者協会長による口頭試験が行われます。フェンシングの礼節や戦術に関する知識を問われるため、事前にNPCからの情報収集が推奨されます。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: ペネトレイター（BaseLv 70＋フェンサー Job 70＋レンジャー Job 70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>高い回避とクリティカル、そして手数による継続火力が持ち味で、シードランサーとは対照的に「単体ボス火力」と「生存力」に長けたジョブです。</p>
+
+                    <p><strong>ステータス配分とSP管理:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>AGI最優先:</strong> 攻撃速度と回避を両立できるため、まずAGIを伸ばし切る構成が基本です。</li>
+                        <li><strong>DEX:</strong> パッシブの命中補正に頼れるため最低限で済みますが、クリティカル威力を底上げしたい場合は中量振りも有効です。</li>
+                        <li><strong>STR/LUK:</strong> 火力を伸ばすSTR、もしくはクリティカル特化型ならLUK寄せの選択肢があります。レイピアはクリティカル係数が良好なため、LUK型は安定した瞬間火力を出せます。</li>
+                        <li><strong>SP管理:</strong> 連撃系スキルの消費SPは中程度で、シードランサーほど枯渇しません。VITとINTは生存と継戦のため最低限を確保しておくと安心です。</li>
+                    </ul>
+
+                    <p><strong>攻撃の特性:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>単体火力:</strong> 「レイスティンガー」「メテオファンデヴ」など高倍率の単体スキルが揃い、ボス戦で真価を発揮します。</li>
+                        <li><strong>クリティカル:</strong> 「マスターレイピア」「フレッシュスタンス」「空間認識」などのパッシブが回避・クリティカルを底上げし、安定したダメージ源となります。</li>
+                        <li><strong>範囲火力:</strong> 範囲スキルは控えめで、雑魚処理速度はシードランサーに劣ります。狩場では「アタックオフェール」を中心に立ち回るのが現実的です。</li>
+                        <li><strong>属性対応:</strong> 後半で習得する「土の障壁」「土の波動」「シュタインボーレン」により、土属性の搦め手も使えるようになります。</li>
+                    </ul>
+
+                    <p><strong>立ち回りとソロ活動:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・「アンガルド」で構えを整え、「フェザーステップ」で間合いを管理しながら戦うのが基本動作です。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・「プレパラッション」「鼓舞」で自己バフを維持し、クリティカル発動率を最大化した状態で「レイスティンガー」を叩き込むのが理想ムーブです。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・回避型のため装備は軽装中心で、HP補強よりFLEE値を優先するとソロ狩り適性が大きく上がります。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・ターゲットポインティングは弱点露出系のサポートにも使えるため、PT参加時は積極的に運用しましょう。</p>
+                </div>
+
+                <h3 class="section-category"> 4．推奨プリザーブスキル</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■火力・強化: 野伏せ、矜持、スイフトスタンス</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■命中・補助: ターゲットポインティング、鼓舞</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■生存・回避: 身体能力、フレッシュスタンス、空間認識</p>
+                </div>
+
+                <h3 class="section-category"> 5．補足ポイント（フェンサー育成のキモ）</h3>
+                <div class="item-content">
+                    <p>
+                        シードランサーが「範囲・属性・命中安定型」なのに対し、フェンサーは
+                        <strong>「単体・回避・クリティカル特化型」</strong>という対照的なポジションです。
+                        育成方針を一言でまとめると以下の通りです。
+                    </p>
+
+                    <table id="compare-table" style="width:100%; border-collapse: collapse; margin: 0.5em 0 1em;">
+                        <thead>
+                            <tr>
+                                <th style="width:20%;">観点</th>
+                                <th style="width:40%;">フェンサー</th>
+                                <th style="width:40%;">(参考) シードランサー</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align:center;">主軸ステータス</td>
+                                <td><strong>AGI &gt; LUK or STR &gt; DEX</strong></td>
+                                <td>INT多め＋STR（ストライカー型）</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">得意分野</td>
+                                <td>ボス・単体火力、ソロ生存</td>
+                                <td>雑魚範囲狩り、属性対応</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">弱点</td>
+                                <td>範囲処理が遅い</td>
+                                <td>単体火力、SP燃費</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">プリザーブ相性</td>
+                                <td>身体能力、矜持、スイフトスタンス</td>
+                                <td>身体能力、野伏せ、プロスフォラ</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">装備傾向</td>
+                                <td>軽装＋回避盛り、クリ係数重視</td>
+                                <td>命中据え置き＋火力盛り</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p><strong>レベリングの山場:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>～ JobLv 35:</strong> 手数が少なく辛い時期。アロンジェブラとプレパラッションを軸に、メイン武器の強化を優先して凌ぐ。</li>
+                        <li><strong>JobLv 35 「アタックオフェール」習得:</strong> 主力の中距離攻撃が手に入り、狩り効率が一気に向上。ここから本格的な育成フェーズに入る。</li>
+                        <li><strong>JobLv 50 「レイスティンガー」習得:</strong> 単体火力がブレイクスルー。クリティカル特化構成の真価が出始める。</li>
+                        <li><strong>JobLv 75 「メテオファンデヴ」到達:</strong> ボス戦のメインアタッカーとして通用するレベルへ。以後はパーティ参加の機会も増える。</li>
+                    </ul>
+
+                    <p><strong>派生三次職を見据えた並行育成:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">
+                        ・派生先の<strong>ペネトレイター</strong>は「レンジャー Job 70」を要求するため、
+                        フェンサーJobを伸ばしながら<strong>アーチャー／レンジャー側のJobも並行して育てておく</strong>と
+                        三次職化がスムーズです。
+                    </p>
+                    <p style="padding-left: 1em; text-indent: -1em;">
+                        ・転職試験が口頭試問形式である点も踏まえ、フェンシング関連NPCの会話イベントは早めに消化しておくと安心です。
+                    </p>
+                </div>
+
+                <h3 class="section-category"> 6．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadFencerSkills() {
+            // フェンサーのjob_id（仮に20と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 20)
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadFencerSkills);
+    </script>
+</body>
+</html>
