@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>グレネディア - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：グレネディア (Grenadier)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    弾丸（バレット）を消費することで、間隔の短い強力なスキルを連発できる遠距離攻撃職です。<br>
+                    全職業の中でもボス戦における最高火力候補の一つとして数えられ、属性バレットスキルを駆使した戦術を得意とします。<br>
+                    また、麻痺スキルの活用により、沈黙が効かないボス戦においても重宝される存在です。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: アーチャーJobLv40以上、かつウィザードJobLv40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■転職試験: 「月光石」「スターダスト」「ダークダスト」を各1つずつ納品します。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: ガンスリンガー（BaseLv70＋グレネディアJob70＋マスケッティアJob70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>弾丸の管理と、スキル連発を支えるステータス構築が運用の鍵となります。</p>
+                    
+                    <p><strong>序盤の育成とスキルの特性:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>育成方針: JobLv26で「アイアンショット」を習得するまでは、ウィンディアロー等を使用するか、極INT型なら魔法スキルをプリザーブして育成するのが効率的です。</li>
+                        <li>属性バレット: 4属性のスキル攻撃は、他のスキルと比較してディレイや硬直が非常に短く設定されています。</li>
+                        <li>アローレイン: 単体に対して使用すれば非常に高い火力を発揮するため、ボス戦で極めて有効です。</li>
+                    </ul>
+
+                    <p><strong>弾丸（バレット）とコスト面:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li>装備制限: バレットの使用にはクロスボウの装備が必須です。</li>
+                        <li>コスト: 弾丸はファーマシストのスキルで生産可能ですが、自作には相応の時間やコスト（石炭、各属性結晶）がかかります。</li>
+                        <li>メリット: 各属性スキルで攻撃するため、武器に高価な属性付与スフィアを付ける必要がなく、武器代を抑えられます。</li>
+                    </ul>
+
+                    <p><strong>耐久力と立ち回り:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・ボスの範囲攻撃に耐えるためのHP確保が必要です。射程の長さを活かし、ボスの射程外から攻撃を届かせる立ち回りも重要です。</p>
+                </div>
+
+                <h3 class="section-category"> 4．ステータス配分と装備の目安</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>配分例:</strong> 極DEX＋極INTをベースに、残りを回避のAGI、あるいは生存率を高める VIT に振る構成が推奨されます。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>スフィア:</strong> 防具にはDEXスフィアよりもATK増加スフィアを付与した方が火力が伸びる傾向にあります。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>武器:</strong> 入手が容易な「ミノタウロススフィア」をエンチャント枠の多い武器に埋めることで、手軽に高火力を実現できます。</p>
+                </div>
+
+                <h3 class="section-category"> 5．推奨プリザーブスキル</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■育成時: ヒール、身体能力、ブレッシング、耐久力、マナの源泉、ディペンシングⅠ</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ボス戦時: プロスフォラ、鬼神降臨、耐久力</p>
+                </div>
+
+                <h3 class="section-category"> 6．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadGrenadierSkills() {
+            // グレネディアのjob_id（仮に24と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 24) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadGrenadierSkills);
+    </script>
+</body>
+</html>
