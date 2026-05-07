@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>アルケミスト - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：アルケミスト (Alchemist)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    ファーマシストの調合能力とシェフの調理能力を併せ持つ、生産スキルのスペシャリストです。<br>
+                    全ステータスを大幅に強化する独自のバフや、特殊な素材を用いた迅速な蘇生スキルを操り、パーティーを強力にバックアップします。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: ファーマシストJobLv40以上、かつシェフJobLv40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■転職試験: 「オリーブ」「コモンタイム」「ツチウナギ」を各3個納品した後、瞬間的に表示される数字を答える記憶力試験が行われます。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: 匠（BaseLv70＋アルケミストJob70＋マイスターJob70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>生産職としての土台を固めつつ、魔法火力をプリザーブすることで戦闘を効率化できます。</p>
+                    
+                    <p><strong>レベリングのコツ:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>ブースト:</strong> ファーマシストの能力を活かした「バレット作成」により、JobLv30程度までは非常に素早く上げることが可能です。</li>
+                        <li><strong>魔法アタッカー運用:</strong> INT型であれば、「スピリチュアリティ」「クォヴァディス」「ソイルレイン」をプリザーブすることで、塔や地底草原などの狩場で活躍できます。</li>
+                        <li><strong>エリア特性:</strong> 地底草原ではシェフの「フィッシュマスタリ」が適用されるため、火力を補いやすくなります。</li>
+                    </ul>
+
+                    <p><strong>ステータス強化の強み:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・「オードブル」と「レプリート」は効果が重複し、さらに「ブレッシング」とも重ねがけが可能です。これらを併用することで、全ステータスを最大で+27まで引き上げることができます。</p>
+
+                    <p><strong>「蘇生の秘薬」の運用:</strong></p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・「黄金の果実」を消費しますが、詠唱や硬直が「ヒール」と同程度に短く非常に優秀です。射程が短いため「ターゲット追従」をONにしての使用が推奨されます。</p>
+                </div>
+
+                <h3 class="section-category"> 4．スキルの重要性</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">・「錬金の心得」はINTが増加するため、魔法火力特化を目指す上で欠かせません。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・大半の生産には、ファーマシストやシェフのスキルLv5以上で作成できる素材が必要となります。</p>
+                </div>
+
+                <h3 class="section-category"> 5．推奨プリザーブスキル</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■生産時: 幸運、幸運の泉、ブレッシング</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■戦闘時: スピリチュアリティ、クォヴァディス、ソイルレイン</p>
+                </div>
+
+                <h3 class="section-category"> 6．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadAlchemistSkills() {
+            // アルケミストのjob_id（仮に26と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 26) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadAlchemistSkills);
+    </script>
+</body>
+</html>
