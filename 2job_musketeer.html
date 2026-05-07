@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>マスケッティア - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：マスケッティア (Musketeer)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    銃を用いた遠距離射撃や、爆弾による範囲攻撃に長けた職業です。<br>
+                    爆弾は自身のスキルで生産することが可能であり、無属性の範囲攻撃や霊属性に有効な攻撃手段も持つため、単独での活動能力も非常に高いのが特徴です。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv 50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: アーチャー JobLv 40以上、かつブラックスミス JobLv 40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■転職試験: フォーゲルブルグの鍛冶屋で、数字の合計を答える判断力試験（3問）と素材（硫黄×1、石炭×2）の納品が行われます。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: ガンスリンガー（BaseLv 70＋マスケッティア Job 70＋グレネディア Job 70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>DEX依存の攻撃スタイルにより命中率に悩まされることが少なく、特化した火力を発揮しやすい職業です。</p>
+                    
+                    <p><strong>戦闘とレベリング:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>属性対応:</strong> 「カルネージショットゼロ」で霊属性にも対処可能です。「ヒール」や「身体能力」をプリザーブすることで、ソロでの活動範囲が広がります。</li>
+                        <li><strong>命中率の利点:</strong> 火力がDEXに依存するため、ステータスを上げる過程で命中率も自然に向上し、攻撃が当たりやすいという強みがあります。</li>
+                    </ul>
+
+                    <p><strong>装備とスフィアの活用:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>特効武器の準備:</strong> 銃には種族特効を持つものが多いため、安価な特効スフィアで長所を伸ばし、敵に合わせて持ち替える運用が定石です。</li>
+                        <li><strong>ボス戦:</strong> 火属性を弱点とするボスには極めて高い適性を持ちます。高火力を誇る一方で、範囲攻撃に耐えるための耐久確保も重要です。</li>
+                    </ul>
+                </div>
+
+                <h3 class="section-category"> 4．生産能力</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">・<strong>クリエイトボム:</strong> 自身のスキルとして爆弾を生産し、戦闘に使用することができます。</p>
+                </div>
+
+                <h3 class="section-category"> 5．推奨プリザーブスキル</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■ソロ・生存: ヒール、身体能力</p>
+                </div>
+
+                <h3 class="section-category"> 6．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadMusketeerSkills() {
+            // マスケッティアのjob_id（仮に27と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 27) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadMusketeerSkills);
+    </script>
+</body>
+</html>
