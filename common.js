@@ -55,7 +55,7 @@ async function loadSidebar() {
                 if (item.page_id === 'fencer') link = '2job_fencer.html';
                 if (item.page_id === 'battlesmith') link = '2job_battlesmith.html';
                 if (item.page_id === 'bishop') link = '2job_bishop.html';
-                if (item.page_id === 'berserk') link = '2job_berserk.html';
+                if (item.page_id === 'berserk') link = '3job_berserk.html';
                 html += `<li><a href="${link}">${item.display_name}</a></li>`;
             });
             html += `</ul>`;
