@@ -59,10 +59,10 @@
                     <table id="skill-table">
                         <thead>
                             <tr>
-                                <th style="width: 10%;">取得Lv</th>
-                                <th style="width: 15%;">PSV/ACT</th>
-                                <th style="width: 25%;">スキル名</th>
-                                <th style="width: 50%;">説明</th>
+                                <th style="width: 7%;">取得Lv</th>
+                                <th style="width: 7%;">PSV/ACT</th>
+                                <th style="width: 16%;">スキル名</th>
+                                <th style="width: 70%;">説明</th>
                             </tr>
                         </thead>
                         <tbody id="skill-body">
@@ -84,7 +84,7 @@
             const { data, error } = await client
                 .from('skills_list')
                 .select('*')
-                .eq('job_id', 29) 
+                .eq('job_id', 28) 
                 .order('習得レベル', { ascending: true });
 
             if (error) {
