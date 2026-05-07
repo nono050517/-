@@ -44,6 +44,7 @@ async function loadSidebar() {
                 if (item.page_id === 'warrior') link = '2job_warrior.html';
                 if (item.page_id === 'tempelion') link = '2job_tempelion.html';
                 if (item.page_id === 'ranger') link = '2job_ranger.html';
+                if (item.page_id === 'sage') link = '2job_sage.html';
                 if (item.page_id === 'grenadier') link = '2job_grenadier.html';
                 html += `<li><a href="${link}">${item.display_name}</a></li>`;
             });
