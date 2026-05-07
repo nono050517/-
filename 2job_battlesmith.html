@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>バトルスミス - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：バトルスミス (Battle Smith)</h2>
+                
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    バトルスミスは、高い耐久力とHPを誇り、戦場において自ら盾となると同時に、武器の研磨や防具の強化といったサポートを行うことを得意とする職業です。<br>
+                    仲間の装備性能を最大限に引き出し、パーティーの防御・攻撃両面を支える役割を担います。
+                </div>
+
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■条件: BaseLv 50以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■ジョブ条件: ソードマン JobLv 40以上、かつブラックスミス JobLv 40以上。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■主な派生三次職: ロイヤルガード（BaseLv 70＋バトルスミス Job 70＋テンペレシオン Job 70）。</p>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>ハンマー（槌）の扱いに特化しており、装備へのバフや敵へのデバフ、緊急時の補強スキルなどを習得します。</p>
+                    
+                    <p><strong>運用の特徴:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>装備サポート:</strong> 自身の戦闘能力だけでなく、周囲の仲間の武器や防具を一時的に強化するスキルが、高難易度のレイドやボス戦で非常に重宝されます。</li>
+                        <li><strong>耐久面:</strong> ソードマンの頑強さを引き継いでいるため、サブタンク（壁役）としての運用も可能です。</li>
+                        <li><strong>武器選択:</strong> スキルの多くがハンマー（メイス系）に関連しているため、高いATKと特殊効果を持つハンマーの収集が火力の鍵となります。</li>
+                    </ul>
+                </div>
+
+                <h3 class="section-category"> 4．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">取得Lv</th>
+                                <th style="width: 15%;">PSV/ACT</th>
+                                <th style="width: 25%;">スキル名</th>
+                                <th style="width: 50%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        async function loadBattleSmithSkills() {
+            // バトルスミスのjob_id（仮に32と設定）で取得
+            const { data, error } = await client
+                .from('skills_list')
+                .select('*')
+                .eq('job_id', 32) 
+                .order('習得レベル', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching skills:", error);
+                return;
+            }
+
+            const tbody = document.getElementById('skill-body');
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(skill => `
+                    <tr>
+                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                        <td class="row-skill">${skill.スキル名}</td>
+                        <td>${skill.説明 || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadBattleSmithSkills);
+    </script>
+</body>
+</html>
