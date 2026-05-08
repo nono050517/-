@@ -75,15 +75,15 @@
     <script src="common.js"></script>
 
     <script>
-        async function loadArcherSkills() {
-            // アーチャーのjob_idである 10 で取得
-            const { data, error } = await client
-                .from('skills_list')
-                .select('*')
-                .eq('job_id', 10) 
-                .order('習得レベル', { ascending: true });
+  async function loadArcherSkills() {
+    // 1. スキル基本情報の取得（アーチャー: job_id 10）
+    const { data: skills, error: skillError } = await client
+      .from('skills_list')
+      .select('*')
+      .eq('job_id', 10)
+      .order('習得レベル', { ascending: true });
 
-            if (skillError) {
+    if (skillError) {
       console.error("Error fetching skills:", skillError);
       return;
     }
