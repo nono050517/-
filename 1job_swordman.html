@@ -118,9 +118,36 @@
                         <td style="text-align:center;">${skill.習得レベル || '-'}</td>
                         <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
                         <td class="row-skill">${skill.スキル名}</td>
-                        <td>${skill.説明 || '-'}</td>
+                        <td>${skill.説明 || '-'}
+                        <div id="stats-${skill.No}" class="stats-list"></div>
+                        </td>
+                        
                     </tr>
                 `).join('');
+                // --- ここから追記 ---
+    // 別テーブルから全てのステータス変化データを取得
+    const { data: effects } = await client.from('skill_effects').select('*');
+
+    if (effects) {
+      effects.forEach(eff => {
+        // skill_id と一致する ID を持つ div を探す
+        const targetDiv = document.getElementById(`stats-${eff.skill_id}`);
+        if (targetDiv) {
+          let html = '';
+          // 習得条件があれば追加
+          if (eff.習得条件) {
+            html += `<div style="font-size: 0.85em; color: #666;">習得条件: ${eff.習得条件}</div>`;
+          }
+          // 項目と変化値があれば追加（横並びで見やすく）
+          if (eff.項目) {
+            html += `<span style="margin-right: 10px; font-weight: bold;">${eff.項目} ${eff.変化値}</span>`;
+          }
+          
+          targetDiv.innerHTML += html;
+        }
+      });
+    }
+    // --- ここまで追記 ---
             }
         }
 
