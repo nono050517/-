@@ -82,7 +82,7 @@
     const { data: skills, error: skillError } = await client
       .from('skills_list')
       .select('*')
-      .eq('job_id', 14)
+      .eq('job_id', 12)
       .order('習得レベル', { ascending: true });
 
     if (skillError) {
