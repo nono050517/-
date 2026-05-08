@@ -76,13 +76,13 @@
         </div>
     </div>
 
-    <script>
+   <script>
   async function loadArcherSkills() {
     // 1. スキル基本情報の取得（アーチャー: job_id 10）
     const { data: skills, error: skillError } = await client
       .from('skills_list')
       .select('*')
-      .eq('job_id', 15)
+      .eq('job_id', 10)
       .order('習得レベル', { ascending: true });
 
     if (skillError) {
@@ -138,5 +138,4 @@
   // ページ読み込み完了時に実行
   window.addEventListener('DOMContentLoaded', loadArcherSkills);
 </script>
-</body>
 </html>
