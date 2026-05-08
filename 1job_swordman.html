@@ -130,17 +130,29 @@
 
     if (effects) {
       effects.forEach(eff => {
-        // skill_id と一致する ID を持つ div を探す
         const targetDiv = document.getElementById(`stats-${eff.No}`);
+        
         if (targetDiv) {
           let html = '';
-          // 習得条件があれば追加
+          
+          // 1. 習得条件（青色・太字）
           if (eff.習得条件) {
-            html += `<div style="font-size: 0.85em; color: #666;">習得条件: ${eff.習得条件}</div>`;
+            html += `<div style="font-size: 0.85em; color: #1e90ff; font-weight: bold; margin-top: 4px;">習得条件: ${eff.習得条件}</div>`;
           }
-          // 項目と変化値があれば追加（横並びで見やすく）
-          if (eff.項目) {
-            html += `<span style="margin-right: 10px; font-weight: bold;">${eff.項目} ${eff.変化値}</span>`;
+          
+          // 2. 項目と変化値（ピンク背景・「＋」付き）
+          if (eff.項目 && eff.変化値) {
+            const val = String(eff.変化値);
+            // マイナスが含まれず、かつ空でない場合に「+」を付与
+            const sign = (!val.includes('-') && val !== '' && val !== 'NULL') ? '+' : '';
+            
+            // デザイン：ピンクのチップ形式
+            html += `
+              <span style="display: inline-block; background-color: #ffe4e1; color: #d02090; 
+                           padding: 2px 8px; border-radius: 12px; font-size: 0.85em; 
+                           font-weight: bold; margin-right: 5px; margin-top: 4px; border: 1px solid #ffb6c1;">
+                ${eff.項目} ${sign}${val}
+              </span>`;
           }
           
           targetDiv.innerHTML += html;
