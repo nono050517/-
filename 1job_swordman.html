@@ -131,7 +131,7 @@
     if (effects) {
       effects.forEach(eff => {
         // skill_id と一致する ID を持つ div を探す
-        const targetDiv = document.getElementById(`stats-${eff.skill_id}`);
+        const targetDiv = document.getElementById(`stats-${eff.No}`);
         if (targetDiv) {
           let html = '';
           // 習得条件があれば追加
