@@ -122,11 +122,12 @@
                   ${eff.項目} ${sign}${val}
                 </span>`;
             }
-            targetDiv.innerHTML += html;
-          }
-        });
-      }
-      // --- ここまで追記 ---
-
+targetDiv.innerHTML += html;
+        }
+      });
     }
-  }
+  } // ここで if (data && data.length > 0) を閉じる
+} // ここで async function loadArcherSkills() を閉じる
+
+window.addEventListener('DOMContentLoaded', loadArcherSkills);
+</script>
