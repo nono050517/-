@@ -118,41 +118,54 @@
     const tbody = document.getElementById('skill-body');
     if (skills && skills.length > 0) {
         tbody.innerHTML = skills.map(skill => {
-            // --- 武器情報の抽出 ---
+            // --- 武器情報の抽出と簡略化 ---
             const weaponTypes = [
                 '片手剣', '両手剣', 'メイス', 'ナックル', '弓矢', 
                 '片手斧', '両手斧', 'ハンマー', 'クロスボウ', 
                 '調理器具', '銃器', '二刀', '片手槍', '両手槍', '突剣'
             ];
-            // 値が「〇」の項目だけを抽出して「/」で結合
-            const availableWeapons = weaponTypes
-                .filter(w => skill[w] === '〇')
-                .join('/');
-
-            // --- 基本情報の組み立て ---
-            let infoHtml = '';
-            if (skill.消費SP && skill.消費SP !== 'NULL') infoHtml += `【消費SP】${skill.消費SP} `;
-            if (skill.属性 && skill.属性 !== 'NULL') infoHtml += `【属性】${skill.属性} `;
+            const activeWeapons = weaponTypes.filter(w => skill[w] === '〇');
             
-            // 効果時間の判定（分または秒）
-            if (skill['効果時間(min)'] && skill['効果時間(min)'] !== '0') {
-                infoHtml += `【効果時間】${skill['効果時間(min)']}分 `;
-            } else if (skill['効果時間(s)'] && skill['効果時間(s)'] !== '0') {
-                infoHtml += `【効果時間】${skill['効果時間(s)']}秒 `;
+            let weaponText = activeWeapons.join('/');
+            // 全武器に近い数（12種以上など）がある場合は「全武器」と表示
+            if (activeWeapons.length >= 13) {
+                weaponText = "全武器使用可能";
+            } else if (activeWeapons.length === 0) {
+                weaponText = "-";
             }
 
-            if (skill.習得条件 && skill.習得条件 !== 'NULL') infoHtml += `【取得条件】${skill.習得条件} `;
+            // --- 基本メタ情報の組み立て ---
+            let metaItems = [];
+            if (skill.消費SP && skill.消費SP !== 'NULL') metaItems.push(`【消費SP】${skill.消費SP}`);
+            if (skill.属性 && skill.属性 !== 'NULL') metaItems.push(`【属性】${skill.属性}`);
+            
+            if (skill['効果時間(min)'] && skill['効果時間(min)'] !== '0') {
+                metaItems.push(`【効果時間】${skill['効果時間(min)']}分`);
+            } else if (skill['効果時間(s)'] && skill['効果時間(s)'] !== '0') {
+                metaItems.push(`【効果時間】${skill['効果時間(s)']}秒`);
+            }
+
+            if (skill.習得条件 && skill.習得条件 !== 'NULL') metaItems.push(`【条件】${skill.習得条件}`);
+
+            const metaHtml = metaItems.length > 0 
+                ? `<div style="background: #f8f9fa; color: #666; border: 1px solid #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; display: inline-block; margin: 5px 0;">${metaItems.join(' ')}</div>` 
+                : '';
 
             return `
                 <tr>
                     <td style="text-align:center;">${skill.習得レベル || '-'}</td>
                     <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
-                    <td class="row-skill">${skill.スキル名}</td>
-                    <td>
-                        ${skill.説明 || '-'}
+                    <td class="row-skill" style="font-weight: bold; color: #333;">${skill.スキル名}</td>
+                    <td style="padding: 10px; line-height: 1.5;">
+                        <div style="font-weight: bold; color: #000; margin-bottom: 4px;">${skill.説明 || '-'}</div>
+                        
                         <div id="stats-${skill.No}" class="stats-list"></div>
-                        <div style="font-size: 0.9em; color: #555; margin-top: 4px;">${infoHtml}</div>
-                        ${availableWeapons ? `<div style="font-size: 0.85em; color: #666;">使用可能武器：${availableWeapons}</div>` : ''}
+                        
+                        ${metaHtml}
+                        
+                        <div style="font-size: 0.8em; color: #888; margin-top: 6px; padding-top: 4px; border-top: 1px dashed #eee;">
+                            <span style="background: #eee; color: #666; padding: 1px 4px; border-radius: 3px; margin-right: 4px;">武器</span> ${weaponText}
+                        </div>
                     </td>
                 </tr>
             `;
@@ -168,7 +181,7 @@
                         const val = String(eff.変化値);
                         const sign = (!val.includes('-') && val !== '' && val !== 'NULL') ? '+' : '';
                         html += `
-                          <span style="color: #d02090; font-size: 0.9em; font-weight: bold; margin-right: 12px; display: inline-block; margin-top: 2px;">
+                          <span style="color: #d02090; font-size: 0.95em; font-weight: bold; margin-right: 12px; display: inline-block; margin-top: 2px;">
                             ${eff.項目} ${sign}${val}
                           </span>`;
                     }
@@ -178,6 +191,8 @@
         }
     }
 }
+
+window.addEventListener('DOMContentLoaded', loadSwordmanSkills);
 
         window.addEventListener('DOMContentLoaded', loadSwordmanSkills);
     </script>
