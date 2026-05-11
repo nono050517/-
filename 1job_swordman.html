@@ -109,39 +109,45 @@
 
     const { data: effects } = await client.from('skill_effects').select('*');
 
-    if (skillError) return;
+    if (skillError) {
+        console.error("Error:", skillError);
+        return;
+    }
 
-    // --- 表示切替用チェックボックスの作成（表の上に追加） ---
-    const controlDiv = document.createElement('div');
-    controlDiv.style.cssText = "margin-bottom: 15px; padding: 10px; background: #fdfdfd; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9em;";
-    controlDiv.innerHTML = `
-        <strong style="margin-right:10px;">表示項目設定:</strong>
-        <label style="margin-right:10px;"><input type="checkbox" class="toggle-col" data-target="cls-weapon" checked> 装備可能武器</label>
-        <label style="margin-right:10px;"><input type="checkbox" class="toggle-col" data-target="cls-sp" checked> 消費SP</label>
-        <label style="margin-right:10px;"><input type="checkbox" class="toggle-col" data-target="cls-effect" checked> ステータス効果</label>
-        <label style="margin-right:10px;"><input type="checkbox" class="toggle-col" data-target="cls-cond" checked> 習得条件</label>
-    `;
-    const main = document.querySelector('main');
+    // --- 表示切替用チェックボックスの作成（エラー回避版） ---
     const table = document.getElementById('skill-table');
-    main.insertBefore(controlDiv, table);
+    if (table && !document.getElementById('skill-controls')) {
+        const controlDiv = document.createElement('div');
+        controlDiv.id = 'skill-controls';
+        controlDiv.style.cssText = "margin-bottom: 15px; padding: 10px; background: #fdfdfd; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9em;";
+        controlDiv.innerHTML = `
+            <strong style="margin-right:10px;">表示設定:</strong>
+            <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-weapon" checked> 装備武器</label>
+            <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-sp" checked> 消費SP</label>
+            <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-effect" checked> 効果/条件</label>
+        `;
+        // tableの直前に挿入（親要素を自動取得してエラーを防止）
+        table.parentNode.insertBefore(controlDiv, table);
+    }
 
     // --- 表の描画 ---
     const tbody = document.getElementById('skill-body');
     if (skills && skills.length > 0) {
         tbody.innerHTML = skills.map(skill => {
-            // 武器の判定
+            // 武器の判定（画像のカラム名に基づき抽出）
             const weaponTypes = ['片手剣', '両手剣', 'メイス', 'ナックル', '弓矢', '片手斧', '両手斧', 'ハンマー', 'クロスボウ', '調理器具', '銃器', '二刀', '片手槍', '両手槍', '突剣'];
             const activeWeapons = weaponTypes.filter(w => skill[w] === '〇');
             let weaponText = activeWeapons.length >= 13 ? "全武器使用可能" : (activeWeapons.join('/') || "-");
 
-            // メタデータの組み立て（個別にクラスを付与）
-            const spHtml = (skill.消費SP && skill.消費SP !== 'NULL') ? `<span class="cls-sp">【消費SP】${skill.消費SP} </span>` : '';
-            const attrHtml = (skill.属性 && skill.属性 !== 'NULL') ? `<span>【属性】${skill.属性} </span>` : '';
-            const condHtml = (skill.習得条件 && skill.習得条件 !== 'NULL') ? `<span class="cls-cond">【条件】${skill.習得条件} </span>` : '';
+            // メタ情報の組み立て
+            let metaItems = [];
+            if (skill.消費SP && skill.消費SP !== 'NULL') metaItems.push(`<span class="cls-sp">【消費SP】${skill.消費SP}</span>`);
+            if (skill.属性 && skill.属性 !== 'NULL') metaItems.push(`<span>【属性】${skill.属性}</span>`);
             
             let timeText = '';
-            if (skill['効果時間(min)'] && skill['効果時間(min)'] !== '0') timeText = `【効果時間】${skill['効果時間(min)']}分 `;
-            else if (skill['効果時間(s)'] && skill['効果時間(s)'] !== '0') timeText = `【効果時間】${skill['効果時間(s)']}秒 `;
+            if (skill['効果時間(min)'] && skill['効果時間(min)'] !== '0') timeText = `【効果時間】${skill['効果時間(min)']}分`;
+            else if (skill['効果時間(s)'] && skill['効果時間(s)'] !== '0') timeText = `【効果時間】${skill['効果時間(s)']}秒`;
+            if (timeText) metaItems.push(`<span>${timeText}</span>`);
 
             return `
                 <tr>
@@ -149,13 +155,12 @@
                     <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
                     <td class="row-skill" style="font-weight: bold;">${skill.スキル名}</td>
                     <td style="padding: 10px;">
-                        <div style="font-weight: bold; margin-bottom: 4px;">${skill.説明 || '-'}</div>
+                        <div style="font-weight: bold; color: #000; margin-bottom: 4px;">${skill.説明 || '-'}</div>
+                        
                         <div id="stats-${skill.No}" class="stats-list cls-effect"></div>
-                        <div class="meta-box" style="margin-top:5px;">
-                            <div style="background: #f8f9fa; border: 1px solid #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; display: inline-block;">
-                                ${spHtml} ${attrHtml} ${timeText} ${condHtml}
-                            </div>
-                        </div>
+                        
+                        ${metaItems.length > 0 ? `<div style="margin-top:5px;"><div style="background: #f8f9fa; border: 1px solid #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; display: inline-block; color: #666;">${metaItems.join(' ')}</div></div>` : ''}
+                        
                         <div class="cls-weapon" style="font-size: 0.8em; color: #888; margin-top: 6px; padding-top: 4px; border-top: 1px dashed #eee;">
                             <span style="background: #eee; color: #666; padding: 1px 4px; border-radius: 3px;">武器</span> ${weaponText}
                         </div>
@@ -168,9 +173,16 @@
         if (effects) {
             effects.forEach(eff => {
                 const targetDiv = document.getElementById(`stats-${eff.No}`);
-                if (targetDiv && eff.項目 && eff.変化値) {
-                    const sign = (!String(eff.変化値).includes('-')) ? '+' : '';
-                    targetDiv.innerHTML += `<span style="color: #d02090; font-size: 0.95em; font-weight: bold; margin-right: 12px;">${eff.項目} ${sign}${eff.変化値}</span>`;
+                if (targetDiv) {
+                    let html = '';
+                    if (eff.習得条件 && eff.習得条件 !== 'NULL') {
+                        html += `<div style="font-size: 0.85em; color: #1e90ff; font-weight: bold; margin-bottom: 2px;">習得条件: ${eff.習得条件}</div>`;
+                    }
+                    if (eff.項目 && eff.変化値) {
+                        const sign = (!String(eff.変化値).includes('-')) ? '+' : '';
+                        html += `<span style="color: #d02090; font-size: 0.95em; font-weight: bold; margin-right: 12px;">${eff.項目} ${sign}${eff.変化値}</span>`;
+                    }
+                    targetDiv.innerHTML += html;
                 }
             });
         }
@@ -188,8 +200,7 @@
     }
 }
 
-window.addEventListener('DOMContentLoaded', loadSwordmanSkills);
-
+// 実行指示
 window.addEventListener('DOMContentLoaded', loadSwordmanSkills);
 
         window.addEventListener('DOMContentLoaded', loadSwordmanSkills);
