@@ -100,67 +100,84 @@
     <!-- このページ専用のデータ取得処理 -->
     <script>
         async function loadSwordmanSkills() {
-            // common.jsで定義された client を使用
-            const { data, error } = await client
-                .from('skills_list')
-                .select('*')
-                .eq('job_id', 9) 
-                .order('習得レベル', { ascending: true });
+    // 1. スキル基本データの取得
+    const { data: skills, error: skillError } = await client
+        .from('skills_list')
+        .select('*')
+        .eq('job_id', 9) 
+        .order('習得レベル', { ascending: true });
 
-            if (error) {
-                console.error("Error fetching skills:", error);
-                return;
-            }
+    if (skillError) {
+        console.error("Error fetching skills:", skillError);
+        return;
+    }
 
-            const tbody = document.getElementById('skill-body');
-            if (data && data.length > 0) {
-                tbody.innerHTML = data.map(skill => `
-                    <tr>
-                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
-                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
-                        <td class="row-skill">${skill.スキル名}</td>
-                        <td>${skill.説明 || '-'}
-                        <div id="stats-${skill.No}" class="stats-list"></div>
-                        </td>
-                        
-                    </tr>
-                `).join('');
-                // --- ここから追記 ---
-    // 別テーブルから全てのステータス変化データを取得
+    // 2. ステータス変化（効果）データの取得
     const { data: effects } = await client.from('skill_effects').select('*');
 
-    if (effects) {
-      effects.forEach(eff => {
-        const targetDiv = document.getElementById(`stats-${eff.No}`);
-        
-        if (targetDiv) {
-          let html = '';
-          
-          // 1. 習得条件（青色・太字）
-          if (eff.習得条件) {
-            html += `<div style="font-size: 0.85em; color: #1e90ff; font-weight: bold; margin-top: 4px;">習得条件: ${eff.習得条件}</div>`;
-          }
-          
-          // 2. 項目と変化値（ピンク色の文字・「＋」付き）
-          if (eff.項目 && eff.変化値) {
-            const val = String(eff.変化値);
-            // マイナスが含まれず、かつ空でない場合に「+」を付与
-            const sign = (!val.includes('-') && val !== '' && val !== 'NULL') ? '+' : '';
+    const tbody = document.getElementById('skill-body');
+    if (skills && skills.length > 0) {
+        tbody.innerHTML = skills.map(skill => {
+            // --- 武器情報の抽出 ---
+            const weaponTypes = [
+                '片手剣', '両手剣', 'メイス', 'ナックル', '弓矢', 
+                '片手斧', '両手斧', 'ハンマー', 'クロスボウ', 
+                '調理器具', '銃器', '二刀', '片手槍', '両手槍', '突剣'
+            ];
+            // 値が「〇」の項目だけを抽出して「/」で結合
+            const availableWeapons = weaponTypes
+                .filter(w => skill[w] === '〇')
+                .join('/');
+
+            // --- 基本情報の組み立て ---
+            let infoHtml = '';
+            if (skill.消費SP && skill.消費SP !== 'NULL') infoHtml += `【消費SP】${skill.消費SP} `;
+            if (skill.属性 && skill.属性 !== 'NULL') infoHtml += `【属性】${skill.属性} `;
             
-            // 枠（backgroundやborder）をすべて削除し、文字色だけピンクにしました
-            html += `
-              <span style="color: #d02090; font-size: 0.9em; font-weight: bold; margin-right: 12px; display: inline-block; margin-top: 2px;">
-                ${eff.項目} ${sign}${val}
-              </span>`;
-          }
-          
-          targetDiv.innerHTML += html;
-        }
-      });
-    }
-    // --- ここまで追記 ---
+            // 効果時間の判定（分または秒）
+            if (skill['効果時間(min)'] && skill['効果時間(min)'] !== '0') {
+                infoHtml += `【効果時間】${skill['効果時間(min)']}分 `;
+            } else if (skill['効果時間(s)'] && skill['効果時間(s)'] !== '0') {
+                infoHtml += `【効果時間】${skill['効果時間(s)']}秒 `;
             }
+
+            if (skill.習得条件 && skill.習得条件 !== 'NULL') infoHtml += `【取得条件】${skill.習得条件} `;
+
+            return `
+                <tr>
+                    <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+                    <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+                    <td class="row-skill">${skill.スキル名}</td>
+                    <td>
+                        ${skill.説明 || '-'}
+                        <div id="stats-${skill.No}" class="stats-list"></div>
+                        <div style="font-size: 0.9em; color: #555; margin-top: 4px;">${infoHtml}</div>
+                        ${availableWeapons ? `<div style="font-size: 0.85em; color: #666;">使用可能武器：${availableWeapons}</div>` : ''}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        // --- ステータス変化（VIT+10など）の流し込み ---
+        if (effects) {
+            effects.forEach(eff => {
+                const targetDiv = document.getElementById(`stats-${eff.No}`);
+                if (targetDiv) {
+                    let html = '';
+                    if (eff.項目 && eff.変化値) {
+                        const val = String(eff.変化値);
+                        const sign = (!val.includes('-') && val !== '' && val !== 'NULL') ? '+' : '';
+                        html += `
+                          <span style="color: #d02090; font-size: 0.9em; font-weight: bold; margin-right: 12px; display: inline-block; margin-top: 2px;">
+                            ${eff.項目} ${sign}${val}
+                          </span>`;
+                    }
+                    targetDiv.innerHTML += html;
+                }
+            });
         }
+    }
+}
 
         window.addEventListener('DOMContentLoaded', loadSwordmanSkills);
     </script>
