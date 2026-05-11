@@ -100,97 +100,95 @@
     <!-- このページ専用のデータ取得処理 -->
     <script>
         async function loadSwordmanSkills() {
-    // 1. スキル基本データの取得
+    // 1. 基本データの取得
     const { data: skills, error: skillError } = await client
         .from('skills_list')
         .select('*')
         .eq('job_id', 9) 
         .order('習得レベル', { ascending: true });
 
-    if (skillError) {
-        console.error("Error fetching skills:", skillError);
-        return;
-    }
-
-    // 2. ステータス変化（効果）データの取得
     const { data: effects } = await client.from('skill_effects').select('*');
 
+    if (skillError) return;
+
+    // --- 表示切替用チェックボックスの作成（表の上に追加） ---
+    const controlDiv = document.createElement('div');
+    controlDiv.style.cssText = "margin-bottom: 15px; padding: 10px; background: #fdfdfd; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9em;";
+    controlDiv.innerHTML = `
+        <strong style="margin-right:10px;">表示項目設定:</strong>
+        <label style="margin-right:10px;"><input type="checkbox" class="toggle-col" data-target="cls-weapon" checked> 装備可能武器</label>
+        <label style="margin-right:10px;"><input type="checkbox" class="toggle-col" data-target="cls-sp" checked> 消費SP</label>
+        <label style="margin-right:10px;"><input type="checkbox" class="toggle-col" data-target="cls-effect" checked> ステータス効果</label>
+        <label style="margin-right:10px;"><input type="checkbox" class="toggle-col" data-target="cls-cond" checked> 習得条件</label>
+    `;
+    const main = document.querySelector('main');
+    const table = document.getElementById('skill-table');
+    main.insertBefore(controlDiv, table);
+
+    // --- 表の描画 ---
     const tbody = document.getElementById('skill-body');
     if (skills && skills.length > 0) {
         tbody.innerHTML = skills.map(skill => {
-            // --- 武器情報の抽出と簡略化 ---
-            const weaponTypes = [
-                '片手剣', '両手剣', 'メイス', 'ナックル', '弓矢', 
-                '片手斧', '両手斧', 'ハンマー', 'クロスボウ', 
-                '調理器具', '銃器', '二刀', '片手槍', '両手槍', '突剣'
-            ];
+            // 武器の判定
+            const weaponTypes = ['片手剣', '両手剣', 'メイス', 'ナックル', '弓矢', '片手斧', '両手斧', 'ハンマー', 'クロスボウ', '調理器具', '銃器', '二刀', '片手槍', '両手槍', '突剣'];
             const activeWeapons = weaponTypes.filter(w => skill[w] === '〇');
+            let weaponText = activeWeapons.length >= 13 ? "全武器使用可能" : (activeWeapons.join('/') || "-");
+
+            // メタデータの組み立て（個別にクラスを付与）
+            const spHtml = (skill.消費SP && skill.消費SP !== 'NULL') ? `<span class="cls-sp">【消費SP】${skill.消費SP} </span>` : '';
+            const attrHtml = (skill.属性 && skill.属性 !== 'NULL') ? `<span>【属性】${skill.属性} </span>` : '';
+            const condHtml = (skill.習得条件 && skill.習得条件 !== 'NULL') ? `<span class="cls-cond">【条件】${skill.習得条件} </span>` : '';
             
-            let weaponText = activeWeapons.join('/');
-            // 全武器に近い数（12種以上など）がある場合は「全武器」と表示
-            if (activeWeapons.length >= 13) {
-                weaponText = "全武器使用可能";
-            } else if (activeWeapons.length === 0) {
-                weaponText = "-";
-            }
-
-            // --- 基本メタ情報の組み立て ---
-            let metaItems = [];
-            if (skill.消費SP && skill.消費SP !== 'NULL') metaItems.push(`【消費SP】${skill.消費SP}`);
-            if (skill.属性 && skill.属性 !== 'NULL') metaItems.push(`【属性】${skill.属性}`);
-            
-            if (skill['効果時間(min)'] && skill['効果時間(min)'] !== '0') {
-                metaItems.push(`【効果時間】${skill['効果時間(min)']}分`);
-            } else if (skill['効果時間(s)'] && skill['効果時間(s)'] !== '0') {
-                metaItems.push(`【効果時間】${skill['効果時間(s)']}秒`);
-            }
-
-            if (skill.習得条件 && skill.習得条件 !== 'NULL') metaItems.push(`【条件】${skill.習得条件}`);
-
-            const metaHtml = metaItems.length > 0 
-                ? `<div style="background: #f8f9fa; color: #666; border: 1px solid #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; display: inline-block; margin: 5px 0;">${metaItems.join(' ')}</div>` 
-                : '';
+            let timeText = '';
+            if (skill['効果時間(min)'] && skill['効果時間(min)'] !== '0') timeText = `【効果時間】${skill['効果時間(min)']}分 `;
+            else if (skill['効果時間(s)'] && skill['効果時間(s)'] !== '0') timeText = `【効果時間】${skill['効果時間(s)']}秒 `;
 
             return `
                 <tr>
                     <td style="text-align:center;">${skill.習得レベル || '-'}</td>
                     <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
-                    <td class="row-skill" style="font-weight: bold; color: #333;">${skill.スキル名}</td>
-                    <td style="padding: 10px; line-height: 1.5;">
-                        <div style="font-weight: bold; color: #000; margin-bottom: 4px;">${skill.説明 || '-'}</div>
-                        
-                        <div id="stats-${skill.No}" class="stats-list"></div>
-                        
-                        ${metaHtml}
-                        
-                        <div style="font-size: 0.8em; color: #888; margin-top: 6px; padding-top: 4px; border-top: 1px dashed #eee;">
-                            <span style="background: #eee; color: #666; padding: 1px 4px; border-radius: 3px; margin-right: 4px;">武器</span> ${weaponText}
+                    <td class="row-skill" style="font-weight: bold;">${skill.スキル名}</td>
+                    <td style="padding: 10px;">
+                        <div style="font-weight: bold; margin-bottom: 4px;">${skill.説明 || '-'}</div>
+                        <div id="stats-${skill.No}" class="stats-list cls-effect"></div>
+                        <div class="meta-box" style="margin-top:5px;">
+                            <div style="background: #f8f9fa; border: 1px solid #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; display: inline-block;">
+                                ${spHtml} ${attrHtml} ${timeText} ${condHtml}
+                            </div>
+                        </div>
+                        <div class="cls-weapon" style="font-size: 0.8em; color: #888; margin-top: 6px; padding-top: 4px; border-top: 1px dashed #eee;">
+                            <span style="background: #eee; color: #666; padding: 1px 4px; border-radius: 3px;">武器</span> ${weaponText}
                         </div>
                     </td>
                 </tr>
             `;
         }).join('');
 
-        // --- ステータス変化（VIT+10など）の流し込み ---
+        // ステータス効果の流し込み
         if (effects) {
             effects.forEach(eff => {
                 const targetDiv = document.getElementById(`stats-${eff.No}`);
-                if (targetDiv) {
-                    let html = '';
-                    if (eff.項目 && eff.変化値) {
-                        const val = String(eff.変化値);
-                        const sign = (!val.includes('-') && val !== '' && val !== 'NULL') ? '+' : '';
-                        html += `
-                          <span style="color: #d02090; font-size: 0.95em; font-weight: bold; margin-right: 12px; display: inline-block; margin-top: 2px;">
-                            ${eff.項目} ${sign}${val}
-                          </span>`;
-                    }
-                    targetDiv.innerHTML += html;
+                if (targetDiv && eff.項目 && eff.変化値) {
+                    const sign = (!String(eff.変化値).includes('-')) ? '+' : '';
+                    targetDiv.innerHTML += `<span style="color: #d02090; font-size: 0.95em; font-weight: bold; margin-right: 12px;">${eff.項目} ${sign}${eff.変化値}</span>`;
                 }
             });
         }
+
+        // --- 切り替えイベントの設定 ---
+        document.querySelectorAll('.toggle-col').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const targetClass = e.target.getAttribute('data-target');
+                const elements = document.getElementsByClassName(targetClass);
+                for (let el of elements) {
+                    el.style.display = e.target.checked ? '' : 'none';
+                }
+            });
+        });
     }
 }
+
+window.addEventListener('DOMContentLoaded', loadSwordmanSkills);
 
 window.addEventListener('DOMContentLoaded', loadSwordmanSkills);
 
