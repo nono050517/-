@@ -75,12 +75,12 @@
     <script src="common.js"></script>
 
     <script>
-  async function loadSwordmanSkills() {
+  async function loadarcherSkills() {
     // 1. 基本データの取得
     const { data: skills, error: skillError } = await client
         .from('skills_list')
         .select('*')
-        .eq('job_id', 9) 
+        .eq('job_id', 10) 
         .order('習得レベル', { ascending: true });
 
     const { data: effects } = await client.from('skill_effects').select('*');
