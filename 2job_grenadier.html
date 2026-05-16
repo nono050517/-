@@ -88,35 +88,64 @@
     <script src="common.js"></script>
 
     <script>
-        async function loadGrenadierSkills() {
-            // グレネディアのjob_id（仮に24と設定）で取得
-            const { data, error } = await client
-                .from('skills_list')
-                .select('*')
-                .eq('job_id', 23) 
-                .order('習得レベル', { ascending: true });
+        async function loadArcherSkills() {
+    // 1. スキル基本情報の取得（アーチャー: job_id 10）
+    const { data: skills, error: skillError } = await client
+      .from('skills_list')
+      .select('*')
+      .eq('job_id', 23)
+      .order('習得レベル', { ascending: true });
 
-            if (error) {
-                console.error("Error fetching skills:", error);
-                return;
+    if (skillError) {
+      console.error("Error fetching skills:", skillError);
+      return;
+    }
+
+    const tbody = document.getElementById('skill-body');
+    if (skills && skills.length > 0) {
+      // 2. 基本表の作成（受け皿となるdivも一緒に作る）
+      tbody.innerHTML = skills.map(skill => `
+        <tr>
+          <td style="text-align:center;">${skill.習得レベル || '-'}</td>
+          <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
+          <td class="row-skill">${skill.スキル名}</td>
+          <td>
+            ${skill.説明 || '-'}
+            <div id="stats-${skill.No}" class="stats-list"></div>
+          </td>
+        </tr>
+      `).join('');
+
+      // 3. ステータス効果の取得と流し込み
+      const { data: effects, error: effectError } = await client
+        .from('skill_effects')
+        .select('*');
+
+      if (!effectError && effects) {
+        effects.forEach(eff => {
+          const targetDiv = document.getElementById(`stats-${eff.No}`);
+          if (targetDiv) {
+            let html = '';
+            // 習得条件（青色）
+            if (eff.習得条件) {
+              html += `<div style="font-size: 0.85em; color: #1e90ff; font-weight: bold; margin-top: 4px;">習得条件: ${eff.習得条件}</div>`;
             }
-
-            const tbody = document.getElementById('skill-body');
-            if (data && data.length > 0) {
-                tbody.innerHTML = data.map(skill => `
-                    <tr>
-                        <td style="text-align:center;">${skill.習得レベル || '-'}</td>
-                        <td style="text-align:center;">${skill['PSV/ACT'] || '-'}</td>
-                        <td class="row-skill">${skill.スキル名}</td>
-                        <td>${skill.説明 || '-'}</td>
-                    </tr>
-                `).join('');
-            } else {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">スキルデータが見つかりませんでした。</td></tr>';
+            // ステータス効果（ピンク色文字）
+            if (eff.項目 && eff.変化値) {
+              const val = String(eff.変化値);
+              const sign = (!val.includes('-') && val !== '' && val !== 'NULL') ? '+' : '';
+              html += `
+                <span style="color: #d02090; font-size: 0.9em; font-weight: bold; margin-right: 12px; display: inline-block; margin-top: 2px;">
+                  ${eff.項目} ${sign}${val}
+                </span>`;
             }
-        }
+            targetDiv.innerHTML += html;
+          }
+        });
+      }
+    }
+  }
 
-        window.addEventListener('DOMContentLoaded', loadGrenadierSkills);
-    </script>
-</body>
-</html>
+  // ページ読み込み完了時に実行
+  window.addEventListener('DOMContentLoaded', loadArcherSkills);
+</script>
