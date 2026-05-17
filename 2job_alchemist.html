@@ -82,12 +82,13 @@
     <script src="common.js"></script>
 
     <script>
-  async function loadArcherSkills() {
-    // 1. スキル基本情報の取得（アーチャー: job_id 10）
+  async function loadarcherSkills() {
+    // 1. 基本データの取得
+    // clientが正しく初期化されていることを確認してください
     const { data: skills, error: skillError } = await client
-      .from('skills_list')
-      .select('*')
-      .eq('job_id', 25)
+        .from('skills_list')
+        .select('*')
+        .eq('job_id', 25) 
         .order('習得レベル', { ascending: true });
 
     const { data: effects } = await client.from('skill_effects').select('*');
