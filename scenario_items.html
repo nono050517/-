@@ -267,7 +267,7 @@ function generateLevelRangeOptions() {
         html += `<option value="${end}">${start} ～ ${end}</option>`;
     }
     lvlSelect.innerHTML = html;
-    lvlSelect.value = "100"; // 初期位置を96〜100に設定
+    lvlSelect.value = "100"; 
 }
 
 function populateSelectBoxes() {
@@ -324,44 +324,45 @@ function setupEventListeners() {
     btnExecute.addEventListener('click', calculateMaterials);
 }
 
-// 【超強化版】全角コロン・半角コロン・英数字の全角半角ブレをすべて吸収する関数
+// 【バグ完全修正版】日本語の「の」を絶対に誤爆カットしない超精密パース処理
 function parseItemStringToArrayList(itemStr, playerLevel) {
     if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
     
-    // 改行コードや半角全角スペース、コンマ、読点でトークンに細かくバラす
     const rawTokens = itemStr.split(/[\s\n\r,、]+/);
     const results = [];
     
-    // 直前のレベル合致判定を引き継ぐ状態管理
     let lastLevelMatchState = true; 
 
     rawTokens.forEach(token => {
         let t = token.trim();
         if (!t) return;
 
-        // メモ書きカッコは完全スルー
         if (t.startsWith('(') || t.startsWith('（')) {
             return;
         }
 
-        // 判定を安定させるために、全角の「：」をプログラム内部で一瞬半角の「:」に統一する
         t = t.replace(/：/g, ':');
 
         let currentName = t;
         let currentCount = 1;
 
-        // 個数（×25 や *25）の切り離し
-        const countMatch = t.match(/^(.+?)(?:×|\*|\s)(\d+)(?:個)?$/);
+        // 【大修正】日本語の文字を誤認しないよう、末尾の「×数字」「*数字」だけを狙い撃ちして切り離す
+        const countMatch = t.match(/^(.+?)(?:×|\*)(\d+)(?:個)?$/);
         if (countMatch) {
             currentName = countMatch[1].trim();
             currentCount = parseInt(countMatch[2], 10);
+        } else {
+            // 末尾がただの数字（例: 竜の羽 20）になっている場合用のフォールバック
+            const spaceNumMatch = t.match(/^(.+?)\s+(\d+)(?:個)?$/);
+            if (spaceNumMatch) {
+                currentName = spaceNumMatch[1].trim();
+                currentCount = parseInt(spaceNumMatch[2], 10);
+            }
         }
 
         let cleanName = currentName;
 
-        // 「以下」条件の全自動判定
         if (currentName.includes('以下:')) {
-            // 全角数字が含まれていてもいいように半角に置換してキャプチャ
             const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
             const matchLvl = normalizedStr.match(/^(\d+)以下:(.+)$/);
             if (matchLvl) {
@@ -370,7 +371,6 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
                 lastLevelMatchState = (playerLevel <= limitLvl); 
             }
         } 
-        // 「以上」条件の全自動判定（Wadaさんの入力スタイルに完全準拠！）
         else if (currentName.includes('以上:')) {
             const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
             const matchLvl = normalizedStr.match(/^(\d+)以上:(.+)$/);
@@ -381,9 +381,7 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
             }
         }
         
-        // レベル適合しているアイテムだけをカード化対象にする
         if (lastLevelMatchState) {
-            // コロンが名前に残ってしまっていた場合の最終お掃除
             if (cleanName.includes(':')) {
                 cleanName = cleanName.split(':')[1].trim();
             }
