@@ -324,10 +324,11 @@ function setupEventListeners() {
     btnExecute.addEventListener('click', calculateMaterials);
 }
 
-// 日本語の名称を100%完全な状態で切り出す精密ロジック
+// セル内改行データを配列化して1行ずつ確実にスキャンするパースロジック
 function parseItemStringToArrayList(itemStr, playerLevel) {
     if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
     
+    // 改行コード（\n、\r）またはカンマで行ごとに完全に分離
     const lines = itemStr.split(/[\n\r,、]+/);
     const results = [];
 
@@ -335,59 +336,65 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
         let rawLine = lineToken.trim();
         if (!rawLine) return;
 
+        // 行のなかにスペース区切りがある場合を想定してさらに分解
         const individualTokens = rawLine.split(/[\s\t]+/);
 
         individualTokens.forEach(token => {
             let t = token.trim();
             if (!t) return;
 
+            // カッコ内のメモ書き行は最優先で完全に隠蔽
             if (t.startsWith('(') || t.startsWith('（')) {
                 return;
             }
 
-            // 個別のトークン処理ごとに、レベル判定状態を確実にTRUEで初期化
+            // 各アイテム（各行）ごとに判定フラグをTRUEで初期化
             let currentLineMatchState = true; 
             t = t.replace(/：/g, ':');
 
-            let currentName = t;
-            let currentCount = 1;
+            let targetText = t;
 
-            // 貪欲マッチに変更：末尾の「×個数」や「*個数」の直前までをアイテム名として最大幅で取得
-            const countMatch = t.match(/^([^×\*]+)(?:×|\*)(\d+)(?:個)?$/);
-            if (countMatch) {
-                currentName = countMatch[1].trim();
-                currentCount = parseInt(countMatch[2], 10);
-            } else {
-                const directNumMatch = t.match(/^([^0-9０-９]+)(\d+)(?:個)?$/);
-                if (directNumMatch) {
-                    currentName = directNumMatch[1].trim();
-                    currentCount = parseInt(directNumMatch[2], 10);
-                }
-            }
-
-            let cleanName = currentName;
-
-            if (currentName.includes('以下:')) {
-                const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+            // 1. レベル制限表記（「80以上:」など）を検知して判定し、後半の素材表記だけを切り出す
+            if (t.includes('以下:')) {
+                const normalizedStr = t.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
                 const matchLvl = normalizedStr.match(/^(\d+)以下:(.+)$/);
                 if (matchLvl) {
                     const limitLvl = parseInt(matchLvl[1], 10);
-                    cleanName = matchLvl[2].trim();
                     currentLineMatchState = (playerLevel <= limitLvl); 
+                    targetText = matchLvl[2].trim();
                 }
             } 
-            else if (currentName.includes('以上:')) {
-                const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+            else if (t.includes('以上:')) {
+                const normalizedStr = t.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
                 const matchLvl = normalizedStr.match(/^(\d+)以上:(.+)$/);
                 if (matchLvl) {
                     const limitLvl = parseInt(matchLvl[1], 10);
-                    cleanName = matchLvl[2].trim();
                     currentLineMatchState = (playerLevel >= limitLvl); 
+                    targetText = matchLvl[2].trim();
                 }
             }
-            
+
+            // 2. 判定をパスした文字列から名前と数量（× or *）を確実に切り離す
             if (currentLineMatchState) {
-                cleanName = cleanName.replace(/^[「『"']+|[」』"']+$/g, '').trim();
+                let currentName = targetText;
+                let currentCount = 1;
+
+                // 貪欲マッチで末尾の数量指定（×数字 または *数字）の直前までを一網打尽にする
+                const countMatch = targetText.match(/^([^×\*]+)(?:×|\*)(\d+)(?:個)?$/);
+                if (countMatch) {
+                    currentName = countMatch[1].trim();
+                    currentCount = parseInt(countMatch[2], 10);
+                } else {
+                    // 記号なしで末尾に直接数字がくっついている場合の安全用フォールバック
+                    const directNumMatch = targetText.match(/^([^0-9０-９]+)(\d+)(?:個)?$/);
+                    if (directNumMatch) {
+                        currentName = directNumMatch[1].trim();
+                        currentCount = parseInt(directNumMatch[2], 10);
+                    }
+                }
+
+                // 前後の余計なカギカッコなどをトリムしてお掃除
+                let cleanName = currentName.replace(/^[「『"']+|[」』"']+$/g, '').trim();
 
                 if (cleanName) {
                     results.push({ name: cleanName, count: currentCount });
@@ -399,7 +406,7 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
     return results;
 }
 
-// ドロップ情報の完全一致逆引き判定
+// ドロップヒントの完全一致逆引き関数
 function findDropHintForMateral(itemName) {
     if (!itemName) return '';
     let hintFound = '';
