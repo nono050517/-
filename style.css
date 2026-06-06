@@ -48,3 +48,29 @@ td { border: 1px solid #ffdae0; padding: 4px; color: #000; }
 .source-container { font-size: 10px; background: #fffafa; border: 1px solid #ffb6c1; padding: 3px 6px; margin: 2px 0 4px 20px; border-radius: 4px; }
 .cb { vertical-align: middle; margin: 0 3px; cursor: pointer; accent-color: #e91e63; }
 .history-box { background-color: #fdf5f5; border: 1px solid #f5e1e1; padding: 10px; max-height: 100px; overflow-y: auto; }
+
+/* アコーディオンの各アイテム（1. 精霊の導き など）の上下余白を狭く */
+.accordion-item-header { /* クラス名は実際のHTMLに合わせて変更してください */
+    padding-top: 8px !important;   /* 現状より数ピクセル小さく */
+    padding-bottom: 8px !important;
+    min-height: auto !important;   /* 高さが固定されている場合の解除 */
+}
+
+/* 中身のドロップダウン（目的・依頼人など）の箇条書きの行間を狭く */
+.accordion-content ul li {
+    margin-top: 4px !important;    /* 上下の隙間を狭める */
+    margin-bottom: 4px !important;
+    line-height: 1.4 !important;   /* 文字自体の行間を少し詰める */
+}
+
+/* コンテンツ全体のパディングも少しタイトに */
+.accordion-content {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+}
+
+.accordion-main-header { /* 「序章～」のヘッダー部分のクラス */
+    background-color: #ffffff !important; /* 背景を純白に */
+    color: #2b2b2b !important;            /* 文字色を少し濃いチャコール〜黒に */
+    border: 1px solid #dcdcdc !important; /* 枠線を少し明るく */
+}
