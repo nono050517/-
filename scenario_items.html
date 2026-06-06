@@ -6,8 +6,8 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 共通Menuやタイトルなどの外枠を絶対に破壊しないよう、ツール専用の独自名前空間でスタイルを隔離 */
-        .scenario-calc-container .notice-warning-box {
+        /* 「現在調査中」アナウンスボックスのスタイル */
+        .notice-warning-box {
             background-color: #fff5f5;
             color: #c53030;
             border: 1px solid #feb2b2;
@@ -20,12 +20,12 @@
             display: flex;
             align-items: center;
         }
-        .scenario-calc-container .notice-warning-box span {
+        .notice-warning-box span {
             margin-right: 8px;
             font-size: 1.2em;
         }
 
-        .scenario-calc-container .tool-panel {
+        .tool-panel {
             background-color: #fdfdfd;
             border: 1px solid #ccc;
             border-radius: 6px;
@@ -33,16 +33,16 @@
             margin-bottom: 25px;
             font-size: 1.05em;
         }
-        .scenario-calc-container .form-group {
+        .form-group {
             margin-bottom: 18px;
         }
-        .scenario-calc-container .form-group label {
+        .form-group label {
             display: block;
             font-weight: bold;
             margin-bottom: 6px;
             color: #333;
         }
-        .scenario-calc-container .form-control {
+        .form-control {
             width: 100%;
             max-width: 500px;
             padding: 10px;
@@ -51,15 +51,15 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
-        .scenario-calc-container .radio-group {
+        .radio-group {
             margin-top: 6px;
         }
-        .scenario-calc-container .radio-label {
+        .radio-label {
             margin-right: 20px;
             cursor: pointer;
             font-weight: normal;
         }
-        .scenario-calc-container .btn-calc {
+        .btn-calc {
             background-color: #1e90ff;
             color: #fff;
             border: none;
@@ -70,11 +70,11 @@
             cursor: pointer;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .scenario-calc-container .btn-calc:hover {
+        .btn-calc:hover {
             background-color: #007ae6;
         }
         
-        .scenario-calc-container .conditional-box {
+        .conditional-box {
             display: none;
             background-color: #f0f8ff;
             padding: 15px;
@@ -83,10 +83,10 @@
             border-radius: 0 4px 4px 0;
         }
 
-        .scenario-calc-container #result-container {
+        #result-container {
             margin-top: 25px;
         }
-        .scenario-calc-container .result-title {
+        .result-title {
             font-size: 1.3em;
             font-weight: bold;
             border-bottom: 2px solid #333;
@@ -94,7 +94,7 @@
             margin-bottom: 15px;
             color: #111;
         }
-        .scenario-calc-container .material-card {
+        .material-card {
             background: #faf9f6;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -102,24 +102,24 @@
             margin-bottom: 12px;
             font-size: 1.05em;
         }
-        .scenario-calc-container .material-name {
+        .material-name {
             font-size: 1.15em;
             font-weight: bold;
             color: #b22222;
         }
-        .scenario-calc-container .material-total {
+        .material-total {
             float: right;
             font-size: 1.3em;
             font-weight: bold;
             color: #ff4500;
         }
-        .scenario-calc-container .drop-info-line {
+        .drop-info-line {
             margin-top: 4px;
             font-size: 0.95em;
             color: #2e8b57;
             font-weight: bold;
         }
-        .scenario-calc-container .material-breakdown {
+        .material-breakdown {
             margin: 8px 0 0 0;
             padding-left: 20px;
             color: #555;
@@ -128,7 +128,7 @@
             border-top: 1px dashed #eee;
             padding-top: 6px;
         }
-        .scenario-calc-container .stop-notice {
+        .stop-notice {
             background-color: #fff3cd;
             color: #856404;
             padding: 12px;
@@ -141,22 +141,18 @@
 </head>
 <body>
     <div class="wrapper">
-        <header class="main-header">
-            <h1 class="site-title">エリシアオンライン アーカイブス</h1>
-        </header>
-
         <div class="container">
             <nav id="sidebar-nav"></nav>
             
-            <main class="scenario-calc-container">
+            <main>
                 <h2 class="page-title" style="font-size: 1.8em;">シナリオ必要素材数計算ツール</h2>
                 
-                <h3 class="section-category" style="font-size: 1.3em;">1．ツールの概要</h3>
-                <div class="item-content" style="font-size: 1.05em; line-height: 1.6; margin-bottom: 20px;">
+                <h3 class="section-category" style="font-size: 1.3em;"> 1．ツールの概要</h3>
+                <div class="item-content" style="font-size: 1.05em; line-height: 1.6;">
                     現在の進行クエストと目標条件、プレイヤーの現在のベースレベル帯を指定することで、自分に必要なアイテムの種類と合計数をピンポイントで一括計算します。
                 </div>
 
-                <h3 class="section-category" style="font-size: 1.3em;">2．条件設定</h3>
+                <h3 class="section-category" style="font-size: 1.3em;"> 2．条件設定</h3>
                 <div class="item-content">
 
                     <div class="notice-warning-box">
@@ -175,7 +171,7 @@
                         <div class="form-group">
                             <label for="player-level-range">あなたの現在のレベル帯（BaseLv）は？</label>
                             <select id="player-level-range" class="form-control" style="width: 200px;">
-                            </select>
+                                </select>
                             <small style="color: #666; display: block; margin-top: 4px;">※「39以下」「40以上」などのレベル帯分岐素材を自動で判別するために使用します。</small>
                         </div>
 
@@ -234,10 +230,8 @@ let rawScenarioNodes = [];
 window.addEventListener('DOMContentLoaded', initializeTool);
 
 async function initializeTool() {
-    // 5刻み・最高Lv150ストップ仕様のセレクトボックス展開
     generateLevelRangeOptions();
 
-    // Supabaseからシナリオデータの取得
     const { data: scenarioNodes, error } = await client
         .from('scenario_nodes')
         .select('*');
@@ -250,7 +244,6 @@ async function initializeTool() {
     if (scenarioNodes && Array.isArray(scenarioNodes)) {
         rawScenarioNodes = scenarioNodes;
         
-        // 未設定タイトル「-」や不要データ、おまけ行の吸い込み誤合体を完全に防ぐ保護フィルタ
         allQuests = scenarioNodes.filter(node => {
             const title = (node.title || '').trim();
             const steps = (node.clear_steps || '').trim();
@@ -263,7 +256,6 @@ async function initializeTool() {
     setupEventListeners();
 }
 
-// ② 5刻み・最高Lv150ストップ仕様のUIオートビルド
 function generateLevelRangeOptions() {
     const lvlSelect = document.getElementById('player-level-range');
     if (!lvlSelect) return;
@@ -332,22 +324,21 @@ function setupEventListeners() {
     btnExecute.addEventListener('click', calculateMaterials);
 }
 
-// ① 日本語「の」＆記号の安全ガード ＋ カッコ()隠蔽 ＋ レベル帯自動仕分け
+// 【絶対安全パース】日本語や記号を誤認・誤削除しない超精密な切り分けロジック
 function parseItemStringToArrayList(itemStr, playerLevel) {
     if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
     
-    // 通常素材の並び（自動バラシ対応）用のトークン解体
+    // トークンをバラす
     const rawTokens = itemStr.split(/[\s\n\r,、]+/);
     const results = [];
     
-    // ③ クエスト内コンテキストの初期化（前行のTRUE/FALSE引きずり事故を徹底遮断）
     let currentLineMatchState = true; 
 
     rawTokens.forEach(token => {
         let t = token.trim();
         if (!t) return;
 
-        // 【セル内のメモ書きの隠蔽方法】カッコ表記は完全無視
+        // メモ用カッコ行は完全除外
         if (t.startsWith('(') || t.startsWith('（')) {
             return;
         }
@@ -357,22 +348,31 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
         let currentName = t;
         let currentCount = 1;
 
-        // 末尾の「×個数」や「*個数」の超精密切り離し（日本語「の」を絶対に巻き添えにしない）
-        const countMatch = t.match(/^(.+?)(?:×|\*)(\d+)(?:個)?$/);
+        // 【修正箇所】末尾の「×個数(個)」や「*個数(個)」を安全かつ厳密に切り離すロジック
+        // アイテム名に非貪欲を使わず、末尾の記号・数字・「個」の塊を一意にマッチングさせる
+        const countMatch = t.match(/^([^×\*]+?)(?:×|\*)(\d+)(?:個)?$/);
         if (countMatch) {
             currentName = countMatch[1].trim();
             currentCount = parseInt(countMatch[2], 10);
         } else {
+            // ×や*がなく、スペース区切りで末尾が数字（および「個」）になっているケースに対応
             const spaceNumMatch = t.match(/^(.+?)\s+(\d+)(?:個)?$/);
             if (spaceNumMatch) {
-                spaceNumMatch[1].trim();
+                currentName = spaceNumMatch[1].trim();
                 currentCount = parseInt(spaceNumMatch[2], 10);
+            } else {
+                // 個数表記がなく、単一のアイテム名で末尾に「10個」のように直接くっついているケースのフォールバック
+                const directNumMatch = t.match(/^([^0-9０-９]+)(\d+)(?:個)?$/);
+                if (directNumMatch) {
+                    currentName = directNumMatch[1].trim();
+                    currentCount = parseInt(directNumMatch[2], 10);
+                }
             }
         }
 
         let cleanName = currentName;
 
-        // 【レベル帯分岐素材：〇〇以下】の自動仕分け
+        // レベル条件（以下）の抽出
         if (currentName.includes('以下:')) {
             const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
             const matchLvl = normalizedStr.match(/^(\d+)以下:(.+)$/);
@@ -382,7 +382,7 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
                 currentLineMatchState = (playerLevel <= limitLvl); 
             }
         } 
-        // 【レベル帯分岐素材：〇〇以上】の自動仕分け
+        // レベル条件（以上）の抽出
         else if (currentName.includes('以上:')) {
             const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
             const matchLvl = normalizedStr.match(/^(\d+)以上:(.+)$/);
@@ -398,7 +398,7 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
                 cleanName = cleanName.split(':')[1].trim();
             }
             
-            // カギカッコ「」や引用符だけをピンポイントでノーダメージ除去する安全ガード
+            // カギカッコや引用符だけをピンポイントでお掃除
             cleanName = cleanName.replace(/^[「『"']+|[」』"']+$/g, '').trim();
 
             if (cleanName) {
@@ -410,7 +410,6 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
     return results;
 }
 
-// ④ ドロップ情報の全自動「ヒント」逆引きロジック（「ヒント：」文言除去仕様）
 function findDropHintForMateral(itemName) {
     let hintFound = '';
     for (let node of rawScenarioNodes) {
@@ -418,6 +417,7 @@ function findDropHintForMateral(itemName) {
         if (steps.includes('ヒント：') || steps.includes('ヒント:')) {
             const lines = steps.split(/\n|<br\s*\/?>|\\n/);
             for (let line of lines) {
+                // アイテム名がカギカッコ等で囲まれていても部分一致で確実にヒットさせる
                 if ((line.startsWith('ヒント：') || line.startsWith('ヒント:')) && line.includes(itemName)) {
                     hintFound = line.replace(/^ヒント[：:]\s*/, '').trim();
                     break;
@@ -429,7 +429,6 @@ function findDropHintForMateral(itemName) {
     return hintFound;
 }
 
-// コア計算ロジックメインエンジン
 function calculateMaterials() {
     const startValue = parseFloat(document.getElementById('start-quest').value);
     const condType = document.querySelector('input[name="end-condition-type"]:checked').value;
@@ -444,7 +443,8 @@ function calculateMaterials() {
 
     let targetedQuests = allQuests.slice(startIndex);
 
-    // 暁ルート・魔女ルートの動的絞り込み
+    // ルート絞り込み
+    // 各クエスト処理開始時にレベル判定状態をフレッシュにリセット
     targetedQuests = targetedQuests.filter(q => {
         const scene = q.scene || '';
         if (scene.includes('暁ルート') && chosenRoute !== '暁') return false;
@@ -452,7 +452,7 @@ function calculateMaterials() {
         return true;
     });
 
-    // 目標クエスト境界線の判定
+    // 目標クエストまでのカット
     if (condType === 'target-quest') {
         const endValue = parseFloat(document.getElementById('end-quest').value);
         const endIndex = targetedQuests.findIndex(q => parseFloat(q.node_id) === endValue);
@@ -472,7 +472,6 @@ function calculateMaterials() {
         
         if (q.required_item) itemStringsCollect.push(q.required_item);
 
-        // titleが「-」（ハイフン）の行を含む、おまけデータ行の合体処理
         const relatedExtras = rawScenarioNodes.filter(node => {
             const nid = parseFloat(node.node_id);
             const title = (node.title || '').trim();
@@ -494,7 +493,7 @@ function calculateMaterials() {
                     if (condType === 'bag-limit' && uniqueItemCount >= bagLimitValue) {
                         stopNoticeHtml = `
                             <div class="stop-notice">
-                                ⚠️ 持ち物の空き枠上限（${bagLimitValue}種類）に達したため、No.${currentId}「${q.title === '-' ? '名称未設定クエスト' : q.title}」の途中で計算をストップしました。
+                                ⚠️ 持ち物の空き枠上限（${bagLimitValue}種類）に達したため、No.${currentId}「${q.title}」の途中で計算をストップしました。
                             </div>`;
                         brokenLoop = true;
                         break;
@@ -504,9 +503,7 @@ function calculateMaterials() {
                 }
 
                 materialSummary[parsed.name].total += parsed.count;
-                // ハイフン行（未設定クエスト）は画面上で「名称未設定クエスト」として綺麗に仮表示
-                const displayTitle = q.title === '-' ? '名称未設定クエスト' : q.title;
-                materialSummary[parsed.name].breakdown.push(`No.${currentId} ${displayTitle} [${parsed.count}個]`);
+                materialSummary[parsed.name].breakdown.push(`No.${currentId} ${q.title} [${parsed.count}個]`);
             }
             if (brokenLoop) break;
         }
@@ -527,7 +524,6 @@ function calculateMaterials() {
     itemNames.forEach(name => {
         const itemData = materialSummary[name];
         const dropHintText = findDropHintForMateral(name);
-        // ④ ドロップ情報のスマートな緑文字表示（「ヒント：」重複なし）
         const dropHintHtml = dropHintText ? 
             `<div class="drop-info-line">📍 ドロップ情報: ${dropHintText}</div>` : 
             `<div class="drop-info-line" style="color:#888; font-weight:normal;">📍 ドロップ情報: データベースにヒントが登録されていません</div>`;
