@@ -6,11 +6,11 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 章ごとの折りたたみヘッダーのスタイル設定 */
-        .scene-group-header {
+        /* 1段階目：章（Scene）のヘッダースタイル */
+        .scene-header {
             background-color: #e9ecef;
             color: #333;
-            padding: 10px 15px;
+            padding: 12px 15px;
             font-weight: bold;
             font-size: 1.05em;
             border: 1px solid #ccc;
@@ -22,38 +22,92 @@
             border-radius: 4px;
             user-select: none;
         }
-        .scene-group-header:hover {
+        .scene-header:hover {
             background-color: #dfe2e6;
         }
-        /* アコーディオンの矢印マーク */
-        .scene-group-header::after {
+        .scene-header::after {
             content: '▼';
             font-size: 0.8em;
             transition: transform 0.2s;
         }
-        .scene-group-header.collapsed::after {
+        .scene-header.collapsed::after {
             transform: rotate(-90deg);
         }
-        /* 折りたたまれる中身のテーブル枠 */
-        .scene-table-wrapper {
-            margin-bottom: 20px;
+
+        /* 章の下のクエストリストを格納するコンテナ（初期状態は非表示） */
+        .quest-list-container {
+            margin-bottom: 15px;
             border: 1px solid #ccc;
             border-top: none;
             background: #fff;
+            padding: 5px 0;
+            display: none; /* 最初はすべて閉じている状態 */
         }
-        .scene-table-wrapper.hidden {
-            display: none;
+
+        /* 2段階目：クエストタイトルのスタイル */
+        .quest-item {
+            border-bottom: 1px dashed #eee;
         }
-        /* 各テーブルの余白調整 */
-        .scene-table-wrapper table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
+        .quest-item:last-child {
+            border-bottom: none;
+        }
+        .quest-title-bar {
+            padding: 10px 20px;
+            font-weight: bold;
+            font-size: 0.95em;
+            color: #222;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        .quest-title-bar:hover {
+            background-color: #f9f9f9;
+        }
+        .quest-title-bar::after {
+            content: '▶';
+            font-size: 0.75em;
+            color: #888;
+            transition: transform 0.2s;
+        }
+        .quest-title-bar.open::after {
+            transform: rotate(90deg);
+        }
+
+        /* 3段階目：画像レイアウトを完全再現した詳細表示エリア（初期状態は非表示） */
+        .quest-details-content {
+            padding: 15px 30px;
+            background-color: #faf9f6; /* 画用紙のような少し温かみのある背景 */
+            border-top: 1px dashed #ddd;
+            display: none; /* 最初はすべて閉じている状態 */
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        /* 画像風の箇条書きスタイル定義 */
+        .quest-details-content ul {
+            list-style-type: disc;
             margin: 0;
+            padding-left: 20px;
         }
-        .scene-table-wrapper table th {
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #ccc;
+        .quest-details-content li {
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .quest-details-content strong {
+            color: #111;
+        }
+
+        /* 進行手順用の連番リストスタイル */
+        .quest-details-content ol {
+            margin: 4px 0 0 0;
+            padding-left: 20px;
+        }
+        .quest-details-content ol li {
+            list-style-type: decimal;
+            margin-bottom: 4px;
+            color: #444;
         }
     </style>
 </head>
@@ -68,22 +122,13 @@
                 <h3 class="section-category"> 1．概要</h3>
                 <div class="item-content">
                     データベース（Supabase）から直接読み込んだメインシナリオおよびサブクエストの一覧データです。<br>
-                    各章のタイトルをクリックすることで、クエスト一覧の表示・非表示を切り替えることができます。
+                    見たい「章」を選んでクリックし、さらに「クエストタイトル」をクリックすることで詳細の手順や報酬を確認できます。
                 </div>
 
                 <h3 class="section-category"> 2．シナリオデータ一覧</h3>
                 <div class="item-content">
                     
-                    <div id="scenario-controls" style="margin-bottom: 15px; padding: 10px; background: #fdfdfd; border: 1px solid #ddd; border-radius: 5px; font-size: 0.85em;">
-                        <strong style="margin-right:15px;">表示列の切り替え:</strong>
-                        <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-content" checked> 概要・あらすじ</label>
-                        <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-steps" checked> 進行手順(クリア条件)</label>
-                        <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-drops" checked> 特殊ドロップ</label>
-                        <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-exp" checked> 獲得経験値</label>
-                        <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-reward" checked> クリア報酬</label>
-                    </div>
-
-                    <div id="archive-container">
+                    <div id="archive-tree-container">
                         <p style="text-align:center; padding:20px;">Supabaseからシナリオデータを読み込み中...</p>
                     </div>
 
@@ -98,19 +143,19 @@
 window.addEventListener('DOMContentLoaded', loadScenarioData);
 
 async function loadScenarioData() {
-    // 1. Supabaseからデータを一括取得
+    // 1. Supabaseからデータを取得
     const { data: scenarioNodes, error } = await client
         .from('scenario_nodes')
         .select('*');
 
     if (error) {
         console.error("Supabaseデータの取得に失敗しました:", error);
-        document.getElementById('archive-container').innerHTML = 
+        document.getElementById('archive-tree-container').innerHTML = 
             `<p style="text-align:center; color:red; font-weight:bold; padding:20px;">データの読み込みに失敗しました。</p>`;
         return;
     }
 
-    // どんなデータ型でも絶対に壊れない数値順ソート
+    // IDを数値型として確実に並び替える（1, 2, 3... 10）
     let items = [];
     if (scenarioNodes && Array.isArray(scenarioNodes)) {
         items = scenarioNodes;
@@ -121,7 +166,7 @@ async function loadScenarioData() {
         });
     }
 
-    // 2. 章（scene）ごとにデータをグループ化する処理
+    // 2. 章（scene）ごとにデータを部屋分けする
     const groupedData = {};
     items.forEach(node => {
         const sceneName = (node.scene && node.scene !== 'NULL' && node.scene !== '') ? node.scene : 'その他のクエスト';
@@ -131,21 +176,19 @@ async function loadScenarioData() {
         groupedData[sceneName].push(node);
     });
 
-    // 3. レンダリング処理を実行
-    renderGroupedScenario(groupedData);
+    // 3. 画面へのツリーレンダリング処理を実行
+    renderTreeArchive(groupedData);
 }
 
-// 数値をカンマ区切りテキストに変換するヘルパー関数
+// 経験値を綺麗にフォーマットする関数
 function formatExp(expValue) {
-    if (!expValue || expValue === 'NULL' || expValue === '0' || expValue === '') {
-        return null;
-    }
+    if (!expValue || expValue === 'NULL' || expValue === '0' || expValue === '') return null;
     const num = Math.floor(Number(String(expValue).replace(/,/g, '')));
     return isNaN(num) ? expValue : num.toLocaleString();
 }
 
-function renderGroupedScenario(groupedData) {
-    const container = document.getElementById('archive-container');
+function renderTreeArchive(groupedData) {
+    const container = document.getElementById('archive-tree-container');
     if (!container) return;
 
     const sceneNames = Object.keys(groupedData);
@@ -154,124 +197,122 @@ function renderGroupedScenario(groupedData) {
         return;
     }
 
-    let finalHtml = '';
-    let groupIndex = 0;
+    let html = '';
+    let sceneIndex = 0;
 
-    // 章ごとにループを回して、アコーディオンのヘッダーとテーブルを生成
+    // 章（1段階目）のループ
     sceneNames.forEach(sceneName => {
+        sceneIndex++;
         const nodes = groupedData[sceneName];
-        groupIndex++;
 
-        // 章のヘッダー部分
-        finalHtml += `
-            <div class="scene-group-header" data-target="wrapper-${groupIndex}">
+        // 章ヘッダー（最初は collapsed 状態を視覚的に合わせるためクラス制御可能）
+        html += `
+            <div class="scene-header collapsed" data-target="box-${sceneIndex}">
                 ${sceneName} （全 ${nodes.length} 件）
             </div>
-            <div id="wrapper-${groupIndex}" class="scene-table-wrapper">
-                <table id="scenario-table-${groupIndex}">
-                    <thead>
-                        <tr>
-                            <th style="width: 55px; text-align:center;">No</th>
-                            <th style="width: 160px; text-align:left;">クエストタイトル</th>
-                            <th class="cls-content" style="width: 240px; text-align:left;">概要・あらすじ</th>
-                            <th class="cls-steps" style="width: 280px; text-align:left;">進行手順</th>
-                            <th class="cls-drops" style="width: 140px; text-align:left;">特殊ドロップ</th>
-                            <th class="cls-exp" style="width: 120px; text-align:left;">獲得EXP</th>
-                            <th class="cls-reward" style="width: 140px; text-align:left;">クリア報酬</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <div id="box-${sceneIndex}" class="quest-list-container">
         `;
 
-        // 章の中のクエスト行を生成
-        finalHtml += nodes.map(node => {
+        // 各章の中のクエスト（2段階目）のループ
+        nodes.forEach(node => {
+            const displayId = node.node_id ? Math.floor(Number(node.node_id)) : '-';
+            const titleText = node.title || '名称未設定';
+            
+            // 必要レベル
             let displayLevel = node.必要レベル;
             if (displayLevel && displayLevel !== 'NULL' && displayLevel !== '') {
                 const parsedLvl = Number(displayLevel);
                 if (!isNaN(parsedLvl)) displayLevel = Math.floor(parsedLvl);
             }
-            const reqLevelHtml = displayLevel ? 
-                `<div style="font-size: 0.82em; color: #1e90ff; font-weight: bold; margin-top: 2px;">[必要Lv: ${displayLevel}]</div>` : '';
+            const lvlText = displayLevel ? ` [必要Lv: ${displayLevel}]` : '';
 
-            let drops = [];
-            if (node.required_item && node.required_item !== 'NULL' && node.required_item !== '') drops.push(node.required_item);
-            if (node.Drop2 && node.Drop2 !== 'NULL' && node.Drop2 !== '') drops.push(node.Drop2);
-            if (node.Drop3 && node.Drop3 !== 'NULL' && node.Drop3 !== '') drops.push(node.Drop3);
-            if (node.Drop4 && node.Drop4 !== 'NULL' && node.Drop4 !== '') drops.push(node.Drop4);
-            const dropsHtml = drops.length > 0 ? drops.join('<br>') : '<span style="color:#999;">-</span>';
-
+            // 獲得EXPのカンマ区切り文字列作成
             const formattedBase = formatExp(node.BaseExp);
             const formattedJob = formatExp(node.JobExp);
-            const baseExpText = formattedBase ? `Base: ${formattedBase}` : '';
-            const jobExpText = formattedJob ? `Job: ${formattedJob}` : '';
-            const expHtml = [baseExpText, jobExpText].filter(Boolean).join('<br>') || '<span style="color:#999;">0</span>';
+            let expParts = [];
+            if (formattedBase) expParts.push(`BaseExp ${formattedBase}`);
+            if (formattedJob) expParts.push(`JobExp ${formattedJob}`);
+            const rewardExpText = expParts.length > 0 ? expParts.join(' / ') : 'なし';
 
-            const rewardText = (node.報酬 && node.報酬 !== 'NULL' && node.報酬 !== '') ? node.報酬 : '<span style="color:#999;">-</span>';
-            const contentText = (node.content_text && node.content_text !== 'NULL') ? node.content_text : '-';
-            const clearSteps = (node.clear_steps && node.clear_steps !== 'NULL') ? node.clear_steps : '-';
+            // クリア報酬アイテムテキスト
+            const itemReward = (node.報酬 && node.報酬 !== 'NULL' && node.報酬 !== '') ? node.報酬 : '';
+            const finalRewardText = itemReward ? `${rewardExpText} 、${itemReward}` : rewardExpText;
 
-            const displayId = node.node_id ? Math.floor(Number(node.node_id)) : '-';
+            // 目的（概要）
+            const objectiveText = (node.content_text && node.content_text !== 'NULL' && node.content_text !== '') ? node.content_text : '-';
 
-            return `
-                <tr>
-                    <td style="text-align:center; font-family: monospace; font-weight: bold;">${displayId}</td>
-                    <td style="font-weight: bold; color: #222;">
-                        ${node.title || '名称未設定'}
-                        ${reqLevelHtml}
-                    </td>
-                    <td class="cls-content" style="font-size: 0.88em; color: #444; line-height: 1.4;">${contentText}</td>
-                    <td class="cls-steps" style="font-size: 0.88em; line-height: 1.4;">${clearSteps}</td>
-                    <td class="cls-drops" style="font-size: 0.85em; color: #333;">${dropsHtml}</td>
-                    <td class="cls-exp" style="font-size: 0.85em; text-align: left; font-family: monospace; line-height: 1.3;">${expHtml}</td>
-                    <td class="cls-reward" style="font-size: 0.85em; color: #d02090; font-weight: bold;">${rewardText}</td>
-                </tr>
+            // 進行手順を1行ずつばらして、きれいな <ol> の番号付きリストへ流し込む
+            let stepsHtml = '-';
+            const rawSteps = node.clear_steps;
+            if (rawSteps && rawSteps !== 'NULL' && rawSteps !== '') {
+                // 改行や区切り、または「1. 2.」のような文字で分割された時の対策をしつつ成形
+                const stepLines = String(rawSteps).split(/\n|<br>|\\n/).map(s => s.trim()).filter(Boolean);
+                if (stepLines.length > 0) {
+                    stepsHtml = '<ol>';
+                    stepLines.forEach(line => {
+                        // もし先頭にすでに「1.」とかが入っている場合は、それを削って二重番号を防ぐクレンジング
+                        const cleanLine = line.replace(/^\d+[\.\、\s\-：:]*/, '');
+                        stepsHtml += `<li>${cleanLine}</li>`;
+                    });
+                    stepsHtml += '</ol>';
+                }
+            }
+
+            // クエスト1件分のブロック構築
+            html += `
+                <div class="quest-item">
+                    <div class="quest-title-bar" data-target="details-${displayId}">
+                        <span>${displayId}. ${titleText}<span style="font-size:0.85em; color:#1e90ff; font-weight:normal;">${lvlText}</span></span>
+                    </div>
+                    
+                    <div id="details-${displayId}" class="quest-details-content">
+                        <ul>
+                            <li><strong>目的:</strong> ${objectiveText}</li>
+                            <li><strong>依頼人:</strong> <span style="color:#666;">-</span></li>
+                            <li><strong>報酬:</strong> ${finalRewardText}</li>
+                            <li><strong>進行手順:</strong>
+                                ${stepsHtml}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             `;
-        }).join('');
+        });
 
-        finalHtml += `
-                    </tbody>
-                </table>
-            </div>
-        `;
+        html += `</div>`; // .quest-list-container の閉じタグ
     });
 
-    container.innerHTML = finalHtml;
+    container.innerHTML = html;
 
-    // 折りたたみ開閉のクリックイベントを設定
-    setupAccordion();
-    
-    // 表示列切り替えチェックボックスのイベントを設定（複数テーブルに対応）
-    setupColumnToggles();
+    // 開閉のイベント処理を紐付け
+    setupTwoLevelAccordion();
 }
 
-function setupAccordion() {
-    document.querySelectorAll('.scene-group-header').forEach(header => {
+function setupTwoLevelAccordion() {
+    // 1段階目：章タイトルクリック時の挙動
+    document.querySelectorAll('.scene-header').forEach(header => {
         header.addEventListener('click', () => {
             const targetId = header.getAttribute('data-target');
-            const wrapper = document.getElementById(targetId);
+            const targetBox = document.getElementById(targetId);
             
-            if (wrapper) {
-                wrapper.classList.toggle('hidden');
-                header.classList.toggle('collapsed');
+            if (targetBox) {
+                const isHidden = window.getComputedStyle(targetBox).display === 'none';
+                targetBox.style.display = isHidden ? 'block' : 'none';
+                header.classList.toggle('collapsed', !isHidden);
             }
         });
     });
-}
 
-function setupColumnToggles() {
-    document.querySelectorAll('.toggle-col').forEach(checkbox => {
-        const targetClass = checkbox.getAttribute('data-target');
-        
-        // 初期状態の反映
-        const elements = document.getElementsByClassName(targetClass);
-        for (let el of elements) {
-            el.style.display = checkbox.checked ? '' : 'none';
-        }
-
-        checkbox.addEventListener('change', (e) => {
-            const els = document.getElementsByClassName(targetClass);
-            for (let el of els) {
-                el.style.display = e.target.checked ? '' : 'none';
+    // 2段階目：クエストタイトルクリック時の挙動
+    document.querySelectorAll('.quest-title-bar').forEach(titleBar => {
+        titleBar.addEventListener('click', () => {
+            const targetId = titleBar.getAttribute('data-target');
+            const detailsBox = document.getElementById(targetId);
+            
+            if (detailsBox) {
+                const isHidden = window.getComputedStyle(detailsBox).display === 'none';
+                detailsBox.style.display = isHidden ? 'block' : 'none';
+                titleBar.classList.toggle('open', isHidden);
             }
         });
     });
