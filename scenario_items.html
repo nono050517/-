@@ -6,383 +6,121 @@
     <title>エリシアオンライン アーカイブス - 必要素材計算ツール</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --primary-text: #333;
-            --accent-red: #d32f2f;
-            --hint-green: #00796b;
-            --border-color: #ddd;
-            --bg-light: #f9f9f9;
-        }
-        body {
-            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-            color: var(--primary-text);
-            background-color: #f0f2f5;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        /* ⚠️ 警告アナウンス常駐 */
-        .warning-banner {
-            background-color: #ffebee;
-            color: #c62828;
-            border: 1px solid #ffcdd2;
-            padding: 12px 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        /* コントロールパネル */
-        .control-panel {
-            background: var(--bg-light);
-            padding: 15px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        select, button {
-            padding: 8px 12px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #1976d2;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-        button:hover {
-            background-color: #1565c0;
-        }
-        /* 素材カード */
-        .item-card {
-            background: #fff;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .item-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #8d6e63; /* アイコンに合わせたブラウン系 */
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .item-total {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--accent-red);
-        }
-        .drop-hint {
-            font-size: 14px;
-            color: var(--hint-green);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .drop-hint.empty {
-            color: #999;
-        }
-        .divider {
-            border-top: 1px dashed var(--border-color);
-            margin: 10px 0;
-        }
-        .usage-breakdown {
-            font-size: 13px;
-            color: #555;
-        }
-        .usage-title {
-            margin-bottom: 5px;
-        }
-        .usage-list {
-            list-style: none;
-            padding-left: 0;
-            margin: 0;
-        }
-        .usage-list li {
-            margin-bottom: 3px;
-        }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 16px;
-            color: #666;
-            display: none;
-        }
+        :root { --primary-text: #333; --accent-red: #d32f2f; --hint-green: #00796b; --border-color: #ddd; --bg-light: #f9f9f9; }
+        body { font-family: sans-serif; color: var(--primary-text); background-color: #f0f2f5; padding: 20px; line-height: 1.6; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .warning-banner { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .control-panel { background: var(--bg-light); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 25px; display: flex; align-items: center; gap: 15px; }
+        select, button { padding: 8px 12px; font-size: 16px; border-radius: 4px; border: 1px solid #ccc; }
+        button { background-color: #1976d2; color: white; cursor: pointer; font-weight: bold; }
+        .item-card { background: #fff; border: 1px solid var(--border-color); border-radius: 6px; padding: 15px; margin-bottom: 15px; }
+        .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .item-name { font-size: 18px; font-weight: bold; color: #8d6e63; }
+        .item-total { font-size: 20px; font-weight: bold; color: var(--accent-red); }
+        .drop-hint { font-size: 14px; color: var(--hint-green); margin-bottom: 10px; }
+        .usage-breakdown { font-size: 13px; color: #555; }
+        .loading { text-align: center; padding: 20px; display: none; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <div class="warning-banner">
-        ⚠️ ※注意：現在データ調査中
-    </div>
-
+    <div class="warning-banner">⚠️ ※注意：現在データ調査中</div>
     <div class="control-panel">
         <label for="level-select"><strong>プレイヤーLv:</strong></label>
         <select id="level-select"></select>
         <button id="calc-btn">必要素材を計算</button>
     </div>
-
     <div id="loading" class="loading">データベースから情報を取得・計算中...</div>
     <div id="result-area"></div>
 </div>
 
 <script>
-    // ==========================================
-    // 🔧 Supabase 接続設定（ご自身の環境に合わせて変更してください）
-    // ==========================================
     const SUPABASE_URL = 'YOUR_SUPABASE_URL';
     const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ==========================================
-    // 1. 初期化・UI構築
-    // ==========================================
     document.addEventListener("DOMContentLoaded", () => {
-        buildLevelSelect();
+        const select = document.getElementById('level-select');
+        for (let i = 1; i <= 146; i += 5) {
+            let opt = document.createElement('option');
+            opt.value = i + 2;
+            opt.textContent = `${i}〜${i+4}`;
+            select.appendChild(opt);
+        }
         document.getElementById('calc-btn').addEventListener('click', fetchDataAndCalculate);
     });
 
-    function buildLevelSelect() {
-        const select = document.getElementById('level-select');
-        select.innerHTML = ''; // 初期化
-        for (let i = 1; i <= 146; i += 5) {
-            const end = i + 4;
-            const option = document.createElement('option');
-            // 中央値をvalueに設定して判定用とする（例: 1〜5なら3、146〜150なら148）
-            option.value = i + 2; 
-            option.textContent = `${i}〜${end}`;
-            select.appendChild(option);
-        }
-    }
-
-    // ==========================================
-    // 2. アイテム解析＆レベルフィルタリング関数（修正版）
-    // ==========================================
     function parseAndFilterItems(rawText, currentLevel) {
         if (!rawText || rawText === '-') return [];
-
-        // カッコ内のメモ書きを自動無視（隠蔽）
         const cleanText = rawText.replace(/[（(].*?[）)]/g, '');
-        // スペース、読点、改行、スラッシュで分割して配列化
         const tokens = cleanText.split(/[\s ,、\n/／]+/);
+        let parsed = [];
+        let cond = { type: null, val: null };
 
-        let parsedItems = [];
-        let currentCondType = null;
-        let currentCondVal = null;
-
-        tokens.forEach(token => {
-            if (!token.trim()) return;
-
-            const condMatch = token.match(/^(\d+)(以上|以下)[:：](.*)/);
-            let itemStr = token;
-
-            if (condMatch) {
-                currentCondVal = parseInt(condMatch[1], 10);
-                currentCondType = condMatch[2];
-                itemStr = condMatch[3];
-            }
-
-            if (!itemStr) return;
-
+        tokens.forEach(t => {
+            if (!t.trim()) return;
+            const m = t.match(/^(\d+)(以上|以下)[:：](.*)/);
+            let itemStr = t;
+            if (m) { cond = { val: parseInt(m[1], 10), type: m[2] }; itemStr = m[3]; }
             const parts = itemStr.split(/[×*ｘＸ]/);
-            let rawName = parts[0].trim();
-            const quantity = parts.length > 1 ? parseInt(parts[1].replace(/[^0-9]/g, ''), 10) : 1;
-
-            // ① 日本語「の」＆記号の安全ガード（先頭と末尾の括弧類だけを安全に剥がす）
-            const finalName = rawName.replace(/^['"「『【]+/g, '').replace(/['"」』】]+$/g, '');
-
-            if (finalName) {
-                parsedItems.push({
-                    name: finalName,
-                    quantity: quantity,
-                    condType: currentCondType,
-                    condVal: currentCondVal
-                });
-            }
+            const name = parts[0].trim().replace(/^['"「『【]+/g, '').replace(/['"」』】]+$/g, '');
+            const qty = parts.length > 1 ? parseInt(parts[1].replace(/[^0-9]/g, ''), 10) : 1;
+            if (name) parsed.push({ name, qty, ...cond });
         });
 
-        // バグ修正：指定レベルにおける「最も厳しい（最高/最低）」条件を判定（勝ち残り方式）
-        let maxIjou = -1;
-        let minIka = 9999;
-
-        parsedItems.forEach(item => {
-            if (item.condType === '以上' && currentLevel >= item.condVal) {
-                if (item.condVal > maxIjou) maxIjou = item.condVal;
-            }
-            if (item.condType === '以下' && currentLevel <= item.condVal) {
-                if (item.condVal < minIka) minIka = item.condVal;
-            }
+        let maxIjou = -1, minIka = 9999;
+        parsed.forEach(i => {
+            if (i.type === '以上' && currentLevel >= i.val) maxIjou = Math.max(maxIjou, i.val);
+            if (i.type === '以下' && currentLevel <= i.val) minIka = Math.min(minIka, i.val);
         });
 
-        // 勝ち残った条件に合致するアイテムだけを残す
-        return parsedItems.filter(item => {
-            if (!item.condType) return true; // 条件なし
-            if (item.condType === '以上') return item.condVal === maxIjou; // 最も高い条件のみ
-            if (item.condType === '以下') return item.condVal === minIka;  // 最も低い条件のみ
+        return parsed.filter(i => {
+            if (!i.type) return true;
+            if (i.type === '以上') return i.val === maxIjou;
+            if (i.type === '以下') return i.val === minIka;
             return false;
         });
     }
 
-    // ==========================================
-    // 3. ドロップ情報の全自動逆引き関数
-    // ==========================================
-    // 全クエストの進行手順テキスト等から「アイテム名」が含まれる行を抽出しヒントにする
-    function extractDropHint(itemName, allNodes) {
-        for (const node of allNodes) {
-            // カラム名は実際のDBに合わせて変更してください（ここでは procedure_text と仮定）
-            const textToSearch = (node.procedure_text || '') + '\n' + (node.hint_text || '');
-            if (!textToSearch) continue;
-
-            const lines = textToSearch.split('\n');
-            for (const line of lines) {
-                // 「竜の羽」が含まれ、かつ「ドロップ」や「[エリア名]」らしき記述がある行を優先取得
-                if (line.includes(itemName) && (line.includes('[') || line.includes('ドロップ'))) {
-                    // 「ヒント：」という無駄な文字を削除して返す（④の仕様）
-                    return line.replace(/^ヒント[:：]\s*/, '').trim();
-                }
-            }
+    function extractDropHint(itemName, nodes) {
+        for (const node of nodes) {
+            const text = (node.procedure_text || '') + '\n' + (node.hint_text || '');
+            const lines = text.split('\n');
+            const match = lines.find(l => l.includes(itemName) && (l.includes('[') || l.includes('ドロップ')));
+            if (match) return match.replace(/^ヒント[:：]\s*/, '').trim();
         }
-        return null; // 見つからなかった場合
+        return null;
     }
 
-    // ==========================================
-    // 4. メイン処理：データ取得と集計・描画
-    // ==========================================
     async function fetchDataAndCalculate() {
-        const loading = document.getElementById('loading');
+        document.getElementById('loading').style.display = 'block';
         const resultArea = document.getElementById('result-area');
+        resultArea.innerHTML = '';
         const selectedLevel = parseInt(document.getElementById('level-select').value, 10);
 
-        loading.style.display = 'block';
-        resultArea.innerHTML = '';
+        const { data: nodes, error } = await supabase.from('scenario_nodes').select('node_id, title, required_items, procedure_text, hint_text').order('node_id');
+        if (error) { alert('取得失敗'); return; }
 
-        try {
-            // DBからデータ取得（カラム名は適宜合わせてください）
-            const { data: nodes, error } = await supabase
-                .from('scenario_nodes')
-                .select('node_id, title, required_items, procedure_text, hint_text')
-                .order('node_id', { ascending: true });
-
-            if (error) throw error;
-
-            // 集計用マップ：Key=アイテム名, Value={ total: 数量, breakdown: [内訳配列] }
-            const aggregatedItems = new Map();
-
-            // ③ クエストごとのレベル判定完全リセット（1行ごとに独立してパースするため安全）
-            nodes.forEach(node => {
-                // ④ 未設定タイトルのクエスト処理（ハイフンの場合は名称未設定クエストにする）
-                const displayTitle = (node.title === '-' || !node.title) ? '名称未設定クエスト' : node.title;
-                const rawItemsText = node.required_items || '';
-
-                // 指定レベルでフィルタリングされた当該クエストの必要素材リストを取得
-                const validItems = parseAndFilterItems(rawItemsText, selectedLevel);
-
-                validItems.forEach(item => {
-                    if (!aggregatedItems.has(item.name)) {
-                        aggregatedItems.set(item.name, {
-                            total: 0,
-                            breakdown: []
-                        });
-                    }
-                    const record = aggregatedItems.get(item.name);
-                    record.total += item.quantity;
-                    record.breakdown.push({
-                        nodeId: node.node_id,
-                        title: displayTitle,
-                        count: item.quantity
-                    });
-                });
+        let aggregated = new Map();
+        nodes.forEach(node => {
+            parseAndFilterItems(node.required_items, selectedLevel).forEach(item => {
+                if (!aggregated.has(item.name)) aggregated.set(item.name, { total: 0, breakdown: [] });
+                let rec = aggregated.get(item.name);
+                rec.total += item.quantity;
+                rec.breakdown.push({ title: (node.title === '-' || !node.title) ? '名称未設定クエスト' : node.title, count: item.quantity });
             });
-
-            // 集計結果の描画
-            renderResults(aggregatedItems, nodes);
-
-        } catch (err) {
-            console.error(err);
-            resultArea.innerHTML = `<p style="color:red;">データの取得中にエラーが発生しました: ${err.message}</p>`;
-        } finally {
-            loading.style.display = 'none';
-        }
-    }
-
-    // ==========================================
-    // 5. 画面描画処理（HTMLの生成）
-    // ==========================================
-    function renderResults(aggregatedItems, allNodes) {
-        const resultArea = document.getElementById('result-area');
-
-        if (aggregatedItems.size === 0) {
-            resultArea.innerHTML = '<p>指定したレベル帯で必要な素材はありません。</p>';
-            return;
-        }
-
-        // アイテムごとにカードを作成
-        aggregatedItems.forEach((data, itemName) => {
-            // ドロップ情報を全体から逆引き
-            const dropHint = extractDropHint(itemName, allNodes);
-            
-            // ドロップ表示用HTML
-            let hintHtml = '';
-            if (dropHint) {
-                hintHtml = `<div class="drop-hint">📍 ドロップ情報: ${dropHint}</div>`;
-            } else {
-                hintHtml = `<div class="drop-hint empty">📍 ドロップ情報: データベースにヒントが登録されていません</div>`;
-            }
-
-            // 内訳リスト用HTML
-            let breakdownHtml = '';
-            data.breakdown.forEach(b => {
-                breakdownHtml += `<li>→ No.${b.nodeId} ${b.title} [${b.count}個]</li>`;
-            });
-
-            // カードHTMLの組み立て
-            const cardHtml = `
-                <div class="item-card">
-                    <div class="item-header">
-                        <div class="item-name">📦 ${itemName}</div>
-                        <div class="item-total">計 ${data.total} 個</div>
-                    </div>
-                    ${hintHtml}
-                    <div class="divider"></div>
-                    <div class="usage-breakdown">
-                        <div class="usage-title">使用内訳:</div>
-                        <ul class="usage-list">
-                            ${breakdownHtml}
-                        </ul>
-                    </div>
-                </div>
-            `;
-            resultArea.insertAdjacentHTML('beforeend', cardHtml);
         });
+
+        let html = '';
+        aggregated.forEach((data, name) => {
+            const hint = extractDropHint(name, nodes);
+            html += `<div class="item-card"><div class="item-header"><div class="item-name">📦 ${name}</div><div class="item-total">計 ${data.total} 個</div></div>
+                     <div class="drop-hint">📍 ドロップ情報: ${hint || '登録なし'}</div>
+                     <div class="usage-breakdown">使用内訳:<ul>${data.breakdown.map(b => `<li>→ ${b.title} [${b.count}個]</li>`).join('')}</ul></div></div>`;
+        });
+        resultArea.innerHTML = html || '<p>該当素材なし</p>';
+        document.getElementById('loading').style.display = 'none';
     }
 </script>
-
 </body>
 </html>
