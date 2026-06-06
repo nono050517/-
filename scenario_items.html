@@ -156,7 +156,7 @@
                 <div class="item-content">
 
                     <div class="notice-warning-box">
-                        <span>⚠️</span> ※注意：現在データ調査中（まだ一部未完成の章や検証中のデータが含まれています）
+                        <span>⚠️</span> ※注意：データ調査中（まだ一部未完成の章や検証中のデータが含まれています）
                     </div>
                     
                     <div class="tool-panel">
@@ -179,7 +179,7 @@
                             <label for="route-choice" style="color: #0056b3;">➔ 第一章の分岐ルートの選択予定は？</label>
                             <select id="route-choice" class="form-control">
                                 <option value="暁">【暁ルート】に進む</option>
-                                <option value="魔女">【魔女ルート】に進む</option>
+                                <option value="魔女" disabled>【魔女ルート】に進む（データ未取得）</option>
                             </select>
                         </div>
 
@@ -296,14 +296,11 @@ function setupEventListeners() {
     const btnExecute = document.getElementById('btn-execute');
 
     startSelect.addEventListener('change', () => {
-        const selectedQuest = allQuests.find(q => q.node_id === startSelect.value);
-        if (selectedQuest) {
-            const sceneText = selectedQuest.scene || '';
-            if (sceneText.includes('序章') || (sceneText.includes('第一章') && !sceneText.includes('暁') && !sceneText.includes('魔女'))) {
-                branchBox.style.display = 'block';
-            } else {
-                branchBox.style.display = 'none';
-            }
+        const currentId = Math.floor(Number(startSelect.value || 0));
+        if (currentId > 0 && currentId <= 41) {
+            branchBox.style.display = 'block';
+        } else {
+            branchBox.style.display = 'none';
         }
     });
 
@@ -324,7 +321,6 @@ function setupEventListeners() {
     btnExecute.addEventListener('click', calculateMaterials);
 }
 
-// レベル分岐の重複判定を完全遮断し、純粋なアイテム構造のみを返す精密パースロジック
 function parseItemStringToArrayList(itemStr, playerLevel) {
     if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
     
@@ -347,11 +343,10 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
 
             t = t.replace(/：/g, ':');
 
-            let type = 'normal'; // 'normal', 'above', 'below'
+            let type = 'normal'; 
             let limitLvl = 0;
             let targetText = t;
 
-            // レベル条件の表記を切り離してデータ化する
             if (t.includes('以下:')) {
                 const normalizedStr = t.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
                 const matchLvl = normalizedStr.match(/^(\d+)以下:(.+)$/);
@@ -389,7 +384,6 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
             let cleanName = currentName.replace(/^[「『"']+|[」』"']+$/g, '').trim();
 
             if (cleanName) {
-                // 判定用の一時データをオブジェクトに詰めて一旦プールする
                 results.push({ 
                     name: cleanName, 
                     count: currentCount,
@@ -451,6 +445,7 @@ function calculateMaterials() {
 
     let targetedQuests = allQuests.slice(startIndex);
 
+    // 親クエスト自体のルート絞り込み
     targetedQuests = targetedQuests.filter(q => {
         const scene = q.scene || '';
         if (scene.includes('暁ルート') && chosenRoute !== '暁') return false;
@@ -503,13 +498,10 @@ function calculateMaterials() {
         for (let itemObj of itemStringsCollect) {
             const parsedList = parseItemStringToArrayList(itemObj.text, playerLevel);
 
-            // 【重複合算バグの完全根絶ロジック】
-            // 同じひとつの条件セル内に存在する、複数の「以上」「以下」の条件を精査する
             let hasAboveOptions = parsedList.some(item => item.type === 'above');
             let maxValidAboveLvl = -1;
 
             if (hasAboveOptions) {
-                // 現在のプレイヤーレベル以下で、最も数値が高い条件のレベル（マキサム値）を算出
                 parsedList.forEach(item => {
                     if (item.type === 'above' && playerLevel >= item.limitLvl) {
                         if (item.limitLvl > maxValidAboveLvl) {
@@ -520,21 +512,16 @@ function calculateMaterials() {
             }
 
             for (let parsed of parsedList) {
-                // フィルタリング処理の徹底
                 let isTarget = false;
 
                 if (parsed.type === 'normal') {
-                    // 制限のない通常素材は100%採用
                     isTarget = true;
                 } else if (parsed.type === 'below') {
-                    // 「以下」条件は、プレイヤーレベルが制限以下なら採用
                     if (playerLevel <= parsed.limitLvl) isTarget = true;
                 } else if (parsed.type === 'above') {
-                    // 「以上」条件は、算出した最高条件レベル（マキサム）とピッタリ一致するものだけを採用する
                     if (parsed.limitLvl === maxValidAboveLvl) isTarget = true;
                 }
 
-                // 該当レベル帯ではない過去のゴミ素材は完全に無視（スキップ）
                 if (!isTarget) continue;
 
                 if (!materialSummary[parsed.name]) {
