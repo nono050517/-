@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 計算ツール用のカスタムデザイン（全体的に大きめで見やすい設計） */
         .tool-panel {
             background-color: #fdfdfd;
             border: 1px solid #ccc;
@@ -56,7 +55,6 @@
             background-color: #007ae6;
         }
         
-        /* 条件分岐用の隠しエリア */
         .conditional-box {
             display: none;
             background-color: #f0f8ff;
@@ -66,7 +64,6 @@
             border-radius: 0 4px 4px 0;
         }
 
-        /* 結果表示エリアの装飾 */
         #result-container {
             margin-top: 25px;
         }
@@ -93,9 +90,16 @@
         }
         .material-total {
             float: right;
-            font-size: 1.2em;
+            font-size: 1.3em;
             font-weight: bold;
-            color: #111;
+            color: #ff4500; /* 個数を目立たせるオレンジ赤 */
+        }
+        /* ドロップモンスター情報のスタイル */
+        .drop-info-line {
+            margin-top: 4px;
+            font-size: 0.92em;
+            color: #2e8b57; /* 安心感のある緑色 */
+            font-weight: bold;
         }
         .material-breakdown {
             margin: 8px 0 0 0;
@@ -103,6 +107,8 @@
             color: #555;
             font-size: 0.95em;
             line-height: 1.5;
+            border-top: 1px dashed #eee;
+            padding-top: 6px;
         }
         .stop-notice {
             background-color: #fff3cd;
@@ -159,14 +165,14 @@
                             </div>
                         </div>
 
-                        <div id="target-quest-group" class="form-group condition-sub-input">
+                        <div id="target-quest-group" class="form-group">
                             <label for="end-quest">どこまでの分が必要？（目標クエスト）</label>
                             <select id="end-quest" class="form-control">
                                 <option value="">データを読み込み中...</option>
                             </select>
                         </div>
 
-                        <div id="bag-limit-group" class="form-group condition-sub-input" style="display: none;">
+                        <div id="bag-limit-group" class="form-group" style="display: none;">
                             <label for="bag-space">あといくつ持ち物が持てる？（空き枠アイテム種類数）</label>
                             <input type="number" id="bag-space" class="form-control" value="10" min="1" max="100" style="width: 120px;">
                             <small style="color: #666; display: block; margin-top: 4px;">※集めるアイテムの種類数がこの数に達した時点で計算をストップします。</small>
@@ -188,13 +194,12 @@
     <script src="common.js"></script>
 
 <script>
-// 全クエストデータを保持するグローバル変数
 let allQuests = [];
+let rawScenarioNodes = []; // 追加報酬（ヒント情報）を検索するために生データも保持
 
 window.addEventListener('DOMContentLoaded', initializeTool);
 
 async function initializeTool() {
-    // 1. Supabaseからデータを取得
     const { data: scenarioNodes, error } = await client
         .from('scenario_nodes')
         .select('*');
@@ -204,27 +209,25 @@ async function initializeTool() {
         return;
     }
 
-    // 数値ID順にソート（おまけの追加報酬行はマージ条件から除外するため、純粋なクエストのみを抽出）
     if (scenarioNodes && Array.isArray(scenarioNodes)) {
+        rawScenarioNodes = scenarioNodes;
+        
+        // メインクエストだけを抽出（追加報酬の別行データは除外）
         allQuests = scenarioNodes.filter(node => {
             const title = (node.title || '').trim();
             const steps = (node.clear_steps || '').trim();
-            return !(title === '' || title === 'NULL' || title === '名称未設定' || title.includes('追加報酬') || title.includes('追加') || steps.includes('追加報酬'));
+            return !(title === '' || title === 'NULL' || title === '名称未設定' || title.includes('追加報酬') || title.includes('追加') || steps.includes('追加報酬') || title === '-');
         });
         allQuests.sort((a, b) => parseFloat(a.node_id || 0) - parseFloat(b.node_id || 0));
     }
 
-    // 2. ドロップダウン（セレクトボックス）にクエストをセット
     populateSelectBoxes();
-
-    // 3. イベントリスナーを登録
     setupEventListeners();
 }
 
 function populateSelectBoxes() {
     const startSelect = document.getElementById('start-quest');
     const endSelect = document.getElementById('end-quest');
-    
     if (!startSelect || !endSelect) return;
 
     let optionsHtml = '';
@@ -237,7 +240,6 @@ function populateSelectBoxes() {
     startSelect.innerHTML = optionsHtml;
     endSelect.innerHTML = optionsHtml;
     
-    // 目標クエストの初期選択は一番最後のクエストにしておく
     if (endSelect.options.length > 0) {
         endSelect.selectedIndex = endSelect.options.length - 1;
     }
@@ -246,15 +248,12 @@ function populateSelectBoxes() {
 function setupEventListeners() {
     const startSelect = document.getElementById('start-quest');
     const branchBox = document.getElementById('route-branch-box');
-    const radioTypes = document.querySelectorAll('name[end-condition-type]');
     const btnExecute = document.getElementById('btn-execute');
 
-    // 現在のクエストが変更された時の処理（第一章の分岐チェック）
     startSelect.addEventListener('change', () => {
         const selectedQuest = allQuests.find(q => q.node_id === startSelect.value);
         if (selectedQuest) {
             const sceneText = selectedQuest.scene || '';
-            // 序章、または第一章の分岐前（sceneに「暁」や「魔女」が含まれていない）ならルート選択を出す
             if (sceneText.includes('序章') || (sceneText.includes('第一章') && !sceneText.includes('暁') && !sceneText.includes('魔女'))) {
                 branchBox.style.display = 'block';
             } else {
@@ -263,10 +262,8 @@ function setupEventListeners() {
         }
     });
 
-    // 初期状態の分岐チェックトリガー
     if (startSelect.value) startSelect.dispatchEvent(new Event('change'));
 
-    // ラジオボタン切り替え（終了条件の表示チェンジ）
     document.querySelectorAll('input[name="end-condition-type"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             if (e.target.value === 'target-quest') {
@@ -279,22 +276,53 @@ function setupEventListeners() {
         });
     });
 
-    // 計算実行ボタンクリック
     btnExecute.addEventListener('click', calculateMaterials);
 }
 
-// アイテムテキストから名前と個数を安全に分解するヘルパー
-function parseItemString(itemStr) {
-    if (!itemStr || itemStr === 'NULL' || itemStr === '') return null;
+// 【機能強化】1つのセルの中に「空白区切り」や「複数アイテム」が混ざっていても確実に1つずつ1品料理にバラす関数
+function parseItemStringToArrayList(itemStr) {
+    if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
     
-    // 「ゼリー×1」や「魔力の綿×2」または「爪×1」の構造を分解
-    // 個数表記がない場合は1個とする
-    const match = itemStr.match(/^(.+?)(?:×|\*|\s)(\d+)(?:個)?$/);
-    if (match) {
-        return { name: match[1].trim(), count: parseInt(match[2], 10) };
-    } else {
-        return { name: itemStr.trim(), count: 1 };
+    // スペース（全角・半角）や読点「、」で複数のアイテムが1セルに入っている場合に備えてバラす
+    const rawTokens = itemStr.split(/[\s,、\s]+/);
+    const results = [];
+
+    rawTokens.forEach(token => {
+        const t = token.trim();
+        if (!t) return;
+
+        // 「アイテム名×5」や「アイテム名*2」を綺麗に分解する
+        const match = t.match(/^(.+?)(?:×|\*|\s)(\d+)(?:個)?$/);
+        if (match) {
+            results.push({ name: match[1].trim(), count: parseInt(match[2], 10) });
+        } else {
+            results.push({ name: t, count: 1 });
+        }
+    });
+
+    return results;
+}
+
+// 【新機能】全データの中から、そのアイテムに対応する「ヒント（ドロップモンスター情報）」を探し出す関数
+function findDropHintForMateral(itemName) {
+    let hintFound = '';
+    
+    // scenario_nodes全体の進行手順（clear_steps）の中から「ヒント：『アイテム名』」と書いてある行を自動大捜索
+    for (let node of rawScenarioNodes) {
+        const steps = node.clear_steps || '';
+        if (steps.includes('ヒント：') || steps.includes('ヒント:')) {
+            const lines = steps.split(/\n|<br\s*\/?>|\\n/);
+            for (let line of lines) {
+                if ((line.startsWith('ヒント：') || line.startsWith('ヒント:')) && line.includes(itemName)) {
+                    // 「ヒント：」という無駄な文字を取り除く（Wadaさんのご要望）
+                    hintFound = line.replace(/^ヒント[：:]\s*/, '').trim();
+                    break;
+                }
+            }
+        }
+        if (hintFound) break;
     }
+    return hintFound;
 }
 
 function calculateMaterials() {
@@ -303,16 +331,14 @@ function calculateMaterials() {
     const chosenRoute = document.getElementById('route-choice').value;
     
     const resultContainer = document.getElementById('result-container');
-    resultContainer.innerHTML = ''; // 一旦クリア
+    resultContainer.innerHTML = ''; 
 
-    // 1. 範囲内のクエストを絞り込む
     let startIndex = allQuests.findIndex(q => parseFloat(q.node_id) === startValue);
     if (startIndex === -1) startIndex = 0;
 
     let targetedQuests = allQuests.slice(startIndex);
 
-    // 2. ルート選択によるフィルタリング
-    // プレイヤーが選んでいない側のルートのクエストはスキップする
+    // ルート絞り込み
     targetedQuests = targetedQuests.filter(q => {
         const scene = q.scene || '';
         if (scene.includes('暁ルート') && chosenRoute !== '暁') return false;
@@ -320,7 +346,7 @@ function calculateMaterials() {
         return true;
     });
 
-    // 3. 条件①（目標クエスト）の場合のカット処理
+    // 目標クエストまでのカット
     if (condType === 'target-quest') {
         const endValue = parseFloat(document.getElementById('end-quest').value);
         const endIndex = targetedQuests.findIndex(q => parseFloat(q.node_id) === endValue);
@@ -329,40 +355,63 @@ function calculateMaterials() {
         }
     }
 
-    // 4. 素材の集計ループ処理
+    // クエストと追加報酬を紐付けたアイテムの一括集計処理
     const materialSummary = {};
     let uniqueItemCount = 0;
     const bagLimitValue = parseInt(document.getElementById('bag-space').value, 10);
     let stopNoticeHtml = '';
 
+    // ループ処理
     for (let q of targetedQuests) {
-        // 対象の列（required_item）をチェック
-        const rawItem = q.required_item;
-        const parsed = parseItemString(rawItem);
+        // メインクエスト側および、そのメインにぶら下がっている追加報酬行（同じnode_id付近）のアイテムも合算対象にする
+        const currentId = Math.floor(Number(q.node_id));
+        
+        // このクエストに関係するすべてのアイテム文字列を回収する（メインの必要アイテム ＋ 追加報酬側の必要アイテム）
+        const itemStringsCollect = [];
+        if (q.required_item) itemStringsCollect.push(q.required_item);
 
-        if (parsed) {
-            // 条件②（バッグ制限）のチェック
-            // まだノートに登録されていない新しいアイテム種類の場合
-            if (!materialSummary[parsed.name]) {
-                if (condType === 'bag-limit' && uniqueItemCount >= bagLimitValue) {
-                    // 限界に達したらここで完全にループをストップ
-                    stopNoticeHtml = `
-                        <div class="stop-notice">
-                            ⚠️ 持ち物の空き枠上限（${bagLimitValue}種類）に達したため、No.${Math.floor(Number(q.node_id))}「${q.title}」の手前で計算をストップしました。
-                        </div>`;
-                    break;
+        // 生データから、このメインクエストの直後にぶら下がっている追加報酬（空タイトルなど）の required_item も探し出して合流させる
+        const relatedExtras = rawScenarioNodes.filter(node => {
+            const nid = parseFloat(node.node_id);
+            const title = (node.title || '').trim();
+            const steps = (node.clear_steps || '').trim();
+            const isExtra = title === '' || title === 'NULL' || title === '名称未設定' || title.includes('追加報酬') || title.includes('追加') || steps.includes('追加報酬') || title === '-';
+            return isExtra && Math.floor(nid) === currentId;
+        });
+
+        relatedExtras.forEach(ext => {
+            if (ext.required_item) itemStringsCollect.push(ext.required_item);
+        });
+
+        // 回収したアイテムを1つずつバラバラにして集計
+        let brokenLoop = false;
+        for (let itemStr of itemStringsCollect) {
+            const parsedList = parseItemStringToArrayList(itemStr);
+
+            for (let parsed of parsedList) {
+                if (!materialSummary[parsed.name]) {
+                    // バッグ空き枠上限チェック
+                    if (condType === 'bag-limit' && uniqueItemCount >= bagLimitValue) {
+                        stopNoticeHtml = `
+                            <div class="stop-notice">
+                                ⚠️ 持ち物の空き枠上限（${bagLimitValue}種類）に達したため、No.${currentId}「${q.title}」の途中で計算をストップしました。
+                            </div>`;
+                        brokenLoop = true;
+                        break;
+                    }
+                    materialSummary[parsed.name] = { total: 0, breakdown: [] };
+                    uniqueItemCount++;
                 }
-                materialSummary[parsed.name] = { total: 0, breakdown: [] };
-                uniqueItemCount++;
-            }
 
-            // 足し算処理と内訳メモ
-            materialSummary[parsed.name].total += parsed.count;
-            materialSummary[parsed.name].breakdown.push(`No.${Math.floor(Number(q.node_id))} ${q.title} [${parsed.count}個]`);
+                materialSummary[parsed.name].total += parsed.count;
+                materialSummary[parsed.name].breakdown.push(`No.${currentId} ${q.title} [${parsed.count}個]`);
+            }
+            if (brokenLoop) break;
         }
+        if (brokenLoop) break;
     }
 
-    // 5. 結果を画面に出力
+    // 結果HTMLのレンダリング
     let resultHtml = `<div class="result-title">🎯 計算結果：必要素材一覧</div>`;
     resultHtml += stopNoticeHtml;
 
@@ -375,10 +424,18 @@ function calculateMaterials() {
 
     itemNames.forEach(name => {
         const itemData = materialSummary[name];
+        
+        // 全自動ドロップヒント逆引き検索！
+        const dropHintText = findDropHintForMateral(name);
+        const dropHintHtml = dropHintText ? 
+            `<div class="drop-info-line">📍 ドロップ情報: ${dropHintText}</div>` : 
+            `<div class="drop-info-line" style="color:#888; font-weight:normal;">📍 ドロップ情報: データベースにヒントが登録されていません</div>`;
+
         resultHtml += `
             <div class="material-card">
                 <span class="material-total">計 ${itemData.total} 個</span>
                 <span class="material-name">📦 ${name}</span>
+                ${dropHintHtml}
                 <div class="material-breakdown">
                     <strong>使用内訳:</strong><br>
                     ${itemData.breakdown.map(line => `➔ ${line}`).join('<br>')}
