@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 【新設】「現在調査中」アナウンスボックスのスタイル */
+        /* 「現在調査中」アナウンスボックスのスタイル */
         .notice-warning-box {
             background-color: #fff5f5;
             color: #c53030;
@@ -149,7 +149,7 @@
                 
                 <h3 class="section-category" style="font-size: 1.3em;"> 1．ツールの概要</h3>
                 <div class="item-content" style="font-size: 1.05em; line-height: 1.6;">
-                    現在の進行クエストと目標条件、プレイヤーの現在のベースレベルを指定することで、自分に必要なアイテムの種類と合計数をピンポイントで一括計算します。
+                    現在の進行クエストと目標条件、プレイヤーの現在のベースレベル帯を指定することで、自分に必要なアイテムの種類と合計数をピンポイントで一括計算します。
                 </div>
 
                 <h3 class="section-category" style="font-size: 1.3em;"> 2．条件設定</h3>
@@ -169,8 +169,9 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="player-level">あなたの現在のレベル（BaseLv）は？</label>
-                            <input type="number" id="player-level" class="form-control" value="50" min="1" max="200" style="width: 120px;">
+                            <label for="player-level-range">あなたの現在のレベル帯（BaseLv）は？</label>
+                            <select id="player-level-range" class="form-control" style="width: 200px;">
+                                </select>
                             <small style="color: #666; display: block; margin-top: 4px;">※「39以下」「40以上」などのレベル帯分岐素材を自動で判別するために使用します。</small>
                         </div>
 
@@ -229,6 +230,9 @@ let rawScenarioNodes = [];
 window.addEventListener('DOMContentLoaded', initializeTool);
 
 async function initializeTool() {
+    // レベルの5刻みドロップダウンを動的に生成
+    generateLevelRangeOptions();
+
     const { data: scenarioNodes, error } = await client
         .from('scenario_nodes')
         .select('*');
@@ -251,6 +255,23 @@ async function initializeTool() {
 
     populateSelectBoxes();
     setupEventListeners();
+}
+
+// 【新機能】1〜200まで5刻みのセレクトボックスを自動で綺麗に作る関数
+function generateLevelRangeOptions() {
+    const lvlSelect = document.getElementById('player-level-range');
+    if (!lvlSelect) return;
+
+    let html = '';
+    // 1〜5, 6〜10, ... 196〜200 までのループを回す
+    for (let start = 1; start <= 196; start += 5) {
+        const end = start + 4;
+        html += `<option value="${end}">${start} ～ ${end}</option>`;
+    }
+    lvlSelect.innerHTML = html;
+    
+    // 初期のレベル帯選択は「46 ～ 50」（valueが50）あたりを真ん中として選んでおく
+    lvlSelect.value = "50";
 }
 
 function populateSelectBoxes() {
@@ -334,6 +355,7 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
             if (matchLvl) {
                 const limitLvl = parseInt(matchLvl[1], 10);
                 cleanName = matchLvl[2].trim();
+                // 選択された範囲の最大値(プレイヤーレベル)で比較
                 if (playerLevel > limitLvl) isLevelMatch = false; 
             }
         } else if (currentName.includes('以上：') || currentName.includes('以上:')) {
@@ -375,7 +397,8 @@ function calculateMaterials() {
     const startValue = parseFloat(document.getElementById('start-quest').value);
     const condType = document.querySelector('input[name="end-condition-type"]:checked').value;
     const chosenRoute = document.getElementById('route-choice').value;
-    const playerLevel = parseInt(document.getElementById('player-level').value, 10) || 1;
+    // セレクトボックスの選択値（50, 55, 60など範囲の上限値）を数値として取得
+    const playerLevel = parseInt(document.getElementById('player-level-range').value, 10) || 1;
     
     const resultContainer = document.getElementById('result-container');
     resultContainer.innerHTML = ''; 
@@ -451,38 +474,7 @@ function calculateMaterials() {
         if (brokenLoop) break;
     }
 
-    let resultHtml = `<div class="result-title">🎯 計算結果：必要素材一覧 (現在の設定Lv: ${playerLevel})</div>`;
-    resultHtml += stopNoticeHtml;
-
-    const itemNames = Object.keys(materialSummary);
-    if (itemNames.length === 0) {
-        resultHtml += `<p style="padding: 15px; color: #666;">指定された範囲およびレベル帯（Lv.${playerLevel}）に該当する必要収集アイテムはありませんでした。</p>`;
-        resultContainer.innerHTML = resultHtml;
-        return;
-    }
-
-    itemNames.forEach(name => {
-        const itemData = materialSummary[name];
-        const dropHintText = findDropHintForMateral(name);
-        const dropHintHtml = dropHintText ? 
-            `<div class="drop-info-line">📍 ドロップ情報: ${dropHintText}</div>` : 
-            `<div class="drop-info-line" style="color:#888; font-weight:normal;">📍 ドロップ情報: データベースにヒントが登録されていません</div>`;
-
-        resultHtml += `
-            <div class="material-card">
-                <span class="material-total">計 ${itemData.total} 個</span>
-                <span class="material-name">📦 ${name}</span>
-                ${dropHintHtml}
-                <div class="material-breakdown">
-                    <strong>使用内訳:</strong><br>
-                    ${itemData.breakdown.map(line => `➔ ${line}`).join('<br>')}
-                </div>
-            </div>
-        `;
-    });
-
-    resultContainer.innerHTML = resultHtml;
-}
-</script>
-</body>
-</html>
+    // レベル表示の部分を「レベル帯」の文言に修正
+    const selectText = document.getElementById('player-level-range').options[document.getElementById('player-level-range').selectedIndex].text;
+    let resultHtml = `<div class="result-title">🎯 計算結果：必要素材一覧 (現在の設定レベル帯: ${selectText})</div>`;
+    resultHtml
