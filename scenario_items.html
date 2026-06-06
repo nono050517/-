@@ -324,87 +324,88 @@ function setupEventListeners() {
     btnExecute.addEventListener('click', calculateMaterials);
 }
 
-// 【絶対安全パース】日本語や記号を誤認・誤削除しない超精密な切り分けロジック
+// 【絶対安全パース】セル内改行・空白・記号を完璧に仕分ける最新超精密ロジック
 function parseItemStringToArrayList(itemStr, playerLevel) {
     if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
     
-    // トークンをバラす
-    const rawTokens = itemStr.split(/[\s\n\r,、]+/);
+    // 1. まず「改行（\n や \r）」または「読点・カンマ」で確実に1行（行単位トークン）に切り分ける
+    const lines = itemStr.split(/[\n\r,、]+/);
     const results = [];
-    
-    let currentLineMatchState = true; 
 
-    rawTokens.forEach(token => {
-        let t = token.trim();
-        if (!t) return;
+    lines.forEach(lineToken => {
+        let rawLine = lineToken.trim();
+        if (!rawLine) return;
 
-        // メモ用カッコ行は完全除外
-        if (t.startsWith('(') || t.startsWith('（')) {
-            return;
-        }
+        // スペース（全角・半角）が並んでいる場合は、スペース区切りの複数アイテムとして再分解
+        const individualTokens = rawLine.split(/[\s\t]+/);
 
-        t = t.replace(/：/g, ':');
+        individualTokens.forEach(token => {
+            let t = token.trim();
+            if (!t) return;
 
-        let currentName = t;
-        let currentCount = 1;
+            // メモ用カッコ行は完全除外
+            if (t.startsWith('(') || t.startsWith('（')) {
+                return;
+            }
 
-        // 【修正箇所】末尾の「×個数(個)」や「*個数(個)」を安全かつ厳密に切り離すロジック
-        // アイテム名に非貪欲を使わず、末尾の記号・数字・「個」の塊を一意にマッチングさせる
-        const countMatch = t.match(/^([^×\*]+?)(?:×|\*)(\d+)(?:個)?$/);
-        if (countMatch) {
-            currentName = countMatch[1].trim();
-            currentCount = parseInt(countMatch[2], 10);
-        } else {
-            // ×や*がなく、スペース区切りで末尾が数字（および「個」）になっているケースに対応
-            const spaceNumMatch = t.match(/^(.+?)\s+(\d+)(?:個)?$/);
-            if (spaceNumMatch) {
-                currentName = spaceNumMatch[1].trim();
-                currentCount = parseInt(spaceNumMatch[2], 10);
+            // コロンの表記揺れを統一
+            t = t.replace(/：/g, ':');
+
+            let currentName = t;
+            let currentCount = 1;
+            let currentLineMatchState = true; 
+
+            // 末尾の「×個数(個)」や「*個数(個)」を安全かつ厳密に切り離す
+            const countMatch = t.match(/^([^×\*]+?)(?:×|\*)(\d+)(?:個)?$/);
+            if (countMatch) {
+                currentName = countMatch[1].trim();
+                currentCount = parseInt(countMatch[2], 10);
             } else {
-                // 個数表記がなく、単一のアイテム名で末尾に「10個」のように直接くっついているケースのフォールバック
+                // 個数表記がなく、直接末尾に数字がくっついているケースの安全フォールバック
                 const directNumMatch = t.match(/^([^0-9０-９]+)(\d+)(?:個)?$/);
                 if (directNumMatch) {
                     currentName = directNumMatch[1].trim();
                     currentCount = parseInt(directNumMatch[2], 10);
                 }
             }
-        }
 
-        let cleanName = currentName;
+            let cleanName = currentName;
 
-        // レベル条件（以下）の抽出
-        if (currentName.includes('以下:')) {
-            const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-            const matchLvl = normalizedStr.match(/^(\d+)以下:(.+)$/);
-            if (matchLvl) {
-                const limitLvl = parseInt(matchLvl[1], 10);
-                cleanName = matchLvl[2].trim();
-                currentLineMatchState = (playerLevel <= limitLvl); 
-            }
-        } 
-        // レベル条件（以上）の抽出
-        else if (currentName.includes('以上:')) {
-            const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-            const matchLvl = normalizedStr.match(/^(\d+)以上:(.+)$/);
-            if (matchLvl) {
-                const limitLvl = parseInt(matchLvl[1], 10);
-                cleanName = matchLvl[2].trim();
-                currentLineMatchState = (playerLevel >= limitLvl); 
-            }
-        }
-        
-        if (currentLineMatchState) {
-            if (cleanName.includes(':')) {
-                cleanName = cleanName.split(':')[1].trim();
+            // レベル条件（以下）の抽出と判定
+            if (currentName.includes('以下:')) {
+                const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+                const matchLvl = normalizedStr.match(/^(\d+)以下:(.+)$/);
+                if (matchLvl) {
+                    const limitLvl = parseInt(matchLvl[1], 10);
+                    cleanName = matchLvl[2].trim();
+                    currentLineMatchState = (playerLevel <= limitLvl); 
+                }
+            } 
+            // レベル条件（以上）の抽出と判定
+            else if (currentName.includes('以上:')) {
+                const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+                const matchLvl = normalizedStr.match(/^(\d+)以上:(.+)$/);
+                if (matchLvl) {
+                    const limitLvl = parseInt(matchLvl[1], 10);
+                    cleanName = matchLvl[2].trim();
+                    currentLineMatchState = (playerLevel >= limitLvl); 
+                }
             }
             
-            // カギカッコや引用符だけをピンポイントでお掃除
-            cleanName = cleanName.replace(/^[「『"']+|[」』"']+$/g, '').trim();
+            // レベル条件を満たしている場合のみ処理
+            if (currentLineMatchState) {
+                if (cleanName.includes(':')) {
+                    cleanName = cleanName.split(':')[1].trim();
+                }
+                
+                // カギカッコや引用符だけをピンポイントでお掃除
+                cleanName = cleanName.replace(/^[「『"']+|[」』"']+$/g, '').trim();
 
-            if (cleanName) {
-                results.push({ name: cleanName, count: currentCount });
+                if (cleanName) {
+                    results.push({ name: cleanName, count: currentCount });
+                }
             }
-        }
+        });
     });
 
     return results;
@@ -444,7 +445,6 @@ function calculateMaterials() {
     let targetedQuests = allQuests.slice(startIndex);
 
     // ルート絞り込み
-    // 各クエスト処理開始時にレベル判定状態をフレッシュにリセット
     targetedQuests = targetedQuests.filter(q => {
         const scene = q.scene || '';
         if (scene.includes('暁ルート') && chosenRoute !== '暁') return false;
