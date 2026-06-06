@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 1段階目：章（Scene）のヘッダースタイル */
+        /* 1段階目：章（Scene）のヘッダースタイル（文字サイズ：大） */
         .scene-header {
             background-color: #e9ecef;
             color: #333;
@@ -44,7 +44,7 @@
             display: none;
         }
 
-        /* 2段階目：クエストタイトルのスタイル */
+        /* 2段階目：クエストタイトルのスタイル（文字サイズ：大） */
         .quest-item {
             border-bottom: 1px dashed #eee;
         }
@@ -75,7 +75,7 @@
             transform: rotate(90deg);
         }
 
-        /* 3段階目：詳細表示エリア */
+        /* 3段階目：詳細表示エリア（文字サイズ：大） */
         .quest-details-content {
             padding: 18px 36px;
             background-color: #faf9f6;
@@ -120,14 +120,14 @@
             display: inline-block;
         }
 
-        /* 追加報酬セクションを目立たせるスタイル */
+        /* 追加報酬セクションのボックススタイル */
         .extra-reward-box {
-            margin-top: 10px;
-            padding: 10px 15px;
-            background-color: #f0f8ff; /* 薄い青色のボックス */
+            margin-top: 12px;
+            padding: 12px 18px;
+            background-color: #f0f8ff;
             border-left: 4px solid #1e90ff;
             border-radius: 0 4px 4px 0;
-            font-size: 0.95em;
+            font-size: 1em;
         }
     </style>
 </head>
@@ -142,7 +142,7 @@
                 <h3 class="section-category" style="font-size: 1.3em;"> 1．概要</h3>
                 <div class="item-content" style="font-size: 1.05em; line-height: 1.6;">
                     データベース（Supabase）から直接読み込んだメインシナリオおよびサブクエストの一覧データです。<br>
-                    追加報酬のみのデータ（小数点のIDなど）は、自動的に直前のメインクエスト内に統合されて表示されます。
+                    追加報酬データ（名称未設定や空欄のデータ）は、自動的に直前のメインクエスト内に統合されて表示されます。
                 </div>
 
                 <h3 class="section-category" style="font-size: 1.3em;"> 2．シナリオデータ一覧</h3>
@@ -172,7 +172,7 @@ async function loadScenarioData() {
         return;
     }
 
-    // IDを数値順に確実にソート（1, 2, 3... 8, 9, 10, 11）
+    // 数値順にソート（1, 2, 3... 8, 9, 10...）
     let rawItems = [];
     if (scenarioNodes && Array.isArray(scenarioNodes)) {
         rawItems = scenarioNodes;
@@ -183,34 +183,44 @@ async function loadScenarioData() {
         });
     }
 
-    // 【超重要】「追加報酬」の行を直前のメインクエストに自動合体させる構造化ロジック
+    // 【判定強化】空データや名称未設定、追加報酬データを100%直前のメインクエストにマージするロジック
     const finalizedItems = [];
     let currentMainQuest = null;
 
     rawItems.forEach(node => {
-        const title = node.title || '';
+        const title = (node.title || '').trim();
+        const steps = (node.clear_steps || '').trim();
         
-        // タイトルに「追加報酬」という文字が含まれている、またはタイトルが空で中身が追加報酬っぽい場合
-        if (title.includes('追加報酬') || title.includes('追加')) {
-            // 直前のメインクエストが存在していれば、その中に「extra_rewards」という配列を作って流し込む
+        // 追加データ（おまけ行）とみなす判定基準
+        const isExtra = 
+            title === '' || 
+            title === 'NULL' || 
+            title === '名称未設定' || 
+            title.includes('追加報酬') || 
+            title.includes('追加') || 
+            steps.includes('追加報酬');
+
+        if (isExtra) {
+            // 条件に当てはまったら、直前のメインクエストの「extra_rewards」ポケットに放り込む
             if (currentMainQuest) {
                 if (!currentMainQuest.extra_rewards) {
                     currentMainQuest.extra_rewards = [];
                 }
                 currentMainQuest.extra_rewards.push(node);
             } else {
-                // 万が一、直前にメインクエストがない場合は独立して残す
+                // 万が一、最初にメインクエストがない場合はそのまま出す
+                node.extra_rewards = [];
                 finalizedItems.push(node);
             }
         } else {
-            // 通常のメインクエストの場合
-            node.extra_rewards = []; // 追加報酬を入れるポケットを用意
+            // 純粋な新規メインクエストの場合
+            node.extra_rewards = [];
             finalizedItems.push(node);
-            currentMainQuest = node; // これを「現在のメインクエスト」として記憶
+            currentMainQuest = node; // 以降の追加データはこのクエストにドッキングさせる
         }
     });
 
-    // 章（scene）ごとに部屋分け
+    // 章（scene）ごとにグループ分け
     const groupedData = {};
     finalizedItems.forEach(node => {
         const sceneName = (node.scene && node.scene !== 'NULL' && node.scene !== '') ? node.scene : 'その他のクエスト';
@@ -223,6 +233,7 @@ async function loadScenarioData() {
     renderTreeArchive(groupedData);
 }
 
+// 経験値用カンマ区切りフォーマット
 function formatExp(expValue) {
     if (!expValue || expValue === 'NULL' || expValue === '0' || expValue === '') return null;
     const num = Math.floor(Number(String(expValue).replace(/,/g, '')));
@@ -264,7 +275,7 @@ function renderTreeArchive(groupedData) {
             }
             const lvlText = displayLevel ? ` [必要Lv: ${displayLevel}]` : '';
 
-            // メメインクエスト側の報酬成形
+            // 報酬テキストの組み立て
             const formattedBase = formatExp(node.BaseExp);
             const formattedJob = formatExp(node.JobExp);
             let expParts = [];
@@ -276,7 +287,7 @@ function renderTreeArchive(groupedData) {
 
             const objectiveText = (node.content_text && node.content_text !== 'NULL' && node.content_text !== '') ? node.content_text : '-';
 
-            // 進行手順の成形
+            // 進行手順の組み立て（依頼人抽出）
             let clientText = '-';
             let stepsHtml = '';
             const rawSteps = node.clear_steps;
@@ -312,7 +323,7 @@ function renderTreeArchive(groupedData) {
                 stepsHtml = '<div class="quest-steps-wrapper">-</div>';
             }
 
-            // 【新機能】合体させた追加報酬（extra_rewards）の表示用HTMLを組み立てる
+            // 合体させた追加報酬（extra_rewards）の表示用HTML組み立て
             let extraRewardsHtml = '';
             if (node.extra_rewards && node.extra_rewards.length > 0) {
                 node.extra_rewards.forEach(extra => {
@@ -325,19 +336,22 @@ function renderTreeArchive(groupedData) {
                     const exItem = (extra.報酬 && extra.報酬 !== 'NULL' && extra.報酬 !== '') ? extra.報酬 : '';
                     const exFinalReward = exItem ? `${exExpText} 、${exItem}` : exExpText;
                     
-                    // 追加条件（clear_steps や content_text に書かれている「〇〇の場合」というテキストを活かす）
-                    const condition = (extra.content_text && extra.content_text !== 'NULL') ? extra.content_text : '特定の条件クリア時';
+                    // 追加側の手順や目的を条件として表示する
+                    let condition = (extra.clear_steps && extra.clear_steps !== 'NULL' && extra.clear_steps !== '') ? extra.clear_steps : '';
+                    if (!condition) {
+                        condition = (extra.title && extra.title !== '名称未設定') ? extra.title : '追加報酬条件';
+                    }
 
                     extraRewardsHtml += `
                         <div class="extra-reward-box">
-                            <strong>🎁 ${extra.title || '追加報酬'}:</strong> (${condition})<br>
-                            <span style="color: #444; margin-left: 10px;">➔ 報酬: ${exFinalReward}</span>
+                            <strong>🎁 追加内容:</strong> ${condition}<br>
+                            <span style="color: #444; margin-left: 10px;">➔ 獲得報酬: <strong>${exFinalReward}</strong></span>
                         </div>
                     `;
                 });
             }
 
-            // クエストブロック構築
+            // クエストブロック
             html += `
                 <div class="quest-item">
                     <div class="quest-title-bar" data-target="details-${displayId}">
