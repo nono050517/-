@@ -230,7 +230,6 @@ let rawScenarioNodes = [];
 window.addEventListener('DOMContentLoaded', initializeTool);
 
 async function initializeTool() {
-    // レベルの5刻みドロップダウン（最高150仕様）を生成
     generateLevelRangeOptions();
 
     const { data: scenarioNodes, error } = await client
@@ -257,20 +256,18 @@ async function initializeTool() {
     setupEventListeners();
 }
 
-// 【最高レベル150調整版】150できれいに完結するループ処理
 function generateLevelRangeOptions() {
     const lvlSelect = document.getElementById('player-level-range');
     if (!lvlSelect) return;
 
     let html = '';
-    // 1〜5から始まり、146〜150でピタッと終わるように上限を設定しました
     for (let start = 1; start <= 146; start += 5) {
         let end = start + 4;
-        if (end > 150) end = 150; 
+        if (end > 150) end = 150;
         html += `<option value="${end}">${start} ～ ${end}</option>`;
     }
     lvlSelect.innerHTML = html;
-    lvlSelect.value = "50"; // 初期位置は使いやすい46〜50
+    lvlSelect.value = "100"; // 初期位置を96〜100に設定
 }
 
 function populateSelectBoxes() {
@@ -327,45 +324,69 @@ function setupEventListeners() {
     btnExecute.addEventListener('click', calculateMaterials);
 }
 
+// 【超強化版】全角コロン・半角コロン・英数字の全角半角ブレをすべて吸収する関数
 function parseItemStringToArrayList(itemStr, playerLevel) {
     if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
     
-    const rawTokens = itemStr.split(/[\s,、\s]+/);
+    // 改行コードや半角全角スペース、コンマ、読点でトークンに細かくバラす
+    const rawTokens = itemStr.split(/[\s\n\r,、]+/);
     const results = [];
+    
+    // 直前のレベル合致判定を引き継ぐ状態管理
+    let lastLevelMatchState = true; 
 
     rawTokens.forEach(token => {
-        const t = token.trim();
+        let t = token.trim();
         if (!t) return;
+
+        // メモ書きカッコは完全スルー
+        if (t.startsWith('(') || t.startsWith('（')) {
+            return;
+        }
+
+        // 判定を安定させるために、全角の「：」をプログラム内部で一瞬半角の「:」に統一する
+        t = t.replace(/：/g, ':');
 
         let currentName = t;
         let currentCount = 1;
 
+        // 個数（×25 や *25）の切り離し
         const countMatch = t.match(/^(.+?)(?:×|\*|\s)(\d+)(?:個)?$/);
         if (countMatch) {
             currentName = countMatch[1].trim();
             currentCount = parseInt(countMatch[2], 10);
         }
 
-        let isLevelMatch = true;
         let cleanName = currentName;
 
-        if (currentName.includes('以下：') || currentName.includes('以下:')) {
-            const matchLvl = currentName.match(/^(\d+)以下[：:](.+)$/);
+        // 「以下」条件の全自動判定
+        if (currentName.includes('以下:')) {
+            // 全角数字が含まれていてもいいように半角に置換してキャプチャ
+            const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+            const matchLvl = normalizedStr.match(/^(\d+)以下:(.+)$/);
             if (matchLvl) {
                 const limitLvl = parseInt(matchLvl[1], 10);
                 cleanName = matchLvl[2].trim();
-                if (playerLevel > limitLvl) isLevelMatch = false; 
+                lastLevelMatchState = (playerLevel <= limitLvl); 
             }
-        } else if (currentName.includes('以上：') || currentName.includes('以上:')) {
-            const matchLvl = currentName.match(/^(\d+)以上[：:](.+)$/);
+        } 
+        // 「以上」条件の全自動判定（Wadaさんの入力スタイルに完全準拠！）
+        else if (currentName.includes('以上:')) {
+            const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+            const matchLvl = normalizedStr.match(/^(\d+)以上:(.+)$/);
             if (matchLvl) {
                 const limitLvl = parseInt(matchLvl[1], 10);
                 cleanName = matchLvl[2].trim();
-                if (playerLevel < limitLvl) isLevelMatch = false; 
+                lastLevelMatchState = (playerLevel >= limitLvl); 
             }
         }
-
-        if (isLevelMatch) {
+        
+        // レベル適合しているアイテムだけをカード化対象にする
+        if (lastLevelMatchState) {
+            // コロンが名前に残ってしまっていた場合の最終お掃除
+            if (cleanName.includes(':')) {
+                cleanName = cleanName.split(':')[1].trim();
+            }
             results.push({ name: cleanName, count: currentCount });
         }
     });
