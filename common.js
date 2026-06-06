@@ -27,6 +27,12 @@ async function loadSidebar() {
             categories[cat].forEach(item => {
                 // リンク先をファイル名に紐付け
                 let link = 'index.html'; 
+                
+                // 【超重要：修正箇所】Supabaseのメニューデータからシナリオページへ正しくリンクを繋ぐ設定を追加
+                if (item.page_id === 'scenario' || item.page_id === 'scenario-page' || item.page_id === 'scenario-nodes' || item.page_id === 'scenario_nodes') {
+                    link = 'scenario_nodes.html';
+                }
+                
                 if (item.page_id === 'production-page') link = 'production.html';
                 if (item.page_id === 'faq-page') link = 'faq.html';
                 if (item.page_id === 'status-page') link = 'status.html';
@@ -62,6 +68,7 @@ async function loadSidebar() {
                 if (item.page_id === 'gunslinger') link = '3job_gunslinger.html';
                 if (item.page_id === 'takumi') link = '3job_takumi.html';
                 if (item.page_id === 'penetrator') link = '3job_penetrator.html';
+                
                 html += `<li><a href="${link}">${item.display_name}</a></li>`;
             });
             html += `</ul>`;
@@ -79,7 +86,7 @@ function toggleNav(u, t) {
 document.addEventListener("DOMContentLoaded", () => {
     const headerHtml = `
         <header>
-            <h1 class="header-title">エリシアオンライン　アーカイブス</h1>
+            <h1 class="header-title">エリシアオンライン アーカイブス</h1>
             <h2 class="header-subtitle">Ellicia-Online Archives</h2>
         </header>
         <div class="nav-bar"></div>
