@@ -28,8 +28,11 @@ async function loadSidebar() {
                 // リンク先をファイル名に紐付け
                 let link = 'index.html'; 
                 
-                // 【超重要：修正箇所】Supabaseのメニューデータからシナリオページへ正しくリンクを繋ぐ設定を追加
-                if (item.page_id === 'scenario' || item.page_id === 'scenario-page' || item.page_id === 'scenario-nodes' || item.page_id === 'scenario_nodes') {
+                // 【超重要】新しく設定した scenario_items への動線を追加
+                if (item.page_id === 'scenario_items' || item.page_id === 'scenario-items') {
+                    link = 'scenario_items.html';
+                }
+                if (item.page_id === 'scenario_nodes' || item.page_id === 'scenario_nodes') {
                     link = 'scenario_nodes.html';
                 }
                 
@@ -82,7 +85,6 @@ function toggleNav(u, t) {
     document.getElementById(t).classList.toggle('active');
 }
 
-// ページ読み込み時にヘッダーを注入
 document.addEventListener("DOMContentLoaded", () => {
     const headerHtml = `
         <header>
