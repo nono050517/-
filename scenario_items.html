@@ -6,7 +6,25 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 計算ツール用のカスタムデザイン（大きめで見やすい設計） */
+        /* 【新設】「現在調査中」アナウンスボックスのスタイル */
+        .notice-warning-box {
+            background-color: #fff5f5;
+            color: #c53030;
+            border: 1px solid #feb2b2;
+            border-left: 5px solid #e53e3e;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 1.05em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .notice-warning-box span {
+            margin-right: 8px;
+            font-size: 1.2em;
+        }
+
         .tool-panel {
             background-color: #fdfdfd;
             border: 1px solid #ccc;
@@ -56,7 +74,6 @@
             background-color: #007ae6;
         }
         
-        /* 条件分岐用の隠しエリア */
         .conditional-box {
             display: none;
             background-color: #f0f8ff;
@@ -66,7 +83,6 @@
             border-radius: 0 4px 4px 0;
         }
 
-        /* 結果表示エリアの装飾 */
         #result-container {
             margin-top: 25px;
         }
@@ -97,7 +113,6 @@
             font-weight: bold;
             color: #ff4500;
         }
-        /* ドロップモンスター情報の緑文字スタイル */
         .drop-info-line {
             margin-top: 4px;
             font-size: 0.95em;
@@ -134,11 +149,16 @@
                 
                 <h3 class="section-category" style="font-size: 1.3em;"> 1．ツールの概要</h3>
                 <div class="item-content" style="font-size: 1.05em; line-height: 1.6;">
-                    現在の進行クエストと目標条件を指定することで、これから先のストーリー攻略に必要なアイテムの種類と合計数を一括計算します。
+                    現在の進行クエストと目標条件、プレイヤーの現在のベースレベルを指定することで、自分に必要なアイテムの種類と合計数をピンポイントで一括計算します。
                 </div>
 
                 <h3 class="section-category" style="font-size: 1.3em;"> 2．条件設定</h3>
                 <div class="item-content">
+
+                    <div class="notice-warning-box">
+                        <span>⚠️</span> ※注意：現在データ調査中（まだ一部未完成の章や検証中のデータが含まれています）
+                    </div>
+                    
                     <div class="tool-panel">
                         
                         <div class="form-group">
@@ -146,6 +166,12 @@
                             <select id="start-quest" class="form-control">
                                 <option value="">データを読み込み中...</option>
                             </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="player-level">あなたの現在のレベル（BaseLv）は？</label>
+                            <input type="number" id="player-level" class="form-control" value="50" min="1" max="200" style="width: 120px;">
+                            <small style="color: #666; display: block; margin-top: 4px;">※「39以下」「40以上」などのレベル帯分岐素材を自動で判別するために使用します。</small>
                         </div>
 
                         <div id="route-branch-box" class="conditional-box">
@@ -198,7 +224,7 @@
 
 <script>
 let allQuests = [];
-let rawScenarioNodes = []; // 追加報酬（ヒント情報）を逆引きするために生データを保持
+let rawScenarioNodes = []; 
 
 window.addEventListener('DOMContentLoaded', initializeTool);
 
@@ -215,7 +241,6 @@ async function initializeTool() {
     if (scenarioNodes && Array.isArray(scenarioNodes)) {
         rawScenarioNodes = scenarioNodes;
         
-        // メインクエストだけを抽出（追加報酬の空行やハイフン行は除外）
         allQuests = scenarioNodes.filter(node => {
             const title = (node.title || '').trim();
             const steps = (node.clear_steps || '').trim();
@@ -228,7 +253,6 @@ async function initializeTool() {
     setupEventListeners();
 }
 
-// 【すっきり修正】ドロップダウンに「章の名前」を流し込まず、Noとタイトルだけにする
 function populateSelectBoxes() {
     const startSelect = document.getElementById('start-quest');
     const endSelect = document.getElementById('end-quest');
@@ -238,7 +262,6 @@ function populateSelectBoxes() {
     allQuests.forEach(q => {
         const id = Math.floor(Number(q.node_id));
         const title = q.title || '名称未設定';
-        // 「(第二章...)」のような長い文字を完全に排除！
         optionsHtml += `<option value="${q.node_id}">No.${id} ${title}</option>`;
     });
 
@@ -284,11 +307,9 @@ function setupEventListeners() {
     btnExecute.addEventListener('click', calculateMaterials);
 }
 
-// 1つのセルの中にスペースで並んでいる複数素材を完璧に1個ずつバラす関数
-function parseItemStringToArrayList(itemStr) {
+function parseItemStringToArrayList(itemStr, playerLevel) {
     if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
     
-    // スペース（全角・半角）やコンマ、読点で分割
     const rawTokens = itemStr.split(/[\s,、\s]+/);
     const results = [];
 
@@ -296,29 +317,50 @@ function parseItemStringToArrayList(itemStr) {
         const t = token.trim();
         if (!t) return;
 
-        // 「アイテム名×5」や「アイテム名*2」を綺麗にカウント分解
-        const match = t.match(/^(.+?)(?:×|\*|\s)(\d+)(?:個)?$/);
-        if (match) {
-            results.push({ name: match[1].trim(), count: parseInt(match[2], 10) });
-        } else {
-            results.push({ name: t, count: 1 });
+        let currentName = t;
+        let currentCount = 1;
+
+        const countMatch = t.match(/^(.+?)(?:×|\*|\s)(\d+)(?:個)?$/);
+        if (countMatch) {
+            currentName = countMatch[1].trim();
+            currentCount = parseInt(countMatch[2], 10);
+        }
+
+        let isLevelMatch = true;
+        let cleanName = currentName;
+
+        if (currentName.includes('以下：') || currentName.includes('以下:')) {
+            const matchLvl = currentName.match(/^(\d+)以下[：:](.+)$/);
+            if (matchLvl) {
+                const limitLvl = parseInt(matchLvl[1], 10);
+                cleanName = matchLvl[2].trim();
+                if (playerLevel > limitLvl) isLevelMatch = false; 
+            }
+        } else if (currentName.includes('以上：') || currentName.includes('以上:')) {
+            const matchLvl = currentName.match(/^(\d+)以上[：:](.+)$/);
+            if (matchLvl) {
+                const limitLvl = parseInt(matchLvl[1], 10);
+                cleanName = matchLvl[2].trim();
+                if (playerLevel < limitLvl) isLevelMatch = false; 
+            }
+        }
+
+        if (isLevelMatch) {
+            results.push({ name: cleanName, count: currentCount });
         }
     });
 
     return results;
 }
 
-// 全データからアイテムに対応する「ヒント」を探し出し、ドロップ元情報にする関数
 function findDropHintForMateral(itemName) {
     let hintFound = '';
-    
     for (let node of rawScenarioNodes) {
         const steps = node.clear_steps || '';
         if (steps.includes('ヒント：') || steps.includes('ヒント:')) {
             const lines = steps.split(/\n|<br\s*\/?>|\\n/);
             for (let line of lines) {
                 if ((line.startsWith('ヒント：') || line.startsWith('ヒント:')) && line.includes(itemName)) {
-                    // 「ヒント：」の文字を削る
                     hintFound = line.replace(/^ヒント[：:]\s*/, '').trim();
                     break;
                 }
@@ -333,6 +375,7 @@ function calculateMaterials() {
     const startValue = parseFloat(document.getElementById('start-quest').value);
     const condType = document.querySelector('input[name="end-condition-type"]:checked').value;
     const chosenRoute = document.getElementById('route-choice').value;
+    const playerLevel = parseInt(document.getElementById('player-level').value, 10) || 1;
     
     const resultContainer = document.getElementById('result-container');
     resultContainer.innerHTML = ''; 
@@ -359,7 +402,6 @@ function calculateMaterials() {
         }
     }
 
-    // 素材の集計処理
     const materialSummary = {};
     let uniqueItemCount = 0;
     const bagLimitValue = parseInt(document.getElementById('bag-space').value, 10);
@@ -371,7 +413,6 @@ function calculateMaterials() {
         
         if (q.required_item) itemStringsCollect.push(q.required_item);
 
-        // このクエストに紐づく追加報酬行のアイテムも合算対象として回収
         const relatedExtras = rawScenarioNodes.filter(node => {
             const nid = parseFloat(node.node_id);
             const title = (node.title || '').trim();
@@ -386,11 +427,10 @@ function calculateMaterials() {
 
         let brokenLoop = false;
         for (let itemStr of itemStringsCollect) {
-            const parsedList = parseItemStringToArrayList(itemStr);
+            const parsedList = parseItemStringToArrayList(itemStr, playerLevel);
 
             for (let parsed of parsedList) {
                 if (!materialSummary[parsed.name]) {
-                    // バッグ制限チェック
                     if (condType === 'bag-limit' && uniqueItemCount >= bagLimitValue) {
                         stopNoticeHtml = `
                             <div class="stop-notice">
@@ -411,20 +451,18 @@ function calculateMaterials() {
         if (brokenLoop) break;
     }
 
-    let resultHtml = `<div class="result-title">🎯 計算結果：必要素材一覧</div>`;
+    let resultHtml = `<div class="result-title">🎯 計算結果：必要素材一覧 (現在の設定Lv: ${playerLevel})</div>`;
     resultHtml += stopNoticeHtml;
 
     const itemNames = Object.keys(materialSummary);
     if (itemNames.length === 0) {
-        resultHtml += `<p style="padding: 15px; color: #666;">指定された範囲のクエストに、必要な収集アイテムはありませんでした。</p>`;
+        resultHtml += `<p style="padding: 15px; color: #666;">指定された範囲およびレベル帯（Lv.${playerLevel}）に該当する必要収集アイテムはありませんでした。</p>`;
         resultContainer.innerHTML = resultHtml;
         return;
     }
 
     itemNames.forEach(name => {
         const itemData = materialSummary[name];
-        
-        // ヒントからドロップ情報を自動逆引き
         const dropHintText = findDropHintForMateral(name);
         const dropHintHtml = dropHintText ? 
             `<div class="drop-info-line">📍 ドロップ情報: ${dropHintText}</div>` : 
