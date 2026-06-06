@@ -2,527 +2,141 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>必要素材数計算 - エリシア・アーカイブス</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>エリシアオンライン アーカイブス - 必要素材計算ツール</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 「現在調査中」アナウンスボックスのスタイル */
-        .notice-warning-box {
-            background-color: #fff5f5;
-            color: #c53030;
-            border: 1px solid #feb2b2;
-            border-left: 5px solid #e53e3e;
-            padding: 12px 20px;
+        :root {
+            --primary-text: #333;
+            --accent-red: #d32f2f;
+            --hint-green: #00796b;
+            --border-color: #ddd;
+            --bg-light: #f9f9f9;
+        }
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            color: var(--primary-text);
+            background-color: #f0f2f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        /* ⚠️ 警告アナウンス常駐 */
+        .warning-banner {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+            padding: 12px 15px;
+            border-radius: 6px;
             margin-bottom: 20px;
-            border-radius: 4px;
-            font-size: 1.05em;
             font-weight: bold;
             display: flex;
             align-items: center;
+            gap: 8px;
         }
-        .notice-warning-box span {
-            margin-right: 8px;
-            font-size: 1.2em;
-        }
-
-        .tool-panel {
-            background-color: #fdfdfd;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            padding: 20px;
-            margin-bottom: 25px;
-            font-size: 1.05em;
-        }
-        .form-group {
-            margin-bottom: 18px;
-        }
-        .form-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 6px;
-            color: #333;
-        }
-        .form-control {
-            width: 100%;
-            max-width: 500px;
-            padding: 10px;
-            font-size: 1em;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .radio-group {
-            margin-top: 6px;
-        }
-        .radio-label {
-            margin-right: 20px;
-            cursor: pointer;
-            font-weight: normal;
-        }
-        .btn-calc {
-            background-color: #1e90ff;
-            color: #fff;
-            border: none;
-            padding: 12px 30px;
-            font-size: 1.1em;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .btn-calc:hover {
-            background-color: #007ae6;
-        }
-        
-        .conditional-box {
-            display: none;
-            background-color: #f0f8ff;
+        /* コントロールパネル */
+        .control-panel {
+            background: var(--bg-light);
             padding: 15px;
-            border-left: 4px solid #1e90ff;
-            margin-top: 10px;
-            border-radius: 0 4px 4px 0;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
-
-        #result-container {
-            margin-top: 25px;
-        }
-        .result-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            border-bottom: 2px solid #333;
-            padding-bottom: 8px;
-            margin-bottom: 15px;
-            color: #111;
-        }
-        .material-card {
-            background: #faf9f6;
-            border: 1px solid #ddd;
+        select, button {
+            padding: 8px 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
             border-radius: 4px;
-            padding: 15px 20px;
-            margin-bottom: 12px;
-            font-size: 1.05em;
         }
-        .material-name {
-            font-size: 1.15em;
+        button {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            cursor: pointer;
             font-weight: bold;
-            color: #b22222;
+            transition: background 0.2s;
         }
-        .material-total {
-            float: right;
-            font-size: 1.3em;
+        button:hover {
+            background-color: #1565c0;
+        }
+        /* 素材カード */
+        .item-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .item-name {
+            font-size: 18px;
             font-weight: bold;
-            color: #ff4500;
+            color: #8d6e63; /* アイコンに合わせたブラウン系 */
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .drop-info-line {
-            margin-top: 4px;
-            font-size: 0.95em;
-            color: #2e8b57;
+        .item-total {
+            font-size: 20px;
             font-weight: bold;
+            color: var(--accent-red);
         }
-        .material-breakdown {
-            margin: 8px 0 0 0;
-            padding-left: 20px;
+        .drop-hint {
+            font-size: 14px;
+            color: var(--hint-green);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .drop-hint.empty {
+            color: #999;
+        }
+        .divider {
+            border-top: 1px dashed var(--border-color);
+            margin: 10px 0;
+        }
+        .usage-breakdown {
+            font-size: 13px;
             color: #555;
-            font-size: 0.95em;
-            line-height: 1.5;
-            border-top: 1px dashed #eee;
-            padding-top: 6px;
         }
-        .stop-notice {
-            background-color: #fff3cd;
-            color: #856404;
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            border-left: 4px solid #ffc107;
-            font-weight: bold;
+        .usage-title {
+            margin-bottom: 5px;
+        }
+        .usage-list {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        .usage-list li {
+            margin-bottom: 3px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            color: #666;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="wrapper">
-        <div class="container">
-            <nav id="sidebar-nav"></nav>
-            
-            <main>
-                <h2 class="page-title" style="font-size: 1.8em;">シナリオ必要素材数計算ツール</h2>
-                
-                <h3 class="section-category" style="font-size: 1.3em;"> 1．ツールの概要</h3>
-                <div class="item-content" style="font-size: 1.05em; line-height: 1.6;">
-                    現在の進行クエストと目標条件、プレイヤーの現在のベースレベル帯を指定することで、自分に必要なアイテムの種類と合計数をピンポイントで一括計算します。
-                </div>
 
-                <h3 class="section-category" style="font-size: 1.3em;"> 2．条件設定</h3>
-                <div class="item-content">
-
-                    <div class="notice-warning-box">
-                        <span>⚠️</span> ※注意：現在データ調査中（まだ一部未完成の章や検証中のデータが含まれています）
-                    </div>
-                    
-                    <div class="tool-panel">
-                        
-                        <div class="form-group">
-                            <label for="start-quest">現在の進行クエストは？</label>
-                            <select id="start-quest" class="form-control">
-                                <option value="">データを読み込み中...</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="player-level-range">あなたの現在のレベル帯（BaseLv）は？</label>
-                            <select id="player-level-range" class="form-control" style="width: 200px;">
-                                </select>
-                            <small style="color: #666; display: block; margin-top: 4px;">※「39以下」「40以上」などのレベル帯分岐素材を自動で判別するために使用します。</small>
-                        </div>
-
-                        <div id="route-branch-box" class="conditional-box">
-                            <label for="route-choice" style="color: #0056b3;">➔ 第一章の分岐ルートの選択予定は？</label>
-                            <select id="route-choice" class="form-control">
-                                <option value="暁">【暁ルート】に進む</option>
-                                <option value="魔女">【魔女ルート】に進む</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group" style="margin-top: 25px;">
-                            <label>終了条件の設定</label>
-                            <div class="radio-group">
-                                <label class="radio-label">
-                                    <input type="radio" name="end-condition-type" value="target-quest" checked> ① 目標クエストまで
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="end-condition-type" value="bag-limit"> ② 持ち物の空き枠限界まで
-                                </label>
-                            </div>
-                        </div>
-
-                        <div id="target-quest-group" class="form-group">
-                            <label for="end-quest">どこまでの分が必要？（目標クエスト）</label>
-                            <select id="end-quest" class="form-control">
-                                <option value="">データを読み込み中...</option>
-                            </select>
-                        </div>
-
-                        <div id="bag-limit-group" class="form-group" style="display: none;">
-                            <label for="bag-space">あといくつ持ち物が持てる？（空き枠アイテム種類数）</label>
-                            <input type="number" id="bag-space" class="form-control" value="10" min="1" max="100" style="width: 120px;">
-                            <small style="color: #666; display: block; margin-top: 4px;">※集めるアイテムの種類数がこの数に達した時点で計算をストップします。</small>
-                        </div>
-
-                        <div style="margin-top: 25px;">
-                            <button type="button" id="btn-execute" class="btn-calc">必要素材を計算する</button>
-                        </div>
-
-                    </div>
-
-                    <div id="result-container"></div>
-
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <script src="common.js"></script>
-
-<script>
-let allQuests = [];
-let rawScenarioNodes = []; 
-
-window.addEventListener('DOMContentLoaded', initializeTool);
-
-async function initializeTool() {
-    generateLevelRangeOptions();
-
-    const { data: scenarioNodes, error } = await client
-        .from('scenario_nodes')
-        .select('*');
-
-    if (error) {
-        console.error("データ取得失敗:", error);
-        return;
-    }
-
-    if (scenarioNodes && Array.isArray(scenarioNodes)) {
-        rawScenarioNodes = scenarioNodes;
-        
-        allQuests = scenarioNodes.filter(node => {
-            const title = (node.title || '').trim();
-            const steps = (node.clear_steps || '').trim();
-            return !(title === '' || title === 'NULL' || title === '名称未設定' || title.includes('追加報酬') || title.includes('追加') || steps.includes('追加報酬') || title === '-');
-        });
-        allQuests.sort((a, b) => parseFloat(a.node_id || 0) - parseFloat(b.node_id || 0));
-    }
-
-    populateSelectBoxes();
-    setupEventListeners();
-}
-
-function generateLevelRangeOptions() {
-    const lvlSelect = document.getElementById('player-level-range');
-    if (!lvlSelect) return;
-
-    let html = '';
-    for (let start = 1; start <= 146; start += 5) {
-        let end = start + 4;
-        if (end > 150) end = 150;
-        html += `<option value="${end}">${start} ～ ${end}</option>`;
-    }
-    lvlSelect.innerHTML = html;
-    lvlSelect.value = "100"; 
-}
-
-function populateSelectBoxes() {
-    const startSelect = document.getElementById('start-quest');
-    const endSelect = document.getElementById('end-quest');
-    if (!startSelect || !endSelect) return;
-
-    let optionsHtml = '';
-    allQuests.forEach(q => {
-        const id = Math.floor(Number(q.node_id));
-        const title = q.title || '名称未設定';
-        optionsHtml += `<option value="${q.node_id}">No.${id} ${title}</option>`;
-    });
-
-    startSelect.innerHTML = optionsHtml;
-    endSelect.innerHTML = optionsHtml;
-    
-    if (endSelect.options.length > 0) {
-        endSelect.selectedIndex = endSelect.options.length - 1;
-    }
-}
-
-function setupEventListeners() {
-    const startSelect = document.getElementById('start-quest');
-    const branchBox = document.getElementById('route-branch-box');
-    const btnExecute = document.getElementById('btn-execute');
-
-    startSelect.addEventListener('change', () => {
-        const selectedQuest = allQuests.find(q => q.node_id === startSelect.value);
-        if (selectedQuest) {
-            const sceneText = selectedQuest.scene || '';
-            if (sceneText.includes('序章') || (sceneText.includes('第一章') && !sceneText.includes('暁') && !sceneText.includes('魔女'))) {
-                branchBox.style.display = 'block';
-            } else {
-                branchBox.style.display = 'none';
-            }
-        }
-    });
-
-    if (startSelect.value) startSelect.dispatchEvent(new Event('change'));
-
-    document.querySelectorAll('input[name="end-condition-type"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            if (e.target.value === 'target-quest') {
-                document.getElementById('target-quest-group').style.display = 'block';
-                document.getElementById('bag-limit-group').style.display = 'none';
-            } else {
-                document.getElementById('target-quest-group').style.display = 'none';
-                document.getElementById('bag-limit-group').style.display = 'block';
-            }
-        });
-    });
-
-    btnExecute.addEventListener('click', calculateMaterials);
-}
-
-// 【バグ完全修正版】日本語の「の」を絶対に誤爆カットしない超精密パース処理
-function parseItemStringToArrayList(itemStr, playerLevel) {
-    if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
-    
-    const rawTokens = itemStr.split(/[\s\n\r,、]+/);
-    const results = [];
-    
-    let lastLevelMatchState = true; 
-
-    rawTokens.forEach(token => {
-        let t = token.trim();
-        if (!t) return;
-
-        if (t.startsWith('(') || t.startsWith('（')) {
-            return;
-        }
-
-        t = t.replace(/：/g, ':');
-
-        let currentName = t;
-        let currentCount = 1;
-
-        // 【大修正】日本語の文字を誤認しないよう、末尾の「×数字」「*数字」だけを狙い撃ちして切り離す
-        const countMatch = t.match(/^(.+?)(?:×|\*)(\d+)(?:個)?$/);
-        if (countMatch) {
-            currentName = countMatch[1].trim();
-            currentCount = parseInt(countMatch[2], 10);
-        } else {
-            // 末尾がただの数字（例: 竜の羽 20）になっている場合用のフォールバック
-            const spaceNumMatch = t.match(/^(.+?)\s+(\d+)(?:個)?$/);
-            if (spaceNumMatch) {
-                currentName = spaceNumMatch[1].trim();
-                currentCount = parseInt(spaceNumMatch[2], 10);
-            }
-        }
-
-        let cleanName = currentName;
-
-        if (currentName.includes('以下:')) {
-            const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-            const matchLvl = normalizedStr.match(/^(\d+)以下:(.+)$/);
-            if (matchLvl) {
-                const limitLvl = parseInt(matchLvl[1], 10);
-                cleanName = matchLvl[2].trim();
-                lastLevelMatchState = (playerLevel <= limitLvl); 
-            }
-        } 
-        else if (currentName.includes('以上:')) {
-            const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-            const matchLvl = normalizedStr.match(/^(\d+)以上:(.+)$/);
-            if (matchLvl) {
-                const limitLvl = parseInt(matchLvl[1], 10);
-                cleanName = matchLvl[2].trim();
-                lastLevelMatchState = (playerLevel >= limitLvl); 
-            }
-        }
-        
-        if (lastLevelMatchState) {
-            if (cleanName.includes(':')) {
-                cleanName = cleanName.split(':')[1].trim();
-            }
-            results.push({ name: cleanName, count: currentCount });
-        }
-    });
-
-    return results;
-}
-
-function findDropHintForMateral(itemName) {
-    let hintFound = '';
-    for (let node of rawScenarioNodes) {
-        const steps = node.clear_steps || '';
-        if (steps.includes('ヒント：') || steps.includes('ヒント:')) {
-            const lines = steps.split(/\n|<br\s*\/?>|\\n/);
-            for (let line of lines) {
-                if ((line.startsWith('ヒント：') || line.startsWith('ヒント:')) && line.includes(itemName)) {
-                    hintFound = line.replace(/^ヒント[：:]\s*/, '').trim();
-                    break;
-                }
-            }
-        }
-        if (hintFound) break;
-    }
-    return hintFound;
-}
-
-function calculateMaterials() {
-    const startValue = parseFloat(document.getElementById('start-quest').value);
-    const condType = document.querySelector('input[name="end-condition-type"]:checked').value;
-    const chosenRoute = document.getElementById('route-choice').value;
-    const playerLevel = parseInt(document.getElementById('player-level-range').value, 10) || 1;
-    
-    const resultContainer = document.getElementById('result-container');
-    resultContainer.innerHTML = ''; 
-
-    let startIndex = allQuests.findIndex(q => parseFloat(q.node_id) === startValue);
-    if (startIndex === -1) startIndex = 0;
-
-    let targetedQuests = allQuests.slice(startIndex);
-
-    // ルート絞り込み
-    targetedQuests = targetedQuests.filter(q => {
-        const scene = q.scene || '';
-        if (scene.includes('暁ルート') && chosenRoute !== '暁') return false;
-        if (scene.includes('魔女ルート') && chosenRoute !== '魔女') return false;
-        return true;
-    });
-
-    // 目標クエストまでのカット
-    if (condType === 'target-quest') {
-        const endValue = parseFloat(document.getElementById('end-quest').value);
-        const endIndex = targetedQuests.findIndex(q => parseFloat(q.node_id) === endValue);
-        if (endIndex !== -1) {
-            targetedQuests = targetedQuests.slice(0, endIndex + 1);
-        }
-    }
-
-    const materialSummary = {};
-    let uniqueItemCount = 0;
-    const bagLimitValue = parseInt(document.getElementById('bag-space').value, 10);
-    let stopNoticeHtml = '';
-
-    for (let q of targetedQuests) {
-        const currentId = Math.floor(Number(q.node_id));
-        const itemStringsCollect = [];
-        
-        if (q.required_item) itemStringsCollect.push(q.required_item);
-
-        const relatedExtras = rawScenarioNodes.filter(node => {
-            const nid = parseFloat(node.node_id);
-            const title = (node.title || '').trim();
-            const steps = (node.clear_steps || '').trim();
-            const isExtra = title === '' || title === 'NULL' || title === '名称未設定' || title.includes('追加報酬') || title.includes('追加') || steps.includes('追加報酬') || title === '-';
-            return isExtra && Math.floor(nid) === currentId;
-        });
-
-        relatedExtras.forEach(ext => {
-            if (ext.required_item) itemStringsCollect.push(ext.required_item);
-        });
-
-        let brokenLoop = false;
-        for (let itemStr of itemStringsCollect) {
-            const parsedList = parseItemStringToArrayList(itemStr, playerLevel);
-
-            for (let parsed of parsedList) {
-                if (!materialSummary[parsed.name]) {
-                    if (condType === 'bag-limit' && uniqueItemCount >= bagLimitValue) {
-                        stopNoticeHtml = `
-                            <div class="stop-notice">
-                                ⚠️ 持ち物の空き枠上限（${bagLimitValue}種類）に達したため、No.${currentId}「${q.title}」の途中で計算をストップしました。
-                            </div>`;
-                        brokenLoop = true;
-                        break;
-                    }
-                    materialSummary[parsed.name] = { total: 0, breakdown: [] };
-                    uniqueItemCount++;
-                }
-
-                materialSummary[parsed.name].total += parsed.count;
-                materialSummary[parsed.name].breakdown.push(`No.${currentId} ${q.title} [${parsed.count}個]`);
-            }
-            if (brokenLoop) break;
-        }
-        if (brokenLoop) break;
-    }
-
-    const selectText = document.getElementById('player-level-range').options[document.getElementById('player-level-range').selectedIndex].text;
-    let resultHtml = `<div class="result-title">🎯 計算結果：必要素材一覧 (現在の設定レベル帯: ${selectText})</div>`;
-    resultHtml += stopNoticeHtml;
-
-    const itemNames = Object.keys(materialSummary);
-    if (itemNames.length === 0) {
-        resultHtml += `<p style="padding: 15px; color: #666;">指定された範囲およびレベル帯（${selectText}）に該当する必要収集アイテムはありませんでした。</p>`;
-        resultContainer.innerHTML = resultHtml;
-        return;
-    }
-
-    itemNames.forEach(name => {
-        const itemData = materialSummary[name];
-        const dropHintText = findDropHintForMateral(name);
-        const dropHintHtml = dropHintText ? 
-            `<div class="drop-info-line">📍 ドロップ情報: ${dropHintText}</div>` : 
-            `<div class="drop-info-line" style="color:#888; font-weight:normal;">📍 ドロップ情報: データベースにヒントが登録されていません</div>`;
-
-        resultHtml += `
-            <div class="material-card">
-                <span class="material-total">計 ${itemData.total} 個</span>
-                <span class="material-name">📦 ${name}</span>
-                ${dropHintHtml}
-                <div class="material-breakdown">
-                    <strong>使用内訳:</strong><br>
-                    ${itemData.breakdown.map(line => `➔ ${line}`).join('<br>')}
-                </div>
-            </div>
-        `;
-    });
-
-    resultContainer.innerHTML = resultHtml;
-}
-</script>
-</body>
-</html>
+<div class="container">
+    <div class="
