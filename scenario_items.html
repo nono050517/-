@@ -282,6 +282,7 @@ function populateSelectBoxes() {
         optionsHtml += `<option value="${q.node_id}">No.${id} ${title}</option>`;
     });
 
+    // 壊れていた箇所のゴミ記述を完全消去し、セレクトボックスへの流し込みを正常化
     startSelect.innerHTML = optionsHtml;
     endSelect.innerHTML = optionsHtml;
     
@@ -328,7 +329,6 @@ function setupEventListeners() {
 function parseItemStringToArrayList(itemStr, playerLevel) {
     if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
     
-    // 1. まず「改行」または「読点・カンマ」で行ごとに綺麗に切り離す
     const lines = itemStr.split(/[\n\r,、]+/);
     const results = [];
 
@@ -336,32 +336,27 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
         let rawLine = lineToken.trim();
         if (!rawLine) return;
 
-        // 全角・半角スペースが並んでいる場合は複数アイテムとして処理
         const individualTokens = rawLine.split(/[\s\t]+/);
 
         individualTokens.forEach(token => {
             let t = token.trim();
             if (!t) return;
 
-            // メモ用カッコ行は完全除外
             if (t.startsWith('(') || t.startsWith('（')) {
                 return;
             }
 
-            // コロンの表記揺れを統一
             t = t.replace(/：/g, ':');
 
             let currentName = t;
             let currentCount = 1;
             let currentLineMatchState = true; 
 
-            // 末尾の「×個数(個)」や「*個数(個)」を厳密に切り離す（アイテム名に×*を含めない）
             const countMatch = t.match(/^([^×\*]+?)(?:×|\*)(\d+)(?:個)?$/);
             if (countMatch) {
                 currentName = countMatch[1].trim();
                 currentCount = parseInt(countMatch[2], 10);
             } else {
-                // 個数表記がなく、直接末尾に数字がくっついているケースの安全フォールバック
                 const directNumMatch = t.match(/^([^0-9０-９]+)(\d+)(?:個)?$/);
                 if (directNumMatch) {
                     currentName = directNumMatch[1].trim();
@@ -371,7 +366,6 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
 
             let cleanName = currentName;
 
-            // レベル条件分岐の抽出と判定（"以下:" や "以上:" が確実にある時だけ切り分ける）
             if (currentName.includes('以下:')) {
                 const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
                 const matchLvl = normalizedStr.match(/^(\d+)以下:(.+)$/);
@@ -391,9 +385,7 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
                 }
             }
             
-            // レベル条件を満たしている場合のみ処理
             if (currentLineMatchState) {
-                // カギカッコや引用符だけをピンポイントでお掃除
                 cleanName = cleanName.replace(/^[「『"']+|[」』"']+$/g, '').trim();
 
                 if (cleanName) {
@@ -406,7 +398,7 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
     return results;
 }
 
-// 【修正箇所】他アイテムとの部分一致による誤爆上書きを100%防ぐ、超厳密なドロップヒント逆引き
+// ドロップヒントの厳密判定と、完全一致時におけるループの即時完全ブレイク
 function findDropHintForMateral(itemName) {
     if (!itemName) return '';
     let hintFound = '';
@@ -419,22 +411,16 @@ function findDropHintForMateral(itemName) {
                 const isHintLine = line.startsWith('ヒント：') || line.startsWith('ヒント:');
                 if (!isHintLine) continue;
 
-                // ヒント行から「ヒント：」ラベルを削った純粋な中身
                 const pureContent = line.replace(/^ヒント[：:]\s*/, '').trim();
-
-                // 【超重要ガード】「竜の羽」を探している時に「羽」のヒント行を誤検知させないための厳密一致判定
-                // 例：ヒント：「竜の羽」：[ドラッへ峡谷1]... から名前に該当する部分を安全に確認する
                 const targetMatch = pureContent.match(/^[「『]?([^」』：:]+)[」』]?[：:]/);
                 
                 if (targetMatch) {
                     const extractedItemName = targetMatch[1].trim();
-                    // 抽出したヒント内のアイテム名が、探している素材名と【完全一致】する場合のみ採用
                     if (extractedItemName === itemName) {
                         hintFound = pureContent;
                         break;
                     }
                 } else {
-                    // 正規表現に引っかからなかった場合の安全用部分一致（ただし最低限、名前がそのまま含まれていること）
                     if (pureContent.includes(`「${itemName}」`) || pureContent.includes(itemName)) {
                         hintFound = pureContent;
                         break;
@@ -442,7 +428,6 @@ function findDropHintForMateral(itemName) {
                 }
             }
         }
-        // 【最重要】一致するヒントが見つかったら、外側の全ノードループも完全にブレイクして終了（上書き事故の根絶）
         if (hintFound) break;
     }
     return hintFound;
@@ -462,7 +447,6 @@ function calculateMaterials() {
 
     let targetedQuests = allQuests.slice(startIndex);
 
-    // ルート絞り込み
     targetedQuests = targetedQuests.filter(q => {
         const scene = q.scene || '';
         if (scene.includes('暁ルート') && chosenRoute !== '暁') return false;
@@ -470,7 +454,6 @@ function calculateMaterials() {
         return true;
     });
 
-    // 目標クエストまでのカット
     if (condType === 'target-quest') {
         const endValue = parseFloat(document.getElementById('end-quest').value);
         const endIndex = targetedQuests.findIndex(q => parseFloat(q.node_id) === endValue);
@@ -504,4 +487,63 @@ function calculateMaterials() {
 
         let brokenLoop = false;
         for (let itemStr of itemStringsCollect) {
-            const
+            const parsedList = parseItemStringToArrayList(itemStr, playerLevel);
+
+            for (let parsed of parsedList) {
+                if (!materialSummary[parsed.name]) {
+                    if (condType === 'bag-limit' && uniqueItemCount >= bagLimitValue) {
+                        stopNoticeHtml = `
+                            <div class="stop-notice">
+                                ⚠️ 持ち物の空き枠上限（${bagLimitValue}種類）に達したため、No.${currentId}「${q.title}」の途中で計算をストップしました。
+                            </div>`;
+                        brokenLoop = true;
+                        break;
+                    }
+                    materialSummary[parsed.name] = { total: 0, breakdown: [] };
+                    uniqueItemCount++;
+                }
+
+                materialSummary[parsed.name].total += parsed.count;
+                materialSummary[parsed.name].breakdown.push(`No.${currentId} ${q.title} [${parsed.count}個]`);
+            }
+            if (brokenLoop) break;
+        }
+        if (brokenLoop) break;
+    }
+
+    const selectText = document.getElementById('player-level-range').options[document.getElementById('player-level-range').selectedIndex].text;
+    let resultHtml = `<div class="result-title">🎯 計算結果：必要素材一覧 (現在の設定レベル帯: ${selectText})</div>`;
+    resultHtml += stopNoticeHtml;
+
+    const itemNames = Object.keys(materialSummary);
+    if (itemNames.length === 0) {
+        resultHtml += `<p style="padding: 15px; color: #666;">指定された範囲およびレベル帯（${selectText}）に該当する必要収集アイテムはありませんでした。</p>`;
+        resultContainer.innerHTML = resultHtml;
+        return;
+    }
+
+    itemNames.forEach(name => {
+        const itemData = materialSummary[name];
+        const dropHintText = findDropHintForMateral(name);
+        const dropHintHtml = dropHintText ? 
+            `<div class="drop-info-line">📍 ドロップ情報: ${dropHintText}</div>` : 
+            `<div class="drop-info-line" style="color:#888; font-weight:normal;">📍 ドロップ情報: データベースにヒントが登録されていません</div>`;
+
+        resultHtml += `
+            <div class="material-card">
+                <span class="material-total">計 ${itemData.total} 個</span>
+                <span class="material-name">📦 ${name}</span>
+                ${dropHintHtml}
+                <div class="material-breakdown">
+                    <strong>使用内訳:</strong><br>
+                    ${itemData.breakdown.map(line => `➔ ${line}`).join('<br>')}
+                </div>
+            </div>
+        `;
+    });
+
+    resultContainer.innerHTML = resultHtml;
+}
+</script>
+</body>
+</html>
