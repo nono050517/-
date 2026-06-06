@@ -324,11 +324,10 @@ function setupEventListeners() {
     btnExecute.addEventListener('click', calculateMaterials);
 }
 
-// 【絶対安全パース】日本語の名称を100%完全な状態で切り出す超精密ロジック
+// 日本語の名称を100%完全な状態で切り出す精密ロジック
 function parseItemStringToArrayList(itemStr, playerLevel) {
     if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
     
-    // 1. まず改行や読点で完全に行単位にスプリット
     const lines = itemStr.split(/[\n\r,、]+/);
     const results = [];
 
@@ -336,32 +335,29 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
         let rawLine = lineToken.trim();
         if (!rawLine) return;
 
-        // 2. スペース区切りがある場合を想定してトークン分解
         const individualTokens = rawLine.split(/[\s\t]+/);
 
         individualTokens.forEach(token => {
             let t = token.trim();
             if (!t) return;
 
-            // カッコ内のメモ書きは最優先で無視
             if (t.startsWith('(') || t.startsWith('（')) {
                 return;
             }
 
-            // 【重要】各アイテムごとに、レベル判定状態を必ずTRUE（初期表示）へフレッシュにリセット
+            // 個別のトークン処理ごとに、レベル判定状態を確実にTRUEで初期化
             let currentLineMatchState = true; 
             t = t.replace(/：/g, ':');
 
             let currentName = t;
             let currentCount = 1;
 
-            // 末尾の「×個数」や「*個数」の安全かつ確実な切り離し（非貪欲による誤カットの根絶）
+            // 貪欲マッチに変更：末尾の「×個数」や「*個数」の直前までをアイテム名として最大幅で取得
             const countMatch = t.match(/^([^×\*]+)(?:×|\*)(\d+)(?:個)?$/);
             if (countMatch) {
                 currentName = countMatch[1].trim();
                 currentCount = parseInt(countMatch[2], 10);
             } else {
-                // ×等がないケース用の、安全な末尾数値フォールバック
                 const directNumMatch = t.match(/^([^0-9０-９]+)(\d+)(?:個)?$/);
                 if (directNumMatch) {
                     currentName = directNumMatch[1].trim();
@@ -371,7 +367,6 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
 
             let cleanName = currentName;
 
-            // レベル条件分岐の抽出と判定（"以下:" や "以上:" が存在するときのみ判定）
             if (currentName.includes('以下:')) {
                 const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
                 const matchLvl = normalizedStr.match(/^(\d+)以下:(.+)$/);
@@ -391,7 +386,6 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
                 }
             }
             
-            // 判定をクリアした場合のみ、アイテム名をお掃除して結果リストへ
             if (currentLineMatchState) {
                 cleanName = cleanName.replace(/^[「『"']+|[」』"']+$/g, '').trim();
 
@@ -405,7 +399,7 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
     return results;
 }
 
-// ドロップヒントの判定（アイテム名の完全一致時にのみブレイク）
+// ドロップ情報の完全一致逆引き判定
 function findDropHintForMateral(itemName) {
     if (!itemName) return '';
     let hintFound = '';
@@ -525,4 +519,32 @@ function calculateMaterials() {
     const itemNames = Object.keys(materialSummary);
     if (itemNames.length === 0) {
         resultHtml += `<p style="padding: 15px; color: #666;">指定された範囲およびレベル帯（${selectText}）に該当する必要収集アイテムはありませんでした。</p>`;
-        resultContainer.innerHTML = result
+        resultContainer.innerHTML = resultHtml;
+        return;
+    }
+
+    itemNames.forEach(name => {
+        const itemData = materialSummary[name];
+        const dropHintText = findDropHintForMateral(name);
+        const dropHintHtml = dropHintText ? 
+            `<div class="drop-info-line">📍 ドロップ情報: ${dropHintText}</div>` : 
+            `<div class="drop-info-line" style="color:#888; font-weight:normal;">📍 ドロップ情報: データベースにヒントが登録されていません</div>`;
+
+        resultHtml += `
+            <div class="material-card">
+                <span class="material-total">計 ${itemData.total} 個</span>
+                <span class="material-name">📦 ${name}</span>
+                ${dropHintHtml}
+                <div class="material-breakdown">
+                    <strong>使用内訳:</strong><br>
+                    ${itemData.breakdown.map(line => `➔ ${line}`).join('<br>')}
+                </div>
+            </div>
+        `;
+    });
+
+    resultContainer.innerHTML = resultHtml;
+}
+</script>
+</body>
+</html>
