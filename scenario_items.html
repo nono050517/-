@@ -155,12 +155,14 @@
                 <h3 class="section-category" style="font-size: 1.3em;"> 2．条件設定</h3>
                 <div class="item-content">
 
+                    <!-- 調査中アナウンス表示エリア -->
                     <div class="notice-warning-box">
                         <span>⚠️</span> ※注意：現在データ調査中（まだ一部未完成の章や検証中のデータが含まれています）
                     </div>
                     
                     <div class="tool-panel">
                         
+                        <!-- 1. 現在のクエスト選択 -->
                         <div class="form-group">
                             <label for="start-quest">現在の進行クエストは？</label>
                             <select id="start-quest" class="form-control">
@@ -168,13 +170,16 @@
                             </select>
                         </div>
 
+                        <!-- プレイヤーのレベルを5刻みのドロップダウンに変更 -->
                         <div class="form-group">
                             <label for="player-level-range">あなたの現在のレベル帯（BaseLv）は？</label>
                             <select id="player-level-range" class="form-control" style="width: 200px;">
-                                </select>
+                                <!-- JavaScriptで動的生成 -->
+                            </select>
                             <small style="color: #666; display: block; margin-top: 4px;">※「39以下」「40以上」などのレベル帯分岐素材を自動で判別するために使用します。</small>
                         </div>
 
+                        <!-- 分岐ルート選択肢 -->
                         <div id="route-branch-box" class="conditional-box">
                             <label for="route-choice" style="color: #0056b3;">➔ 第一章の分岐ルートの選択予定は？</label>
                             <select id="route-choice" class="form-control">
@@ -183,6 +188,7 @@
                             </select>
                         </div>
 
+                        <!-- 2. 終了条件の切り替え選択 -->
                         <div class="form-group" style="margin-top: 25px;">
                             <label>終了条件の設定</label>
                             <div class="radio-group">
@@ -195,6 +201,7 @@
                             </div>
                         </div>
 
+                        <!-- 条件①：目標クエスト入力欄 -->
                         <div id="target-quest-group" class="form-group">
                             <label for="end-quest">どこまでの分が必要？（目標クエスト）</label>
                             <select id="end-quest" class="form-control">
@@ -202,6 +209,7 @@
                             </select>
                         </div>
 
+                        <!-- 条件②：バッグの空き枠数入力欄 -->
                         <div id="bag-limit-group" class="form-group" style="display: none;">
                             <label for="bag-space">あといくつ持ち物が持てる？（空き枠アイテム種類数）</label>
                             <input type="number" id="bag-space" class="form-control" value="10" min="1" max="100" style="width: 120px;">
@@ -214,6 +222,7 @@
 
                     </div>
 
+                    <!-- 計算結果の出力先 -->
                     <div id="result-container"></div>
 
                 </div>
@@ -230,7 +239,7 @@ let rawScenarioNodes = [];
 window.addEventListener('DOMContentLoaded', initializeTool);
 
 async function initializeTool() {
-    // レベルの5刻みドロップダウンを動的に生成
+    // レベルの5刻みドロップダウンを生成
     generateLevelRangeOptions();
 
     const { data: scenarioNodes, error } = await client
@@ -257,21 +266,19 @@ async function initializeTool() {
     setupEventListeners();
 }
 
-// 【新機能】1〜200まで5刻みのセレクトボックスを自動で綺麗に作る関数
 function generateLevelRangeOptions() {
     const lvlSelect = document.getElementById('player-level-range');
     if (!lvlSelect) return;
 
     let html = '';
-    // 1〜5, 6〜10, ... 196〜200 までのループを回す
+    // ループ条件を正しく修正しました
     for (let start = 1; start <= 196; start += 5) {
-        const end = start + 4;
+        let end = start + 4;
+        if (end > 200) end = 200;
         html += `<option value="${end}">${start} ～ ${end}</option>`;
     }
     lvlSelect.innerHTML = html;
-    
-    // 初期のレベル帯選択は「46 ～ 50」（valueが50）あたりを真ん中として選んでおく
-    lvlSelect.value = "50";
+    lvlSelect.value = "50"; 
 }
 
 function populateSelectBoxes() {
@@ -355,7 +362,6 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
             if (matchLvl) {
                 const limitLvl = parseInt(matchLvl[1], 10);
                 cleanName = matchLvl[2].trim();
-                // 選択された範囲の最大値(プレイヤーレベル)で比較
                 if (playerLevel > limitLvl) isLevelMatch = false; 
             }
         } else if (currentName.includes('以上：') || currentName.includes('以上:')) {
@@ -397,7 +403,6 @@ function calculateMaterials() {
     const startValue = parseFloat(document.getElementById('start-quest').value);
     const condType = document.querySelector('input[name="end-condition-type"]:checked').value;
     const chosenRoute = document.getElementById('route-choice').value;
-    // セレクトボックスの選択値（50, 55, 60など範囲の上限値）を数値として取得
     const playerLevel = parseInt(document.getElementById('player-level-range').value, 10) || 1;
     
     const resultContainer = document.getElementById('result-container');
@@ -474,7 +479,39 @@ function calculateMaterials() {
         if (brokenLoop) break;
     }
 
-    // レベル表示の部分を「レベル帯」の文言に修正
     const selectText = document.getElementById('player-level-range').options[document.getElementById('player-level-range').selectedIndex].text;
     let resultHtml = `<div class="result-title">🎯 計算結果：必要素材一覧 (現在の設定レベル帯: ${selectText})</div>`;
-    resultHtml
+    resultHtml += stopNoticeHtml;
+
+    const itemNames = Object.keys(materialSummary);
+    if (itemNames.length === 0) {
+        resultHtml += `<p style="padding: 15px; color: #666;">指定された範囲およびレベル帯（${selectText}）に該当する必要収集アイテムはありませんでした。</p>`;
+        resultContainer.innerHTML = resultHtml;
+        return;
+    }
+
+    itemNames.forEach(name => {
+        const itemData = materialSummary[name];
+        const dropHintText = findDropHintForMateral(name);
+        const dropHintHtml = dropHintText ? 
+            `<div class="drop-info-line">📍 ドロップ情報: ${dropHintText}</div>` : 
+            `<div class="drop-info-line" style="color:#888; font-weight:normal;">📍 ドロップ情報: データベースにヒントが登録されていません</div>`;
+
+        resultHtml += `
+            <div class="material-card">
+                <span class="material-total">計 ${itemData.total} 個</span>
+                <span class="material-name">📦 ${name}</span>
+                ${dropHintHtml}
+                <div class="material-breakdown">
+                    <strong>使用内訳:</strong><br>
+                    ${itemData.breakdown.map(line => `➔ ${line}`).join('<br>')}
+                </div>
+            </div>
+        `;
+    });
+
+    resultContainer.innerHTML = resultHtml;
+}
+</script>
+</body>
+</html>
