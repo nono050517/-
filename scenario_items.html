@@ -247,7 +247,7 @@ async function initializeTool() {
         allQuests = scenarioNodes.filter(node => {
             const title = (node.title || '').trim();
             const steps = (node.clear_steps || '').trim();
-            return !(title === '' || title === 'NULL' || title === '名称未設定' || title.includes('追加報酬') || title.includes('追加') || steps.includes('追加報酬') || title === '-');
+            return !(title === '' || title === 'NULL' || title === '名称未設定' || title === '-' || title.includes('追加報酬') || steps.includes('追加報酬'));
         });
         allQuests.sort((a, b) => parseFloat(a.node_id || 0) - parseFloat(b.node_id || 0));
     }
@@ -324,11 +324,10 @@ function setupEventListeners() {
     btnExecute.addEventListener('click', calculateMaterials);
 }
 
-// セル内改行データを配列化して1行ずつ確実にスキャンするパースロジック
+// レベル分岐の重複判定を完全遮断し、純粋なアイテム構造のみを返す精密パースロジック
 function parseItemStringToArrayList(itemStr, playerLevel) {
     if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
     
-    // 改行コード（\n、\r）またはカンマで行ごとに完全に分離
     const lines = itemStr.split(/[\n\r,、]+/);
     const results = [];
 
@@ -336,31 +335,29 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
         let rawLine = lineToken.trim();
         if (!rawLine) return;
 
-        // 行のなかにスペース区切りがある場合を想定してさらに分解
         const individualTokens = rawLine.split(/[\s\t]+/);
 
         individualTokens.forEach(token => {
             let t = token.trim();
             if (!t) return;
 
-            // カッコ内のメモ書き行は最優先で完全に隠蔽
             if (t.startsWith('(') || t.startsWith('（')) {
                 return;
             }
 
-            // 各アイテム（各行）ごとに判定フラグをTRUEで初期化
-            let currentLineMatchState = true; 
             t = t.replace(/：/g, ':');
 
+            let type = 'normal'; // 'normal', 'above', 'below'
+            let limitLvl = 0;
             let targetText = t;
 
-            // 1. レベル制限表記（「80以上:」など）を検知して判定し、後半の素材表記だけを切り出す
+            // レベル条件の表記を切り離してデータ化する
             if (t.includes('以下:')) {
                 const normalizedStr = t.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
                 const matchLvl = normalizedStr.match(/^(\d+)以下:(.+)$/);
                 if (matchLvl) {
-                    const limitLvl = parseInt(matchLvl[1], 10);
-                    currentLineMatchState = (playerLevel <= limitLvl); 
+                    type = 'below';
+                    limitLvl = parseInt(matchLvl[1], 10);
                     targetText = matchLvl[2].trim();
                 }
             } 
@@ -368,37 +365,37 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
                 const normalizedStr = t.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
                 const matchLvl = normalizedStr.match(/^(\d+)以上:(.+)$/);
                 if (matchLvl) {
-                    const limitLvl = parseInt(matchLvl[1], 10);
-                    currentLineMatchState = (playerLevel >= limitLvl); 
+                    type = 'above';
+                    limitLvl = parseInt(matchLvl[1], 10);
                     targetText = matchLvl[2].trim();
                 }
             }
 
-            // 2. 判定をパスした文字列から名前と数量（× or *）を確実に切り離す
-            if (currentLineMatchState) {
-                let currentName = targetText;
-                let currentCount = 1;
+            let currentName = targetText;
+            let currentCount = 1;
 
-                // 貪欲マッチで末尾の数量指定（×数字 または *数字）の直前までを一網打尽にする
-                const countMatch = targetText.match(/^([^×\*]+)(?:×|\*)(\d+)(?:個)?$/);
-                if (countMatch) {
-                    currentName = countMatch[1].trim();
-                    currentCount = parseInt(countMatch[2], 10);
-                } else {
-                    // 記号なしで末尾に直接数字がくっついている場合の安全用フォールバック
-                    const directNumMatch = targetText.match(/^([^0-9０-９]+)(\d+)(?:個)?$/);
-                    if (directNumMatch) {
-                        currentName = directNumMatch[1].trim();
-                        currentCount = parseInt(directNumMatch[2], 10);
-                    }
+            const countMatch = targetText.match(/^([^×\*]+)(?:×|\*)(\d+)(?:個)?$/);
+            if (countMatch) {
+                currentName = countMatch[1].trim();
+                currentCount = parseInt(countMatch[2], 10);
+            } else {
+                const directNumMatch = targetText.match(/^([^0-9０-９]+)(\d+)(?:個)?$/);
+                if (directNumMatch) {
+                    currentName = directNumMatch[1].trim();
+                    currentCount = parseInt(directNumMatch[2], 10);
                 }
+            }
 
-                // 前後の余計なカギカッコなどをトリムしてお掃除
-                let cleanName = currentName.replace(/^[「『"']+|[」』"']+$/g, '').trim();
+            let cleanName = currentName.replace(/^[「『"']+|[」』"']+$/g, '').trim();
 
-                if (cleanName) {
-                    results.push({ name: cleanName, count: currentCount });
-                }
+            if (cleanName) {
+                // 判定用の一時データをオブジェクトに詰めて一旦プールする
+                results.push({ 
+                    name: cleanName, 
+                    count: currentCount,
+                    type: type,
+                    limitLvl: limitLvl
+                });
             }
         });
     });
@@ -406,7 +403,6 @@ function parseItemStringToArrayList(itemStr, playerLevel) {
     return results;
 }
 
-// ドロップヒントの完全一致逆引き関数
 function findDropHintForMateral(itemName) {
     if (!itemName) return '';
     let hintFound = '';
@@ -442,7 +438,7 @@ function findDropHintForMateral(itemName) {
 }
 
 function calculateMaterials() {
-    const startValue = parseFloat(document.getElementById('start-quest').value);
+    const startValue = document.getElementById('start-quest').value;
     const condType = document.querySelector('input[name="end-condition-type"]:checked').value;
     const chosenRoute = document.getElementById('route-choice').value;
     const playerLevel = parseInt(document.getElementById('player-level-range').value, 10) || 1;
@@ -450,7 +446,7 @@ function calculateMaterials() {
     const resultContainer = document.getElementById('result-container');
     resultContainer.innerHTML = ''; 
 
-    let startIndex = allQuests.findIndex(q => parseFloat(q.node_id) === startValue);
+    let startIndex = allQuests.findIndex(q => q.node_id === startValue);
     if (startIndex === -1) startIndex = 0;
 
     let targetedQuests = allQuests.slice(startIndex);
@@ -463,8 +459,8 @@ function calculateMaterials() {
     });
 
     if (condType === 'target-quest') {
-        const endValue = parseFloat(document.getElementById('end-quest').value);
-        const endIndex = targetedQuests.findIndex(q => parseFloat(q.node_id) === endValue);
+        const endValue = document.getElementById('end-quest').value;
+        const endIndex = targetedQuests.findIndex(q => q.node_id === endValue);
         if (endIndex !== -1) {
             targetedQuests = targetedQuests.slice(0, endIndex + 1);
         }
@@ -477,9 +473,13 @@ function calculateMaterials() {
 
     for (let q of targetedQuests) {
         const currentId = Math.floor(Number(q.node_id));
+        const currentTitle = q.title || '名称未設定';
+        
         const itemStringsCollect = [];
         
-        if (q.required_item) itemStringsCollect.push(q.required_item);
+        if (q.required_item) {
+            itemStringsCollect.push({ text: q.required_item, originTitle: currentTitle, originId: currentId });
+        }
 
         const relatedExtras = rawScenarioNodes.filter(node => {
             const nid = parseFloat(node.node_id);
@@ -490,19 +490,58 @@ function calculateMaterials() {
         });
 
         relatedExtras.forEach(ext => {
-            if (ext.required_item) itemStringsCollect.push(ext.required_item);
+            if (ext.required_item) {
+                let extraTitle = (ext.title || '').trim();
+                if (extraTitle === '' || extraTitle === 'NULL' || extraTitle === '-') {
+                    extraTitle = currentTitle;
+                }
+                itemStringsCollect.push({ text: ext.required_item, originTitle: extraTitle, originId: currentId });
+            }
         });
 
         let brokenLoop = false;
-        for (let itemStr of itemStringsCollect) {
-            const parsedList = parseItemStringToArrayList(itemStr, playerLevel);
+        for (let itemObj of itemStringsCollect) {
+            const parsedList = parseItemStringToArrayList(itemObj.text, playerLevel);
+
+            // 【重複合算バグの完全根絶ロジック】
+            // 同じひとつの条件セル内に存在する、複数の「以上」「以下」の条件を精査する
+            let hasAboveOptions = parsedList.some(item => item.type === 'above');
+            let maxValidAboveLvl = -1;
+
+            if (hasAboveOptions) {
+                // 現在のプレイヤーレベル以下で、最も数値が高い条件のレベル（マキサム値）を算出
+                parsedList.forEach(item => {
+                    if (item.type === 'above' && playerLevel >= item.limitLvl) {
+                        if (item.limitLvl > maxValidAboveLvl) {
+                            maxValidAboveLvl = item.limitLvl;
+                        }
+                    }
+                });
+            }
 
             for (let parsed of parsedList) {
+                // フィルタリング処理の徹底
+                let isTarget = false;
+
+                if (parsed.type === 'normal') {
+                    // 制限のない通常素材は100%採用
+                    isTarget = true;
+                } else if (parsed.type === 'below') {
+                    // 「以下」条件は、プレイヤーレベルが制限以下なら採用
+                    if (playerLevel <= parsed.limitLvl) isTarget = true;
+                } else if (parsed.type === 'above') {
+                    // 「以上」条件は、算出した最高条件レベル（マキサム）とピッタリ一致するものだけを採用する
+                    if (parsed.limitLvl === maxValidAboveLvl) isTarget = true;
+                }
+
+                // 該当レベル帯ではない過去のゴミ素材は完全に無視（スキップ）
+                if (!isTarget) continue;
+
                 if (!materialSummary[parsed.name]) {
                     if (condType === 'bag-limit' && uniqueItemCount >= bagLimitValue) {
                         stopNoticeHtml = `
                             <div class="stop-notice">
-                                ⚠️ 持ち物の空き枠上限（${bagLimitValue}種類）に達したため、No.${currentId}「${q.title}」の途中で計算をストップしました。
+                                ⚠️ 持ち物の空き枠上限（${bagLimitValue}種類）に達したため、No.${itemObj.originId}「${itemObj.originTitle}」の途中で計算をストップしました。
                             </div>`;
                         brokenLoop = true;
                         break;
@@ -512,7 +551,7 @@ function calculateMaterials() {
                 }
 
                 materialSummary[parsed.name].total += parsed.count;
-                materialSummary[parsed.name].breakdown.push(`No.${currentId} ${q.title} [${parsed.count}個]`);
+                materialSummary[parsed.name].breakdown.push(`No.${itemObj.originId} ${itemObj.originTitle} [${parsed.count}個]`);
             }
             if (brokenLoop) break;
         }
