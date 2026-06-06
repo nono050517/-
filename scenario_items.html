@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>必要素材数計算 - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* 計算ツール用のカスタムデザイン（全体的に大きめで見やすい設計） */
+        .tool-panel {
+            background-color: #fdfdfd;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+            font-size: 1.05em;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #333;
+        }
+        .form-control {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .radio-group {
+            margin-top: 6px;
+        }
+        .radio-label {
+            margin-right: 20px;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        .btn-calc {
+            background-color: #1e90ff;
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn-calc:hover {
+            background-color: #007ae6;
+        }
+        
+        /* 条件分岐用の隠しエリア */
+        .conditional-box {
+            display: none;
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-left: 4px solid #1e90ff;
+            margin-top: 10px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* 結果表示エリアの装飾 */
+        #result-container {
+            margin-top: 25px;
+        }
+        .result-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            border-bottom: 2px solid #333;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            color: #111;
+        }
+        .material-card {
+            background: #faf9f6;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            font-size: 1.05em;
+        }
+        .material-name {
+            font-size: 1.15em;
+            font-weight: bold;
+            color: #b22222;
+        }
+        .material-total {
+            float: right;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #111;
+        }
+        .material-breakdown {
+            margin: 8px 0 0 0;
+            padding-left: 20px;
+            color: #555;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        .stop-notice {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ffc107;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            
+            <main>
+                <h2 class="page-title" style="font-size: 1.8em;">シナリオ必要素材数計算ツール</h2>
+                
+                <h3 class="section-category" style="font-size: 1.3em;"> 1．ツールの概要</h3>
+                <div class="item-content" style="font-size: 1.05em; line-height: 1.6;">
+                    現在の進行クエストと目標条件を指定することで、これから先のストーリー攻略に必要なアイテムの種類と合計数を一括計算します。
+                </div>
+
+                <h3 class="section-category" style="font-size: 1.3em;"> 2．条件設定</h3>
+                <div class="item-content">
+                    <div class="tool-panel">
+                        
+                        <div class="form-group">
+                            <label for="start-quest">現在の進行クエストは？</label>
+                            <select id="start-quest" class="form-control">
+                                <option value="">データを読み込み中...</option>
+                            </select>
+                        </div>
+
+                        <div id="route-branch-box" class="conditional-box">
+                            <label for="route-choice" style="color: #0056b3;">➔ 第一章の分岐ルートの選択予定は？</label>
+                            <select id="route-choice" class="form-control">
+                                <option value="暁">【暁ルート】に進む</option>
+                                <option value="魔女">【魔女ルート】に進む</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 25px;">
+                            <label>終了条件の設定</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="end-condition-type" value="target-quest" checked> ① 目標クエストまで
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="end-condition-type" value="bag-limit"> ② 持ち物の空き枠限界まで
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="target-quest-group" class="form-group condition-sub-input">
+                            <label for="end-quest">どこまでの分が必要？（目標クエスト）</label>
+                            <select id="end-quest" class="form-control">
+                                <option value="">データを読み込み中...</option>
+                            </select>
+                        </div>
+
+                        <div id="bag-limit-group" class="form-group condition-sub-input" style="display: none;">
+                            <label for="bag-space">あといくつ持ち物が持てる？（空き枠アイテム種類数）</label>
+                            <input type="number" id="bag-space" class="form-control" value="10" min="1" max="100" style="width: 120px;">
+                            <small style="color: #666; display: block; margin-top: 4px;">※集めるアイテムの種類数がこの数に達した時点で計算をストップします。</small>
+                        </div>
+
+                        <div style="margin-top: 25px;">
+                            <button type="button" id="btn-execute" class="btn-calc">必要素材を計算する</button>
+                        </div>
+
+                    </div>
+
+                    <div id="result-container"></div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+<script>
+// 全クエストデータを保持するグローバル変数
+let allQuests = [];
+
+window.addEventListener('DOMContentLoaded', initializeTool);
+
+async function initializeTool() {
+    // 1. Supabaseからデータを取得
+    const { data: scenarioNodes, error } = await client
+        .from('scenario_nodes')
+        .select('*');
+
+    if (error) {
+        console.error("データ取得失敗:", error);
+        return;
+    }
+
+    // 数値ID順にソート（おまけの追加報酬行はマージ条件から除外するため、純粋なクエストのみを抽出）
+    if (scenarioNodes && Array.isArray(scenarioNodes)) {
+        allQuests = scenarioNodes.filter(node => {
+            const title = (node.title || '').trim();
+            const steps = (node.clear_steps || '').trim();
+            return !(title === '' || title === 'NULL' || title === '名称未設定' || title.includes('追加報酬') || title.includes('追加') || steps.includes('追加報酬'));
+        });
+        allQuests.sort((a, b) => parseFloat(a.node_id || 0) - parseFloat(b.node_id || 0));
+    }
+
+    // 2. ドロップダウン（セレクトボックス）にクエストをセット
+    populateSelectBoxes();
+
+    // 3. イベントリスナーを登録
+    setupEventListeners();
+}
+
+function populateSelectBoxes() {
+    const startSelect = document.getElementById('start-quest');
+    const endSelect = document.getElementById('end-quest');
+    
+    if (!startSelect || !endSelect) return;
+
+    let optionsHtml = '';
+    allQuests.forEach(q => {
+        const id = Math.floor(Number(q.node_id));
+        const scene = q.scene || 'その他';
+        optionsHtml += `<option value="${q.node_id}">No.${id} ${q.title} (${scene})</option>`;
+    });
+
+    startSelect.innerHTML = optionsHtml;
+    endSelect.innerHTML = optionsHtml;
+    
+    // 目標クエストの初期選択は一番最後のクエストにしておく
+    if (endSelect.options.length > 0) {
+        endSelect.selectedIndex = endSelect.options.length - 1;
+    }
+}
+
+function setupEventListeners() {
+    const startSelect = document.getElementById('start-quest');
+    const branchBox = document.getElementById('route-branch-box');
+    const radioTypes = document.querySelectorAll('name[end-condition-type]');
+    const btnExecute = document.getElementById('btn-execute');
+
+    // 現在のクエストが変更された時の処理（第一章の分岐チェック）
+    startSelect.addEventListener('change', () => {
+        const selectedQuest = allQuests.find(q => q.node_id === startSelect.value);
+        if (selectedQuest) {
+            const sceneText = selectedQuest.scene || '';
+            // 序章、または第一章の分岐前（sceneに「暁」や「魔女」が含まれていない）ならルート選択を出す
+            if (sceneText.includes('序章') || (sceneText.includes('第一章') && !sceneText.includes('暁') && !sceneText.includes('魔女'))) {
+                branchBox.style.display = 'block';
+            } else {
+                branchBox.style.display = 'none';
+            }
+        }
+    });
+
+    // 初期状態の分岐チェックトリガー
+    if (startSelect.value) startSelect.dispatchEvent(new Event('change'));
+
+    // ラジオボタン切り替え（終了条件の表示チェンジ）
+    document.querySelectorAll('input[name="end-condition-type"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'target-quest') {
+                document.getElementById('target-quest-group').style.display = 'block';
+                document.getElementById('bag-limit-group').style.display = 'none';
+            } else {
+                document.getElementById('target-quest-group').style.display = 'none';
+                document.getElementById('bag-limit-group').style.display = 'block';
+            }
+        });
+    });
+
+    // 計算実行ボタンクリック
+    btnExecute.addEventListener('click', calculateMaterials);
+}
+
+// アイテムテキストから名前と個数を安全に分解するヘルパー
+function parseItemString(itemStr) {
+    if (!itemStr || itemStr === 'NULL' || itemStr === '') return null;
+    
+    // 「ゼリー×1」や「魔力の綿×2」または「爪×1」の構造を分解
+    // 個数表記がない場合は1個とする
+    const match = itemStr.match(/^(.+?)(?:×|\*|\s)(\d+)(?:個)?$/);
+    if (match) {
+        return { name: match[1].trim(), count: parseInt(match[2], 10) };
+    } else {
+        return { name: itemStr.trim(), count: 1 };
+    }
+}
+
+function calculateMaterials() {
+    const startValue = parseFloat(document.getElementById('start-quest').value);
+    const condType = document.querySelector('input[name="end-condition-type"]:checked').value;
+    const chosenRoute = document.getElementById('route-choice').value;
+    
+    const resultContainer = document.getElementById('result-container');
+    resultContainer.innerHTML = ''; // 一旦クリア
+
+    // 1. 範囲内のクエストを絞り込む
+    let startIndex = allQuests.findIndex(q => parseFloat(q.node_id) === startValue);
+    if (startIndex === -1) startIndex = 0;
+
+    let targetedQuests = allQuests.slice(startIndex);
+
+    // 2. ルート選択によるフィルタリング
+    // プレイヤーが選んでいない側のルートのクエストはスキップする
+    targetedQuests = targetedQuests.filter(q => {
+        const scene = q.scene || '';
+        if (scene.includes('暁ルート') && chosenRoute !== '暁') return false;
+        if (scene.includes('魔女ルート') && chosenRoute !== '魔女') return false;
+        return true;
+    });
+
+    // 3. 条件①（目標クエスト）の場合のカット処理
+    if (condType === 'target-quest') {
+        const endValue = parseFloat(document.getElementById('end-quest').value);
+        const endIndex = targetedQuests.findIndex(q => parseFloat(q.node_id) === endValue);
+        if (endIndex !== -1) {
+            targetedQuests = targetedQuests.slice(0, endIndex + 1);
+        }
+    }
+
+    // 4. 素材の集計ループ処理
+    const materialSummary = {};
+    let uniqueItemCount = 0;
+    const bagLimitValue = parseInt(document.getElementById('bag-space').value, 10);
+    let stopNoticeHtml = '';
+
+    for (let q of targetedQuests) {
+        // 対象の列（required_item）をチェック
+        const rawItem = q.required_item;
+        const parsed = parseItemString(rawItem);
+
+        if (parsed) {
+            // 条件②（バッグ制限）のチェック
+            // まだノートに登録されていない新しいアイテム種類の場合
+            if (!materialSummary[parsed.name]) {
+                if (condType === 'bag-limit' && uniqueItemCount >= bagLimitValue) {
+                    // 限界に達したらここで完全にループをストップ
+                    stopNoticeHtml = `
+                        <div class="stop-notice">
+                            ⚠️ 持ち物の空き枠上限（${bagLimitValue}種類）に達したため、No.${Math.floor(Number(q.node_id))}「${q.title}」の手前で計算をストップしました。
+                        </div>`;
+                    break;
+                }
+                materialSummary[parsed.name] = { total: 0, breakdown: [] };
+                uniqueItemCount++;
+            }
+
+            // 足し算処理と内訳メモ
+            materialSummary[parsed.name].total += parsed.count;
+            materialSummary[parsed.name].breakdown.push(`No.${Math.floor(Number(q.node_id))} ${q.title} [${parsed.count}個]`);
+        }
+    }
+
+    // 5. 結果を画面に出力
+    let resultHtml = `<div class="result-title">🎯 計算結果：必要素材一覧</div>`;
+    resultHtml += stopNoticeHtml;
+
+    const itemNames = Object.keys(materialSummary);
+    if (itemNames.length === 0) {
+        resultHtml += `<p style="padding: 15px; color: #666;">指定された範囲のクエストに、必要な収集アイテムはありませんでした。</p>`;
+        resultContainer.innerHTML = resultHtml;
+        return;
+    }
+
+    itemNames.forEach(name => {
+        const itemData = materialSummary[name];
+        resultHtml += `
+            <div class="material-card">
+                <span class="material-total">計 ${itemData.total} 個</span>
+                <span class="material-name">📦 ${name}</span>
+                <div class="material-breakdown">
+                    <strong>使用内訳:</strong><br>
+                    ${itemData.breakdown.map(line => `➔ ${line}`).join('<br>')}
+                </div>
+            </div>
+        `;
+    });
+
+    resultContainer.innerHTML = resultHtml;
+}
+</script>
+</body>
+</html>
