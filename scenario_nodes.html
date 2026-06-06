@@ -6,15 +6,15 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 1段階目：章（Scene）のヘッダースタイル */
+        /* 1段階目：章（Scene）のヘッダースタイル（文字サイズを大きく調整） */
         .scene-header {
             background-color: #e9ecef;
             color: #333;
-            padding: 12px 15px;
+            padding: 14px 18px;
             font-weight: bold;
-            font-size: 1.05em;
+            font-size: 1.2em; /* 1.05emから拡大 */
             border: 1px solid #ccc;
-            margin-top: 15px;
+            margin-top: 18px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
@@ -27,24 +27,24 @@
         }
         .scene-header::after {
             content: '▼';
-            font-size: 0.8em;
+            font-size: 0.85em;
             transition: transform 0.2s;
         }
         .scene-header.collapsed::after {
             transform: rotate(-90deg);
         }
 
-        /* 章の下のクエストリストを格納するコンテナ（初期状態は非表示） */
+        /* 章の下のクエストリストを格納するコンテナ */
         .quest-list-container {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             border: 1px solid #ccc;
             border-top: none;
             background: #fff;
-            padding: 5px 0;
-            display: none; /* 最初はすべて閉じている状態 */
+            padding: 6px 0;
+            display: none;
         }
 
-        /* 2段階目：クエストタイトルのスタイル */
+        /* 2段階目：クエストタイトルのスタイル（文字サイズを大きく調整） */
         .quest-item {
             border-bottom: 1px dashed #eee;
         }
@@ -52,9 +52,9 @@
             border-bottom: none;
         }
         .quest-title-bar {
-            padding: 10px 20px;
+            padding: 12px 24px;
             font-weight: bold;
-            font-size: 0.95em;
+            font-size: 1.1em; /* 0.95emから拡大 */
             color: #222;
             cursor: pointer;
             display: flex;
@@ -67,7 +67,7 @@
         }
         .quest-title-bar::after {
             content: '▶';
-            font-size: 0.75em;
+            font-size: 0.8em;
             color: #888;
             transition: transform 0.2s;
         }
@@ -75,39 +75,51 @@
             transform: rotate(90deg);
         }
 
-        /* 3段階目：画像レイアウトを完全再現した詳細表示エリア（初期状態は非表示） */
+        /* 3段階目：詳細表示エリア（全体的に文字サイズを大きく調整） */
         .quest-details-content {
-            padding: 15px 30px;
-            background-color: #faf9f6; /* 画用紙のような少し温かみのある背景 */
+            padding: 18px 36px;
+            background-color: #faf9f6;
             border-top: 1px dashed #ddd;
-            display: none; /* 最初はすべて閉じている状態 */
-            font-size: 0.9em;
-            line-height: 1.6;
+            display: none;
+            font-size: 1.05em; /* 0.9emから拡大 */
+            line-height: 1.7;
         }
 
-        /* 画像風の箇条書きスタイル定義 */
+        /* 箇条書き（ドット）のスタイル定義 */
         .quest-details-content ul {
             list-style-type: disc;
             margin: 0;
-            padding-left: 20px;
+            padding-left: 24px;
         }
         .quest-details-content li {
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             color: #333;
         }
         .quest-details-content strong {
             color: #111;
+            font-size: 1.05em;
         }
 
-        /* 進行手順用の連番リストスタイル */
-        .quest-details-content ol {
-            margin: 4px 0 0 0;
+        /* 進行手順エリア用のカスタムリスト（HTMLの自動番号は使わず、データの数値を綺麗に活かす） */
+        .quest-steps-wrapper {
+            margin-top: 6px;
             padding-left: 20px;
         }
-        .quest-details-content ol li {
-            list-style-type: decimal;
-            margin-bottom: 4px;
+        .step-line-item {
+            margin-bottom: 6px;
             color: #444;
+            list-style-type: none; /* 標準のドットや番号を完全に消去 */
+            position: relative;
+        }
+        /* ヒント行を目立たせるためのスタイル */
+        .step-line-item.hint-style {
+            color: #721c24;
+            background-color: #f8d7da;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+            font-size: 0.95em;
+            display: inline-block;
         }
     </style>
 </head>
@@ -117,19 +129,19 @@
             <nav id="sidebar-nav"></nav>
             
             <main>
-                <h2 class="page-title">シナリオ・クエストアーカイブ</h2>
+                <h2 class="page-title" style="font-size: 1.8em;">シナリオ・クエストアーカイブ</h2>
                 
-                <h3 class="section-category"> 1．概要</h3>
-                <div class="item-content">
+                <h3 class="section-category" style="font-size: 1.3em;"> 1．概要</h3>
+                <div class="item-content" style="font-size: 1.05em; line-height: 1.6;">
                     データベース（Supabase）から直接読み込んだメインシナリオおよびサブクエストの一覧データです。<br>
                     見たい「章」を選んでクリックし、さらに「クエストタイトル」をクリックすることで詳細の手順や報酬を確認できます。
                 </div>
 
-                <h3 class="section-category"> 2．シナリオデータ一覧</h3>
+                <h3 class="section-category" style="font-size: 1.3em;"> 2．シナリオデータ一覧</h3>
                 <div class="item-content">
                     
                     <div id="archive-tree-container">
-                        <p style="text-align:center; padding:20px;">Supabaseからシナリオデータを読み込み中...</p>
+                        <p style="text-align:center; padding:20px; font-size: 1.1em;">Supabaseからシナリオデータを読み込み中...</p>
                     </div>
 
                 </div>
@@ -205,7 +217,6 @@ function renderTreeArchive(groupedData) {
         sceneIndex++;
         const nodes = groupedData[sceneName];
 
-        // 章ヘッダー（最初は collapsed 状態を視覚的に合わせるためクラス制御可能）
         html += `
             <div class="scene-header collapsed" data-target="box-${sceneIndex}">
                 ${sceneName} （全 ${nodes.length} 件）
@@ -241,21 +252,47 @@ function renderTreeArchive(groupedData) {
             // 目的（概要）
             const objectiveText = (node.content_text && node.content_text !== 'NULL' && node.content_text !== '') ? node.content_text : '-';
 
-            // 進行手順を1行ずつばらして、きれいな <ol> の番号付きリストへ流し込む
-            let stepsHtml = '-';
+            // 【超重要】進行手順のテキストクレンジング（重複番号除去・依頼人自動抽出ロジック）
+            let clientText = '-'; // 依頼人の初期値
+            let stepsHtml = '';
             const rawSteps = node.clear_steps;
+
             if (rawSteps && rawSteps !== 'NULL' && rawSteps !== '') {
-                // 改行や区切り、または「1. 2.」のような文字で分割された時の対策をしつつ成形
+                // 改行コードや<br>で1行ずつにばらす
                 const stepLines = String(rawSteps).split(/\n|<br>|\\n/).map(s => s.trim()).filter(Boolean);
+                
                 if (stepLines.length > 0) {
-                    stepsHtml = '<ol>';
+                    // もし1行目に番号（1. や 1、）がついておらず、ただのNPC名（例: [王宮前広場]アーデン）だった場合
+                    if (stepLines[0] && !/^\d+[\.\、\s\-：:]/.test(stepLines[0])) {
+                        clientText = stepLines[0]; // それを「依頼人」として引き抜く
+                        stepLines.shift(); // 手順のリストからは消去する
+                    }
+
+                    stepsHtml = '<div class="quest-steps-wrapper">';
                     stepLines.forEach(line => {
-                        // もし先頭にすでに「1.」とかが入っている場合は、それを削って二重番号を防ぐクレンジング
-                        const cleanLine = line.replace(/^\d+[\.\、\s\-：:]*/, '');
-                        stepsHtml += `<li>${cleanLine}</li>`;
+                        let currentLine = line;
+                        let isHint = false;
+
+                        // 「ヒント：」で始まる行の判定
+                        if (currentLine.startsWith('ヒント：') || currentLine.startsWith('ヒント:')) {
+                            isHint = true;
+                        }
+
+                        // すでにテキスト側に打たれている「1. 」「2. 」などの番号を抽出し、二重番号化（2. 1. など）するバグを完全に修正
+                        // 先頭の「1. 2. 」を綺麗に整えてそのまま出力する
+                        if (!isHint) {
+                            stepsHtml += `<div class="step-line-item">${currentLine}</div>`;
+                        } else {
+                            // ヒントの場合は専用の赤いボックスデザインを適用
+                            stepsHtml += `<div class="step-line-item hint-style">${currentLine}</div>`;
+                        }
                     });
-                    stepsHtml += '</ol>';
+                    stepsHtml += '</div>';
                 }
+            }
+
+            if (stepsHtml === '') {
+                stepsHtml = '<div class="quest-steps-wrapper">-</div>';
             }
 
             // クエスト1件分のブロック構築
@@ -268,7 +305,7 @@ function renderTreeArchive(groupedData) {
                     <div id="details-${displayId}" class="quest-details-content">
                         <ul>
                             <li><strong>目的:</strong> ${objectiveText}</li>
-                            <li><strong>依頼人:</strong> <span style="color:#666;">-</span></li>
+                            <li><strong>依頼人:</strong> <span style="color:#b22222; font-weight:bold;">${clientText}</span></li>
                             <li><strong>報酬:</strong> ${finalRewardText}</li>
                             <li><strong>進行手順:</strong>
                                 ${stepsHtml}
@@ -279,7 +316,7 @@ function renderTreeArchive(groupedData) {
             `;
         });
 
-        html += `</div>`; // .quest-list-container の閉じタグ
+        html += `</div>`;
     });
 
     container.innerHTML = html;
