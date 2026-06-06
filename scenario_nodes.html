@@ -36,19 +36,19 @@
                     <table id="scenario-table">
                         <thead>
                             <tr>
-                                <th style="width: 5%;">ID</th>
-                                <th class="cls-scene" style="width: 15%;">章 / シーン</th>
-                                <th style="width: 15%;">タイトル / 必要Lv</th>
-                                <th class="cls-content" style="width: 20%;">概要</th>
-                                <th class="cls-steps" style="width: 25%;">進行手順</th>
-                                <th class="cls-drops" style="width: 10%;">ドロップ項目</th>
-                                <th class="cls-exp" style="width: 10%;">獲得EXP</th>
-                                <th class="cls-reward" style="width: 10%;">報酬</th>
+                                <th style="width: 55px; text-align:center;">No</th>
+                                <th class="cls-scene" style="width: 140px;">章 / シーン</th>
+                                <th style="width: 160px;">クエストタイトル</th>
+                                <th class="cls-content" style="width: 220px;">概要・あらすじ</th>
+                                <th class="cls-steps" style="width: 260px;">進行手順</th>
+                                <th class="cls-drops" style="width: 130px;">ドロップ項目</th>
+                                <th class="cls-exp" style="width: 120px;">獲得EXP</th>
+                                <th class="cls-reward" style="width: 130px;">クリア報酬</th>
                             </tr>
                         </thead>
                         <tbody id="scenario-body">
                             <tr>
-                                <td colspan="8" style="text-align:center;">Supabaseからシナリオデータを読み込み中...</td>
+                                <td colspan="8" style="text-align:center; padding:20px;">Supabaseからシナリオデータを読み込み中...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -60,35 +60,34 @@
     <script src="common.js"></script>
 
 <script>
-// ドキュメントの読み込み完了時に実行
 window.addEventListener('DOMContentLoaded', loadScenarioData);
 
 async function loadScenarioData() {
-    // 1. Supabaseの 'scenario_nodes' テーブルから全データを一括取得
+    // 1. Supabaseからデータを一括取得
     const { data: scenarioNodes, error } = await client
         .from('scenario_nodes')
         .select('*');
 
     if (error) {
         console.error("Supabaseデータの取得に失敗しました:", error);
-        const tbody = document.getElementById('scenario-body');
-        if (tbody) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red; font-weight:bold;">データの読み込みに失敗しました。詳細: ${error.message}</td></tr>`;
-        }
+        document.getElementById('scenario-body').innerHTML = 
+            `<tr><td colspan="8" style="text-align:center; color:red; font-weight:bold; padding:20px;">データの読み込みに失敗しました。詳細: ${error.message}</td></tr>`;
         return;
     }
 
-    // 文字列の "1.0" や "10.0" から小数点を綺麗に除去し、純粋な数値として1から順に並び替える
-    if (scenarioNodes) {
-        scenarioNodes.sort((a, b) => {
-            const numA = a.node_id ? Math.floor(Number(a.node_id)) : 0;
-            const numB = b.node_id ? Math.floor(Number(b.node_id)) : 0;
-            return numA - numB;
+    // 文字列の"1.0"や"10.0"を、絶対に壊れない最速の方法で「1, 2, 3...10」の数値順にソート
+    let items = [];
+    if (scenarioNodes && Array.isArray(scenarioNodes)) {
+        items = scenarioNodes;
+        items.sort((a, b) => {
+            const valA = a.node_id ? parseFloat(a.node_id) : 0;
+            const valB = b.node_id ? parseFloat(b.node_id) : 0;
+            return valA - valB;
         });
     }
 
-    // 2. テーブルへのレンダリング処理
-    renderScenarioTable(scenarioNodes);
+    // 2. テーブルへのレンダリング処理を実行
+    renderScenarioTable(items);
 }
 
 // 数値をカンマ区切りテキストに変換するヘルパー関数
@@ -96,7 +95,6 @@ function formatExp(expValue) {
     if (!expValue || expValue === 'NULL' || expValue === '0' || expValue === '') {
         return null;
     }
-    // 小数点対策として、一度数値化して端数を切り捨てる
     const num = Math.floor(Number(String(expValue).replace(/,/g, '')));
     return isNaN(num) ? expValue : num.toLocaleString();
 }
@@ -106,25 +104,23 @@ function renderScenarioTable(nodes) {
     if (!tbody) return;
 
     if (!nodes || nodes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">該当するシナリオデータがありません。</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px;">該当するシナリオデータがありません。</td></tr>`;
         return;
     }
 
-    // マッピング処理
+    // マッピング処理：すべてアーチャーと同じように独立した <td> 枠の中に美しく横並びで流し込む
     tbody.innerHTML = nodes.map(node => {
         
-        // "必要レベル" の1.0などを整数表記にする処理
+        // 必要レベルの整数表記化
         let displayLevel = node.必要レベル;
         if (displayLevel && displayLevel !== 'NULL' && displayLevel !== '') {
             const parsedLvl = Number(displayLevel);
-            if (!isNaN(parsedLvl)) {
-                displayLevel = Math.floor(parsedLvl);
-            }
+            if (!isNaN(parsedLvl)) displayLevel = Math.floor(parsedLvl);
         }
-        const reqLevelHtml = (displayLevel) ? 
-            `<div style="font-size: 0.8em; color: #1e90ff; font-weight: bold; margin-top: 4px;">[必要Lv: ${displayLevel}]</div>` : '';
+        const reqLevelHtml = displayLevel ? 
+            `<div style="font-size: 0.82em; color: #1e90ff; font-weight: bold; margin-top: 2px;">[必要Lv: ${displayLevel}]</div>` : '';
 
-        // 特殊ドロップ（required_item, Drop2, Drop3, Drop4）の結合処理
+        // ドロップアイテム（required_item, Drop2, Drop3, Drop4）の結合
         let drops = [];
         if (node.required_item && node.required_item !== 'NULL' && node.required_item !== '') drops.push(node.required_item);
         if (node.Drop2 && node.Drop2 !== 'NULL' && node.Drop2 !== '') drops.push(node.Drop2);
@@ -132,42 +128,46 @@ function renderScenarioTable(nodes) {
         if (node.Drop4 && node.Drop4 !== 'NULL' && node.Drop4 !== '') drops.push(node.Drop4);
         const dropsHtml = drops.length > 0 ? drops.join('<br>') : '<span style="color:#999;">-</span>';
 
-        // 獲得EXP（Base / Job）のパースとカンマ区切り整形
+        // 獲得EXP（Base / Job）のカンマ区切り
         const formattedBase = formatExp(node.BaseExp);
         const formattedJob = formatExp(node.JobExp);
-        
         const baseExpText = formattedBase ? `Base: ${formattedBase}` : '';
         const jobExpText = formattedJob ? `Job: ${formattedJob}` : '';
         const expHtml = [baseExpText, jobExpText].filter(Boolean).join('<br>') || '<span style="color:#999;">0</span>';
 
-        // クリア報酬
+        // 報酬・テキストの空値対策
         const rewardText = (node.報酬 && node.報酬 !== 'NULL' && node.報酬 !== '') ? node.報酬 : '<span style="color:#999;">-</span>';
-
-        // 概要や手順が空っぽ（NULL）の時のフォールバック
         const contentText = (node.content_text && node.content_text !== 'NULL') ? node.content_text : '-';
         const clearSteps = (node.clear_steps && node.clear_steps !== 'NULL') ? node.clear_steps : '-';
 
-        // 小数点（1.0など）が表示されるのを完全に防ぐため、整数値にキャスト
+        // IDの「1.0」を綺麗な整数「1」にする
         const displayId = node.node_id ? Math.floor(Number(node.node_id)) : '-';
 
         return `
             <tr>
                 <td style="text-align:center; font-family: monospace; font-weight: bold;">${displayId}</td>
-                <td class="cls-scene" style="font-size: 0.9em; color: #555;">${node.scene || '-'}</td>
+                
+                <td class="cls-scene" style="font-size: 0.88em; color: #555;">${node.scene || '-'}</td>
+                
                 <td style="font-weight: bold; color: #222;">
                     ${node.title || '名称未設定'}
                     ${reqLevelHtml}
                 </td>
+                
                 <td class="cls-content" style="font-size: 0.88em; color: #444; line-height: 1.4;">${contentText}</td>
+                
                 <td class="cls-steps" style="font-size: 0.88em; line-height: 1.4;">${clearSteps}</td>
+                
                 <td class="cls-drops" style="font-size: 0.85em; color: #333;">${dropsHtml}</td>
-                <td class="cls-exp" style="font-size: 0.85em; text-align: right; font-family: monospace; line-height: 1.3;">${expHtml}</td>
+                
+                <td class="cls-exp" style="font-size: 0.85em; text-align: left; font-family: monospace; line-height: 1.3;">${expHtml}</td>
+                
                 <td class="cls-reward" style="font-size: 0.85em; color: #d02090; font-weight: bold;">${rewardText}</td>
             </tr>
         `;
     }).join('');
 
-    // 表示列の動的切り替えイベント設定
+    // 表示列切り替えの有効化（アーチャーの仕様完全継承）
     setupColumnToggles();
 }
 
