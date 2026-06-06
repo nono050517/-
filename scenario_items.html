@@ -2,393 +2,551 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>必要素材数計算ツール - エリシアオンライン アーカイブス</title>
+    <title>必要素材数計算 - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-            background-color: #f8f9fa;
-            color: #333333;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        /* ⑤「現在調査中」警告アナウンスの常駐デザイン */
-        .alert-announcement {
+        /* 共通Menuやタイトルなどの外枠を絶対に破壊しないよう、ツール専用の独自名前空間でスタイルを隔離 */
+        .scenario-calc-container .notice-warning-box {
             background-color: #fff5f5;
-            border-left: 5px solid #e53e3e;
             color: #c53030;
-            padding: 15px;
+            border: 1px solid #feb2b2;
+            border-left: 5px solid #e53e3e;
+            padding: 12px 20px;
             margin-bottom: 20px;
             border-radius: 4px;
+            font-size: 1.05em;
             font-weight: bold;
             display: flex;
             align-items: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        .alert-announcement .icon {
-            font-size: 1.2rem;
-            margin-right: 10px;
+        .scenario-calc-container .notice-warning-box span {
+            margin-right: 8px;
+            font-size: 1.2em;
         }
-        .control-panel {
-            background-color: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        }
-        .panel-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #2d3748;
-        }
-        .select-box {
-            width: 100%;
-            max-width: 300px;
-            padding: 10px;
-            font-size: 1rem;
-            border: 1px solid #cbd5e0;
-            border-radius: 4px;
-            background-color: #fff;
-            color: #4a5568;
-            outline: none;
-        }
-        .select-box:focus {
-            border-color: #3182ce;
-        }
-        .item-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .item-card {
-            background-color: #ffffff;
-            border: 1px solid #e2e8f0;
+
+        .scenario-calc-container .tool-panel {
+            background-color: #fdfdfd;
+            border: 1px solid #ccc;
             border-radius: 6px;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            margin-bottom: 25px;
+            font-size: 1.05em;
         }
-        .item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+        .scenario-calc-container .form-group {
+            margin-bottom: 18px;
         }
-        .item-name-wrap {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .item-icon {
-            font-size: 1.2rem;
-        }
-        .item-name {
-            font-size: 1.15rem;
+        .scenario-calc-container .form-group label {
+            display: block;
             font-weight: bold;
-            color: #c53030;
+            margin-bottom: 6px;
+            color: #333;
         }
-        .item-total {
-            font-size: 1.2rem;
+        .scenario-calc-container .form-control {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .scenario-calc-container .radio-group {
+            margin-top: 6px;
+        }
+        .scenario-calc-container .radio-label {
+            margin-right: 20px;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        .scenario-calc-container .btn-calc {
+            background-color: #1e90ff;
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
             font-weight: bold;
-            color: #e53e3e;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        /* ④ ドロップ情報の自動「ヒント」逆引き（緑文字表示） */
-        .drop-info {
-            font-size: 0.9rem;
-            color: #2f855a;
+        .scenario-calc-container .btn-calc:hover {
+            background-color: #007ae6;
+        }
+        
+        .scenario-calc-container .conditional-box {
+            display: none;
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-left: 4px solid #1e90ff;
+            margin-top: 10px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .scenario-calc-container #result-container {
+            margin-top: 25px;
+        }
+        .scenario-calc-container .result-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            border-bottom: 2px solid #333;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            color: #111;
+        }
+        .scenario-calc-container .material-card {
+            background: #faf9f6;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px 20px;
             margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            font-size: 1.05em;
         }
-        .breakdown-title {
-            font-size: 0.85rem;
-            color: #718096;
-            margin-bottom: 4px;
+        .scenario-calc-container .material-name {
+            font-size: 1.15em;
+            font-weight: bold;
+            color: #b22222;
         }
-        .breakdown-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            font-size: 0.9rem;
-            color: #4a5568;
+        .scenario-calc-container .material-total {
+            float: right;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #ff4500;
         }
-        .breakdown-item {
-            padding-left: 15px;
-            position: relative;
+        .scenario-calc-container .drop-info-line {
+            margin-top: 4px;
+            font-size: 0.95em;
+            color: #2e8b57;
+            font-weight: bold;
         }
-        .breakdown-item::before {
-            content: "➔";
-            position: absolute;
-            left: 0;
-            color: #a0aec0;
+        .scenario-calc-container .material-breakdown {
+            margin: 8px 0 0 0;
+            padding-left: 20px;
+            color: #555;
+            font-size: 0.95em;
+            line-height: 1.5;
+            border-top: 1px dashed #eee;
+            padding-top: 6px;
+        }
+        .scenario-calc-container .stop-notice {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ffc107;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
+    <div class="wrapper">
+        <header class="main-header">
+            <h1 class="site-title">エリシアオンライン アーカイブス</h1>
+        </header>
 
-<div class="container">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            
+            <main class="scenario-calc-container">
+                <h2 class="page-title" style="font-size: 1.8em;">シナリオ必要素材数計算ツール</h2>
+                
+                <h3 class="section-category" style="font-size: 1.3em;">1．ツールの概要</h3>
+                <div class="item-content" style="font-size: 1.05em; line-height: 1.6; margin-bottom: 20px;">
+                    現在の進行クエストと目標条件、プレイヤーの現在のベースレベル帯を指定することで、自分に必要なアイテムの種類と合計数をピンポイントで一括計算します。
+                </div>
 
-    <div class="alert-announcement">
-        <span class="icon">⚠️</span>
-        <span>※注意：現在データ調査中</span>
+                <h3 class="section-category" style="font-size: 1.3em;">2．条件設定</h3>
+                <div class="item-content">
+
+                    <div class="notice-warning-box">
+                        <span>⚠️</span> ※注意：現在データ調査中（まだ一部未完成の章や検証中のデータが含まれています）
+                    </div>
+                    
+                    <div class="tool-panel">
+                        
+                        <div class="form-group">
+                            <label for="start-quest">現在の進行クエストは？</label>
+                            <select id="start-quest" class="form-control">
+                                <option value="">データを読み込み中...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="player-level-range">あなたの現在のレベル帯（BaseLv）は？</label>
+                            <select id="player-level-range" class="form-control" style="width: 200px;">
+                            </select>
+                            <small style="color: #666; display: block; margin-top: 4px;">※「39以下」「40以上」などのレベル帯分岐素材を自動で判別するために使用します。</small>
+                        </div>
+
+                        <div id="route-branch-box" class="conditional-box">
+                            <label for="route-choice" style="color: #0056b3;">➔ 第一章の分岐ルートの選択予定は？</label>
+                            <select id="route-choice" class="form-control">
+                                <option value="暁">【暁ルート】に進む</option>
+                                <option value="魔女">【魔女ルート】に進む</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 25px;">
+                            <label>終了条件の設定</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="end-condition-type" value="target-quest" checked> ① 目標クエストまで
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="end-condition-type" value="bag-limit"> ② 持ち物の空き枠限界まで
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="target-quest-group" class="form-group">
+                            <label for="end-quest">どこまでの分が必要？（目標クエスト）</label>
+                            <select id="end-quest" class="form-control">
+                                <option value="">データを読み込み中...</option>
+                            </select>
+                        </div>
+
+                        <div id="bag-limit-group" class="form-group" style="display: none;">
+                            <label for="bag-space">あといくつ持ち物が持てる？（空き枠アイテム種類数）</label>
+                            <input type="number" id="bag-space" class="form-control" value="10" min="1" max="100" style="width: 120px;">
+                            <small style="color: #666; display: block; margin-top: 4px;">※集めるアイテムの種類数がこの数に達した時点で計算をストップします。</small>
+                        </div>
+
+                        <div style="margin-top: 25px;">
+                            <button type="button" id="btn-execute" class="btn-calc">必要素材を計算する</button>
+                        </div>
+
+                    </div>
+
+                    <div id="result-container"></div>
+
+                </div>
+            </main>
+        </div>
     </div>
 
-    <div class="control-panel">
-        <div class="panel-title">現在のキャラクターレベル帯を選択してください</div>
-        <select id="levelSelect" class="select-box">
-            </select>
-    </div>
-
-    <div id="resultArea" class="item-list"></div>
-
-</div>
+    <script src="common.js"></script>
 
 <script>
-// サンプルデータ（Supabaseのscenario_nodesテーブルから取得したデータを想定）
-// 未設定タイトル、レベル帯分岐、カッコ付きメモ、日本語「の」をすべて網羅
-const scenarioNodes = [
-    {
-        node_id: 56,
-        title: "エーレの防衛線",
-        required_items: "竜の羽×20 エーレの花×10",
-        progress_text: "ドラッへ峡谷1のLv52ワイバーンから竜の羽を入手。エーレの花は採取。"
-    },
-    {
-        node_id: 57,
-        title: "太古の封印",
-        // ユーザーがLv100の場合、39以下は非表示、40以上・60以上・80以上のうち「80以上」だけが最高Lv制限として選ばれる
-        required_items: "39以下：魔力の綿×1 / 40以上：呪いの骨×8 (BaseLvにより変化) / 60以上：海月の雫×15 / 80以上：黒染めの布×25",
-        progress_text: "さいはての地のコストラから呪いの骨をドロップ。海月の雫は海底洞窟。"
-    },
-    {
-        node_id: 69,
-        title: "-", // 【書き方ルール】未設定タイトルのクエスト（おまけ行の誤合体防止）
-        required_items: "謎の珍アイテム×2",
-        progress_text: "道中の宝箱から回収。"
-    }
-];
+let allQuests = [];
+let rawScenarioNodes = []; 
 
-// ② 5刻み・最高Lv150ストップ仕様のセレクトボックス生成
-function initLevelSelect() {
-    const select = document.getElementById('levelSelect');
-    select.innerHTML = '';
-    for (let i = 1; i <= 150; i += 5) {
-        const start = i;
-        const end = Math.min(i + 4, 150);
-        const option = document.createElement('option');
-        option.value = end; // 判定には上限値（5, 10, ..., 150）を使用
-        option.text = `${start}～${end}`;
-        // デフォルト選択例としてLv100が含まれる「96～100」を初期選択にする
-        if (start <= 100 && 100 <= end) {
-            option.selected = true;
-        }
-        select.appendChild(option);
+window.addEventListener('DOMContentLoaded', initializeTool);
+
+async function initializeTool() {
+    // 5刻み・最高Lv150ストップ仕様のセレクトボックス展開
+    generateLevelRangeOptions();
+
+    // Supabaseからシナリオデータの取得
+    const { data: scenarioNodes, error } = await client
+        .from('scenario_nodes')
+        .select('*');
+
+    if (error) {
+        console.error("データ取得失敗:", error);
+        return;
+    }
+
+    if (scenarioNodes && Array.isArray(scenarioNodes)) {
+        rawScenarioNodes = scenarioNodes;
+        
+        // 未設定タイトル「-」や不要データ、おまけ行の吸い込み誤合体を完全に防ぐ保護フィルタ
+        allQuests = scenarioNodes.filter(node => {
+            const title = (node.title || '').trim();
+            const steps = (node.clear_steps || '').trim();
+            return !(title === '' || title === 'NULL' || title === '名称未設定' || title.includes('追加報酬') || title.includes('追加') || steps.includes('追加報酬') || title === '-');
+        });
+        allQuests.sort((a, b) => parseFloat(a.node_id || 0) - parseFloat(b.node_id || 0));
+    }
+
+    populateSelectBoxes();
+    setupEventListeners();
+}
+
+// ② 5刻み・最高Lv150ストップ仕様のUIオートビルド
+function generateLevelRangeOptions() {
+    const lvlSelect = document.getElementById('player-level-range');
+    if (!lvlSelect) return;
+
+    let html = '';
+    for (let start = 1; start <= 146; start += 5) {
+        let end = start + 4;
+        if (end > 150) end = 150;
+        html += `<option value="${end}">${start} ～ ${end}</option>`;
+    }
+    lvlSelect.innerHTML = html;
+    lvlSelect.value = "100"; 
+}
+
+function populateSelectBoxes() {
+    const startSelect = document.getElementById('start-quest');
+    const endSelect = document.getElementById('end-quest');
+    if (!startSelect || !endSelect) return;
+
+    let optionsHtml = '';
+    allQuests.forEach(q => {
+        const id = Math.floor(Number(q.node_id));
+        const title = q.title || '名称未設定';
+        optionsHtml += `<option value="${q.node_id}">No.${id} ${title}</option>`;
+    });
+
+    startSelect.innerHTML = optionsHtml;
+    endSelect.innerHTML = optionsHtml;
+    
+    if (endSelect.options.length > 0) {
+        endSelect.selectedIndex = endSelect.options.length - 1;
     }
 }
 
-// メインの集計・描画処理
-function calculateRequiredItems() {
-    const selectedLevel = parseInt(document.getElementById('levelSelect').value, 10);
-    const itemMap = {};
+function setupEventListeners() {
+    const startSelect = document.getElementById('start-quest');
+    const branchBox = document.getElementById('route-branch-box');
+    const btnExecute = document.getElementById('btn-execute');
 
-    scenarioNodes.forEach(node => {
-        let title = node.title ? node.title.trim() : "";
-        // 【書き方ルール】titleが「-」の場合は「名称未設定クエスト」に綺麗に仮表示
-        if (title === "-") {
-            title = "名称未設定クエスト";
-        }
-
-        const rawItemsText = node.required_items || "";
-        if (!rawItemsText) return;
-
-        // スペース、全角スペース、読点「、」または「/」でバラシ解体
-        const rawTokens = rawItemsText.split(/[\s,、\/]+/);
-        
-        // ③ クエストごとのレベル判定完全リセット（引きずり事故防止）
-        // 1つのクエスト内で見つかった「レベル分岐条件」を一旦ここにストックする
-        const branchTokens = [];
-        const normalTokens = [];
-
-        rawTokens.forEach(token => {
-            const t = token.trim();
-            if (!t) return;
-
-            // 【書き方ルール】レベル帯分岐の検出（全角・半角コロン両対応）
-            const branchMatch = t.match(/^(\d+)(以上|以下)[:：](.+)$/);
-            if (branchMatch) {
-                const targetLv = parseInt(branchMatch[1], 10);
-                const conditionType = branchMatch[2]; // "以上" or "以下"
-                const itemContent = branchMatch[3];   // アイテム名×個数
-
-                branchTokens.push({
-                    targetLv: targetLv,
-                    conditionType: conditionType,
-                    itemContent: itemContent
-                });
+    startSelect.addEventListener('change', () => {
+        const selectedQuest = allQuests.find(q => q.node_id === startSelect.value);
+        if (selectedQuest) {
+            const sceneText = selectedQuest.scene || '';
+            if (sceneText.includes('序章') || (sceneText.includes('第一章') && !sceneText.includes('暁') && !sceneText.includes('魔女'))) {
+                branchBox.style.display = 'block';
             } else {
-                normalTokens.push(t);
+                branchBox.style.display = 'none';
             }
-        });
-
-        // 💡 【今回のバグ修正コアロジック】
-        // 適合するレベル帯分岐トークンのうち、「最も制限レベルが高いもの（最大値）」だけを1つ選出する
-        let selectedBranchToken = null;
-        let maxMatchedLevel = -1;
-
-        branchTokens.forEach(bToken => {
-            let isMatch = false;
-            if (bToken.conditionType === "以上" && selectedLevel >= bToken.targetLv) {
-                isMatch = true;
-            } else if (bToken.conditionType === "以下" && selectedLevel <= bToken.targetLv) {
-                isMatch = true;
-            }
-
-            if (isMatch) {
-                // 「以上」かつ、これまでにマッチしたどのレベルよりも高い制限であれば上書き更新
-                if (bToken.conditionType === "以上") {
-                    if (bToken.targetLv > maxMatchedLevel) {
-                        maxMatchedLevel = bToken.targetLv;
-                        selectedBranchToken = bToken;
-                    }
-                } else {
-                    // 「以下」の場合は、最初に適合したものを採用（必要に応じてロジック変更可能）
-                    if (selectedBranchToken === null) {
-                        selectedBranchToken = bToken;
-                    }
-                }
-            }
-        });
-
-        // 最終的に処理対象とするトークン群（通常素材 + 厳選された1つの分岐素材）
-        const finalTokensToProcess = [...normalTokens];
-        if (selectedBranchToken) {
-            finalTokensToProcess.push(selectedBranchToken.itemContent);
         }
+    });
 
-        // トークンごとの解析と合算処理
-        finalTokensToProcess.forEach(tokenContent => {
-            // 【書き方ルール】カッコ「()」で囲まれたセル内のメモ書きを自動無視
-            // カッコとその中身を完全に消去
-            let cleanToken = tokenContent.replace(/\([^)]*\)/g, "").replace(/（[^）]*）/g, "").trim();
-            if (!cleanToken) return;
+    if (startSelect.value) startSelect.dispatchEvent(new Event('change'));
 
-            // ① 日本語「の」＆記号の安全ガード
-            // アイテム名と個数の切り離し。名前側のカギカッコも巻き添えにせず、個数直前の「×」か「*」でセパレート
-            const qtyMatch = cleanToken.match(/^(.+?)[×\*](\d+)$/);
-            if (!qtyMatch) return;
-
-            let itemName = qtyMatch[1].trim();
-            const itemQty = parseInt(qtyMatch[2], 10);
-
-            // 前後のカギカッコ（「」）などが残っている場合は安全にトリム（日本語の「の」は絶対に守る）
-            itemName = itemName.replace(/^[「『"']|[」』"']$/g, "").trim();
-
-            if (!itemName) return;
-
-            // グローバルなitemMapに合算マージ
-            if (!itemMap[itemName]) {
-                itemMap[itemName] = {
-                    total: 0,
-                    breakdown: [],
-                    progressText: node.progressText || ""
-                };
+    document.querySelectorAll('input[name="end-condition-type"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'target-quest') {
+                document.getElementById('target-quest-group').style.display = 'block';
+                document.getElementById('bag-limit-group').style.display = 'none';
+            } else {
+                document.getElementById('target-quest-group').style.display = 'none';
+                document.getElementById('bag-limit-group').style.display = 'block';
             }
-            itemMap[itemName].total += itemQty;
-            itemMap[itemName].breakdown.push({
-                questTitle: title,
-                qty: itemQty
-            });
         });
     });
 
-    // 画面への描画処理
-    renderItems(itemMap);
+    btnExecute.addEventListener('click', calculateMaterials);
 }
 
-// ④ ドロップ情報の全自動「ヒント」逆引き（緑文字表示）を含んだレンダリング
-function renderItems(itemMap) {
-    const resultArea = document.getElementById('resultArea');
-    resultArea.innerHTML = '';
+// ① 日本語「の」＆記号の安全ガード ＋ カッコ()隠蔽 ＋ レベル帯自動仕分け
+function parseItemStringToArrayList(itemStr, playerLevel) {
+    if (!itemStr || itemStr === 'NULL' || itemStr === '') return [];
+    
+    // 通常素材の並び（自動バラシ対応）用のトークン解体
+    const rawTokens = itemStr.split(/[\s\n\r,、]+/);
+    const results = [];
+    
+    // ③ クエスト内コンテキストの初期化（前行のTRUE/FALSE引きずり事故を徹底遮断）
+    let currentLineMatchState = true; 
 
-    const itemNames = Object.keys(itemMap);
+    rawTokens.forEach(token => {
+        let t = token.trim();
+        if (!t) return;
+
+        // 【セル内のメモ書きの隠蔽方法】カッコ表記は完全無視
+        if (t.startsWith('(') || t.startsWith('（')) {
+            return;
+        }
+
+        t = t.replace(/：/g, ':');
+
+        let currentName = t;
+        let currentCount = 1;
+
+        // 末尾の「×個数」や「*個数」の超精密切り離し（日本語「の」を絶対に巻き添えにしない）
+        const countMatch = t.match(/^(.+?)(?:×|\*)(\d+)(?:個)?$/);
+        if (countMatch) {
+            currentName = countMatch[1].trim();
+            currentCount = parseInt(countMatch[2], 10);
+        } else {
+            const spaceNumMatch = t.match(/^(.+?)\s+(\d+)(?:個)?$/);
+            if (spaceNumMatch) {
+                spaceNumMatch[1].trim();
+                currentCount = parseInt(spaceNumMatch[2], 10);
+            }
+        }
+
+        let cleanName = currentName;
+
+        // 【レベル帯分岐素材：〇〇以下】の自動仕分け
+        if (currentName.includes('以下:')) {
+            const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+            const matchLvl = normalizedStr.match(/^(\d+)以下:(.+)$/);
+            if (matchLvl) {
+                const limitLvl = parseInt(matchLvl[1], 10);
+                cleanName = matchLvl[2].trim();
+                currentLineMatchState = (playerLevel <= limitLvl); 
+            }
+        } 
+        // 【レベル帯分岐素材：〇〇以上】の自動仕分け
+        else if (currentName.includes('以上:')) {
+            const normalizedStr = currentName.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+            const matchLvl = normalizedStr.match(/^(\d+)以上:(.+)$/);
+            if (matchLvl) {
+                const limitLvl = parseInt(matchLvl[1], 10);
+                cleanName = matchLvl[2].trim();
+                currentLineMatchState = (playerLevel >= limitLvl); 
+            }
+        }
+        
+        if (currentLineMatchState) {
+            if (cleanName.includes(':')) {
+                cleanName = cleanName.split(':')[1].trim();
+            }
+            
+            // カギカッコ「」や引用符だけをピンポイントでノーダメージ除去する安全ガード
+            cleanName = cleanName.replace(/^[「『"']+|[」』"']+$/g, '').trim();
+
+            if (cleanName) {
+                results.push({ name: cleanName, count: currentCount });
+            }
+        }
+    });
+
+    return results;
+}
+
+// ④ ドロップ情報の全自動「ヒント」逆引きロジック（「ヒント：」文言除去仕様）
+function findDropHintForMateral(itemName) {
+    let hintFound = '';
+    for (let node of rawScenarioNodes) {
+        const steps = node.clear_steps || '';
+        if (steps.includes('ヒント：') || steps.includes('ヒント:')) {
+            const lines = steps.split(/\n|<br\s*\/?>|\\n/);
+            for (let line of lines) {
+                if ((line.startsWith('ヒント：') || line.startsWith('ヒント:')) && line.includes(itemName)) {
+                    hintFound = line.replace(/^ヒント[：:]\s*/, '').trim();
+                    break;
+                }
+            }
+        }
+        if (hintFound) break;
+    }
+    return hintFound;
+}
+
+// コア計算ロジックメインエンジン
+function calculateMaterials() {
+    const startValue = parseFloat(document.getElementById('start-quest').value);
+    const condType = document.querySelector('input[name="end-condition-type"]:checked').value;
+    const chosenRoute = document.getElementById('route-choice').value;
+    const playerLevel = parseInt(document.getElementById('player-level-range').value, 10) || 1;
+    
+    const resultContainer = document.getElementById('result-container');
+    resultContainer.innerHTML = ''; 
+
+    let startIndex = allQuests.findIndex(q => parseFloat(q.node_id) === startValue);
+    if (startIndex === -1) startIndex = 0;
+
+    let targetedQuests = allQuests.slice(startIndex);
+
+    // 暁ルート・魔女ルートの動的絞り込み
+    targetedQuests = targetedQuests.filter(q => {
+        const scene = q.scene || '';
+        if (scene.includes('暁ルート') && chosenRoute !== '暁') return false;
+        if (scene.includes('魔女ルート') && chosenRoute !== '魔女') return false;
+        return true;
+    });
+
+    // 目標クエスト境界線の判定
+    if (condType === 'target-quest') {
+        const endValue = parseFloat(document.getElementById('end-quest').value);
+        const endIndex = targetedQuests.findIndex(q => parseFloat(q.node_id) === endValue);
+        if (endIndex !== -1) {
+            targetedQuests = targetedQuests.slice(0, endIndex + 1);
+        }
+    }
+
+    const materialSummary = {};
+    let uniqueItemCount = 0;
+    const bagLimitValue = parseInt(document.getElementById('bag-space').value, 10);
+    let stopNoticeHtml = '';
+
+    for (let q of targetedQuests) {
+        const currentId = Math.floor(Number(q.node_id));
+        const itemStringsCollect = [];
+        
+        if (q.required_item) itemStringsCollect.push(q.required_item);
+
+        // titleが「-」（ハイフン）の行を含む、おまけデータ行の合体処理
+        const relatedExtras = rawScenarioNodes.filter(node => {
+            const nid = parseFloat(node.node_id);
+            const title = (node.title || '').trim();
+            const steps = (node.clear_steps || '').trim();
+            const isExtra = title === '' || title === 'NULL' || title === '名称未設定' || title.includes('追加報酬') || title.includes('追加') || steps.includes('追加報酬') || title === '-';
+            return isExtra && Math.floor(nid) === currentId;
+        });
+
+        relatedExtras.forEach(ext => {
+            if (ext.required_item) itemStringsCollect.push(ext.required_item);
+        });
+
+        let brokenLoop = false;
+        for (let itemStr of itemStringsCollect) {
+            const parsedList = parseItemStringToArrayList(itemStr, playerLevel);
+
+            for (let parsed of parsedList) {
+                if (!materialSummary[parsed.name]) {
+                    if (condType === 'bag-limit' && uniqueItemCount >= bagLimitValue) {
+                        stopNoticeHtml = `
+                            <div class="stop-notice">
+                                ⚠️ 持ち物の空き枠上限（${bagLimitValue}種類）に達したため、No.${currentId}「${q.title === '-' ? '名称未設定クエスト' : q.title}」の途中で計算をストップしました。
+                            </div>`;
+                        brokenLoop = true;
+                        break;
+                    }
+                    materialSummary[parsed.name] = { total: 0, breakdown: [] };
+                    uniqueItemCount++;
+                }
+
+                materialSummary[parsed.name].total += parsed.count;
+                // ハイフン行（未設定クエスト）は画面上で「名称未設定クエスト」として綺麗に仮表示
+                const displayTitle = q.title === '-' ? '名称未設定クエスト' : q.title;
+                materialSummary[parsed.name].breakdown.push(`No.${currentId} ${displayTitle} [${parsed.count}個]`);
+            }
+            if (brokenLoop) break;
+        }
+        if (brokenLoop) break;
+    }
+
+    const selectText = document.getElementById('player-level-range').options[document.getElementById('player-level-range').selectedIndex].text;
+    let resultHtml = `<div class="result-title">🎯 計算結果：必要素材一覧 (現在の設定レベル帯: ${selectText})</div>`;
+    resultHtml += stopNoticeHtml;
+
+    const itemNames = Object.keys(materialSummary);
     if (itemNames.length === 0) {
-        resultArea.innerHTML = '<div style="color: #718096; text-align: center; padding: 20px;">選択されたレベル帯に該当する必要素材はありません。</div>';
+        resultHtml += `<p style="padding: 15px; color: #666;">指定された範囲およびレベル帯（${selectText}）に該当する必要収集アイテムはありませんでした。</p>`;
+        resultContainer.innerHTML = resultHtml;
         return;
     }
 
     itemNames.forEach(name => {
-        const data = itemMap[name];
-        const card = document.createElement('div');
-        card.className = 'item-card';
+        const itemData = materialSummary[name];
+        const dropHintText = findDropHintForMateral(name);
+        // ④ ドロップ情報のスマートな緑文字表示（「ヒント：」重複なし）
+        const dropHintHtml = dropHintText ? 
+            `<div class="drop-info-line">📍 ドロップ情報: ${dropHintText}</div>` : 
+            `<div class="drop-info-line" style="color:#888; font-weight:normal;">📍 ドロップ情報: データベースにヒントが登録されていません</div>`;
 
-        // 1. ヘッダー（アイテム名、合計個数）
-        const header = document.createElement('div');
-        header.className = 'item-header';
-        
-        const nameWrap = document.createElement('div');
-        nameWrap.className = 'item-name-wrap';
-        nameWrap.innerHTML = `<span class="item-icon">📦</span><span class="item-name">${name}</span>`;
-        
-        const total = document.createElement('div');
-        total.className = 'item-total';
-        total.innerText = `計 ${data.total} 個`;
-
-        header.appendChild(nameWrap);
-        header.appendChild(total);
-        card.appendChild(header);
-
-        // 2. ④ ドロップ情報の全自動「ヒント」逆引き（緑文字表示）
-        const dropDiv = document.createElement('div');
-        dropDiv.className = 'drop-info';
-        
-        // 進行手順テキスト（progress_text）から該当アイテムのドロップ元をスマートに抽出
-        let hintText = "データベースにヒントが登録されていません";
-        if (data.progressText) {
-            // テキスト内に自身のアイテム名が含まれているか簡易抽出（必要に応じて正規表現でさらに絞り込み可能）
-            if (data.progressText.includes(name)) {
-                hintText = data.progressText;
-            } else {
-                hintText = data.progressText; // 該当クエストの手順をそのままヒントとして流用
-            }
-        }
-        dropDiv.innerHTML = `📍 ドロップ情報: ${hintText}`;
-        card.appendChild(dropDiv);
-
-        // 3. 使用内訳
-        const breakdownTitle = document.createElement('div');
-        breakdownTitle.className = 'breakdown-title';
-        breakdownTitle.innerText = '使用内訳:';
-        card.appendChild(breakdownTitle);
-
-        const bList = document.createElement('ul');
-        bList.className = 'breakdown-list';
-        data.breakdown.forEach(b => {
-            const li = document.createElement('li');
-            li.className = 'breakdown-item';
-            li.innerText = `${b.questTitle} [${b.qty}個]`;
-            bList.appendChild(li);
-        });
-        card.appendChild(bList);
-
-        resultArea.appendChild(card);
+        resultHtml += `
+            <div class="material-card">
+                <span class="material-total">計 ${itemData.total} 個</span>
+                <span class="material-name">📦 ${name}</span>
+                ${dropHintHtml}
+                <div class="material-breakdown">
+                    <strong>使用内訳:</strong><br>
+                    ${itemData.breakdown.map(line => `➔ ${line}`).join('<br>')}
+                </div>
+            </div>
+        `;
     });
+
+    resultContainer.innerHTML = resultHtml;
 }
-
-// 初期化イベント設定
-document.getElementById('levelSelect').addEventListener('change', calculateRequiredItems);
-
-// 起動時実行
-window.onload = function() {
-    initLevelSelect();
-    calculateRequiredItems();
-};
 </script>
-
 </body>
 </html>
