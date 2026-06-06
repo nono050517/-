@@ -155,14 +155,12 @@
                 <h3 class="section-category" style="font-size: 1.3em;"> 2．条件設定</h3>
                 <div class="item-content">
 
-                    <!-- 調査中アナウンス表示エリア -->
                     <div class="notice-warning-box">
                         <span>⚠️</span> ※注意：現在データ調査中（まだ一部未完成の章や検証中のデータが含まれています）
                     </div>
                     
                     <div class="tool-panel">
                         
-                        <!-- 1. 現在のクエスト選択 -->
                         <div class="form-group">
                             <label for="start-quest">現在の進行クエストは？</label>
                             <select id="start-quest" class="form-control">
@@ -170,16 +168,13 @@
                             </select>
                         </div>
 
-                        <!-- プレイヤーのレベルを5刻みのドロップダウンに変更 -->
                         <div class="form-group">
                             <label for="player-level-range">あなたの現在のレベル帯（BaseLv）は？</label>
                             <select id="player-level-range" class="form-control" style="width: 200px;">
-                                <!-- JavaScriptで動的生成 -->
-                            </select>
+                                </select>
                             <small style="color: #666; display: block; margin-top: 4px;">※「39以下」「40以上」などのレベル帯分岐素材を自動で判別するために使用します。</small>
                         </div>
 
-                        <!-- 分岐ルート選択肢 -->
                         <div id="route-branch-box" class="conditional-box">
                             <label for="route-choice" style="color: #0056b3;">➔ 第一章の分岐ルートの選択予定は？</label>
                             <select id="route-choice" class="form-control">
@@ -188,7 +183,6 @@
                             </select>
                         </div>
 
-                        <!-- 2. 終了条件の切り替え選択 -->
                         <div class="form-group" style="margin-top: 25px;">
                             <label>終了条件の設定</label>
                             <div class="radio-group">
@@ -201,7 +195,6 @@
                             </div>
                         </div>
 
-                        <!-- 条件①：目標クエスト入力欄 -->
                         <div id="target-quest-group" class="form-group">
                             <label for="end-quest">どこまでの分が必要？（目標クエスト）</label>
                             <select id="end-quest" class="form-control">
@@ -209,7 +202,6 @@
                             </select>
                         </div>
 
-                        <!-- 条件②：バッグの空き枠数入力欄 -->
                         <div id="bag-limit-group" class="form-group" style="display: none;">
                             <label for="bag-space">あといくつ持ち物が持てる？（空き枠アイテム種類数）</label>
                             <input type="number" id="bag-space" class="form-control" value="10" min="1" max="100" style="width: 120px;">
@@ -222,7 +214,6 @@
 
                     </div>
 
-                    <!-- 計算結果の出力先 -->
                     <div id="result-container"></div>
 
                 </div>
@@ -239,7 +230,7 @@ let rawScenarioNodes = [];
 window.addEventListener('DOMContentLoaded', initializeTool);
 
 async function initializeTool() {
-    // レベルの5刻みドロップダウンを生成
+    // レベルの5刻みドロップダウン（最高150仕様）を生成
     generateLevelRangeOptions();
 
     const { data: scenarioNodes, error } = await client
@@ -266,19 +257,20 @@ async function initializeTool() {
     setupEventListeners();
 }
 
+// 【最高レベル150調整版】150できれいに完結するループ処理
 function generateLevelRangeOptions() {
     const lvlSelect = document.getElementById('player-level-range');
     if (!lvlSelect) return;
 
     let html = '';
-    // ループ条件を正しく修正しました
-    for (let start = 1; start <= 196; start += 5) {
+    // 1〜5から始まり、146〜150でピタッと終わるように上限を設定しました
+    for (let start = 1; start <= 146; start += 5) {
         let end = start + 4;
-        if (end > 200) end = 200;
+        if (end > 150) end = 150; 
         html += `<option value="${end}">${start} ～ ${end}</option>`;
     }
     lvlSelect.innerHTML = html;
-    lvlSelect.value = "50"; 
+    lvlSelect.value = "50"; // 初期位置は使いやすい46〜50
 }
 
 function populateSelectBoxes() {
