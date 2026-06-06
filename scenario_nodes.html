@@ -5,6 +5,57 @@
     <title>シナリオ・クエストデータ - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* 章ごとの折りたたみヘッダーのスタイル設定 */
+        .scene-group-header {
+            background-color: #e9ecef;
+            color: #333;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 1.05em;
+            border: 1px solid #ccc;
+            margin-top: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 4px;
+            user-select: none;
+        }
+        .scene-group-header:hover {
+            background-color: #dfe2e6;
+        }
+        /* アコーディオンの矢印マーク */
+        .scene-group-header::after {
+            content: '▼';
+            font-size: 0.8em;
+            transition: transform 0.2s;
+        }
+        .scene-group-header.collapsed::after {
+            transform: rotate(-90deg);
+        }
+        /* 折りたたまれる中身のテーブル枠 */
+        .scene-table-wrapper {
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-top: none;
+            background: #fff;
+        }
+        .scene-table-wrapper.hidden {
+            display: none;
+        }
+        /* 各テーブルの余白調整 */
+        .scene-table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin: 0;
+        }
+        .scene-table-wrapper table th {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ccc;
+        }
+    </style>
 </head>
 <body>
     <div class="wrapper">
@@ -17,7 +68,7 @@
                 <h3 class="section-category"> 1．概要</h3>
                 <div class="item-content">
                     データベース（Supabase）から直接読み込んだメインシナリオおよびサブクエストの一覧データです。<br>
-                    受注に必要なレベル、各クエストの進行手順、各種ドロップアイテムやクリア報酬データを網羅しています。
+                    各章のタイトルをクリックすることで、クエスト一覧の表示・非表示を切り替えることができます。
                 </div>
 
                 <h3 class="section-category"> 2．シナリオデータ一覧</h3>
@@ -25,7 +76,6 @@
                     
                     <div id="scenario-controls" style="margin-bottom: 15px; padding: 10px; background: #fdfdfd; border: 1px solid #ddd; border-radius: 5px; font-size: 0.85em;">
                         <strong style="margin-right:15px;">表示列の切り替え:</strong>
-                        <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-scene" checked> 章・セクション</label>
                         <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-content" checked> 概要・あらすじ</label>
                         <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-steps" checked> 進行手順(クリア条件)</label>
                         <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-drops" checked> 特殊ドロップ</label>
@@ -33,25 +83,10 @@
                         <label style="margin-right:10px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-reward" checked> クリア報酬</label>
                     </div>
 
-                    <table id="scenario-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 55px; text-align:center;">No</th>
-                                <th class="cls-scene" style="width: 140px;">章 / シーン</th>
-                                <th style="width: 160px;">クエストタイトル</th>
-                                <th class="cls-content" style="width: 220px;">概要・あらすじ</th>
-                                <th class="cls-steps" style="width: 260px;">進行手順</th>
-                                <th class="cls-drops" style="width: 130px;">ドロップ項目</th>
-                                <th class="cls-exp" style="width: 120px;">獲得EXP</th>
-                                <th class="cls-reward" style="width: 130px;">クリア報酬</th>
-                            </tr>
-                        </thead>
-                        <tbody id="scenario-body">
-                            <tr>
-                                <td colspan="8" style="text-align:center; padding:20px;">Supabaseからシナリオデータを読み込み中...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div id="archive-container">
+                        <p style="text-align:center; padding:20px;">Supabaseからシナリオデータを読み込み中...</p>
+                    </div>
+
                 </div>
             </main>
         </div>
@@ -70,12 +105,12 @@ async function loadScenarioData() {
 
     if (error) {
         console.error("Supabaseデータの取得に失敗しました:", error);
-        document.getElementById('scenario-body').innerHTML = 
-            `<tr><td colspan="8" style="text-align:center; color:red; font-weight:bold; padding:20px;">データの読み込みに失敗しました。詳細: ${error.message}</td></tr>`;
+        document.getElementById('archive-container').innerHTML = 
+            `<p style="text-align:center; color:red; font-weight:bold; padding:20px;">データの読み込みに失敗しました。</p>`;
         return;
     }
 
-    // 文字列の"1.0"や"10.0"を、絶対に壊れない最速の方法で「1, 2, 3...10」の数値順にソート
+    // どんなデータ型でも絶対に壊れない数値順ソート
     let items = [];
     if (scenarioNodes && Array.isArray(scenarioNodes)) {
         items = scenarioNodes;
@@ -86,8 +121,18 @@ async function loadScenarioData() {
         });
     }
 
-    // 2. テーブルへのレンダリング処理を実行
-    renderScenarioTable(items);
+    // 2. 章（scene）ごとにデータをグループ化する処理
+    const groupedData = {};
+    items.forEach(node => {
+        const sceneName = (node.scene && node.scene !== 'NULL' && node.scene !== '') ? node.scene : 'その他のクエスト';
+        if (!groupedData[sceneName]) {
+            groupedData[sceneName] = [];
+        }
+        groupedData[sceneName].push(node);
+    });
+
+    // 3. レンダリング処理を実行
+    renderGroupedScenario(groupedData);
 }
 
 // 数値をカンマ区切りテキストに変換するヘルパー関数
@@ -99,89 +144,132 @@ function formatExp(expValue) {
     return isNaN(num) ? expValue : num.toLocaleString();
 }
 
-function renderScenarioTable(nodes) {
-    const tbody = document.getElementById('scenario-body');
-    if (!tbody) return;
+function renderGroupedScenario(groupedData) {
+    const container = document.getElementById('archive-container');
+    if (!container) return;
 
-    if (!nodes || nodes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px;">該当するシナリオデータがありません。</td></tr>`;
+    const sceneNames = Object.keys(groupedData);
+    if (sceneNames.length === 0) {
+        container.innerHTML = `<p style="text-align:center; padding:20px;">該当するシナリオデータがありません。</p>`;
         return;
     }
 
-    // マッピング処理：すべてアーチャーと同じように独立した <td> 枠の中に美しく横並びで流し込む
-    tbody.innerHTML = nodes.map(node => {
-        
-        // 必要レベルの整数表記化
-        let displayLevel = node.必要レベル;
-        if (displayLevel && displayLevel !== 'NULL' && displayLevel !== '') {
-            const parsedLvl = Number(displayLevel);
-            if (!isNaN(parsedLvl)) displayLevel = Math.floor(parsedLvl);
-        }
-        const reqLevelHtml = displayLevel ? 
-            `<div style="font-size: 0.82em; color: #1e90ff; font-weight: bold; margin-top: 2px;">[必要Lv: ${displayLevel}]</div>` : '';
+    let finalHtml = '';
+    let groupIndex = 0;
 
-        // ドロップアイテム（required_item, Drop2, Drop3, Drop4）の結合
-        let drops = [];
-        if (node.required_item && node.required_item !== 'NULL' && node.required_item !== '') drops.push(node.required_item);
-        if (node.Drop2 && node.Drop2 !== 'NULL' && node.Drop2 !== '') drops.push(node.Drop2);
-        if (node.Drop3 && node.Drop3 !== 'NULL' && node.Drop3 !== '') drops.push(node.Drop3);
-        if (node.Drop4 && node.Drop4 !== 'NULL' && node.Drop4 !== '') drops.push(node.Drop4);
-        const dropsHtml = drops.length > 0 ? drops.join('<br>') : '<span style="color:#999;">-</span>';
+    // 章ごとにループを回して、アコーディオンのヘッダーとテーブルを生成
+    sceneNames.forEach(sceneName => {
+        const nodes = groupedData[sceneName];
+        groupIndex++;
 
-        // 獲得EXP（Base / Job）のカンマ区切り
-        const formattedBase = formatExp(node.BaseExp);
-        const formattedJob = formatExp(node.JobExp);
-        const baseExpText = formattedBase ? `Base: ${formattedBase}` : '';
-        const jobExpText = formattedJob ? `Job: ${formattedJob}` : '';
-        const expHtml = [baseExpText, jobExpText].filter(Boolean).join('<br>') || '<span style="color:#999;">0</span>';
-
-        // 報酬・テキストの空値対策
-        const rewardText = (node.報酬 && node.報酬 !== 'NULL' && node.報酬 !== '') ? node.報酬 : '<span style="color:#999;">-</span>';
-        const contentText = (node.content_text && node.content_text !== 'NULL') ? node.content_text : '-';
-        const clearSteps = (node.clear_steps && node.clear_steps !== 'NULL') ? node.clear_steps : '-';
-
-        // IDの「1.0」を綺麗な整数「1」にする
-        const displayId = node.node_id ? Math.floor(Number(node.node_id)) : '-';
-
-        return `
-            <tr>
-                <td style="text-align:center; font-family: monospace; font-weight: bold;">${displayId}</td>
-                
-                <td class="cls-scene" style="font-size: 0.88em; color: #555;">${node.scene || '-'}</td>
-                
-                <td style="font-weight: bold; color: #222;">
-                    ${node.title || '名称未設定'}
-                    ${reqLevelHtml}
-                </td>
-                
-                <td class="cls-content" style="font-size: 0.88em; color: #444; line-height: 1.4;">${contentText}</td>
-                
-                <td class="cls-steps" style="font-size: 0.88em; line-height: 1.4;">${clearSteps}</td>
-                
-                <td class="cls-drops" style="font-size: 0.85em; color: #333;">${dropsHtml}</td>
-                
-                <td class="cls-exp" style="font-size: 0.85em; text-align: left; font-family: monospace; line-height: 1.3;">${expHtml}</td>
-                
-                <td class="cls-reward" style="font-size: 0.85em; color: #d02090; font-weight: bold;">${rewardText}</td>
-            </tr>
+        // 章のヘッダー部分
+        finalHtml += `
+            <div class="scene-group-header" data-target="wrapper-${groupIndex}">
+                ${sceneName} （全 ${nodes.length} 件）
+            </div>
+            <div id="wrapper-${groupIndex}" class="scene-table-wrapper">
+                <table id="scenario-table-${groupIndex}">
+                    <thead>
+                        <tr>
+                            <th style="width: 55px; text-align:center;">No</th>
+                            <th style="width: 160px; text-align:left;">クエストタイトル</th>
+                            <th class="cls-content" style="width: 240px; text-align:left;">概要・あらすじ</th>
+                            <th class="cls-steps" style="width: 280px; text-align:left;">進行手順</th>
+                            <th class="cls-drops" style="width: 140px; text-align:left;">特殊ドロップ</th>
+                            <th class="cls-exp" style="width: 120px; text-align:left;">獲得EXP</th>
+                            <th class="cls-reward" style="width: 140px; text-align:left;">クリア報酬</th>
+                        </tr>
+                    </thead>
+                    <tbody>
         `;
-    }).join('');
 
-    // 表示列切り替えの有効化（アーチャーの仕様完全継承）
+        // 章の中のクエスト行を生成
+        finalHtml += nodes.map(node => {
+            let displayLevel = node.必要レベル;
+            if (displayLevel && displayLevel !== 'NULL' && displayLevel !== '') {
+                const parsedLvl = Number(displayLevel);
+                if (!isNaN(parsedLvl)) displayLevel = Math.floor(parsedLvl);
+            }
+            const reqLevelHtml = displayLevel ? 
+                `<div style="font-size: 0.82em; color: #1e90ff; font-weight: bold; margin-top: 2px;">[必要Lv: ${displayLevel}]</div>` : '';
+
+            let drops = [];
+            if (node.required_item && node.required_item !== 'NULL' && node.required_item !== '') drops.push(node.required_item);
+            if (node.Drop2 && node.Drop2 !== 'NULL' && node.Drop2 !== '') drops.push(node.Drop2);
+            if (node.Drop3 && node.Drop3 !== 'NULL' && node.Drop3 !== '') drops.push(node.Drop3);
+            if (node.Drop4 && node.Drop4 !== 'NULL' && node.Drop4 !== '') drops.push(node.Drop4);
+            const dropsHtml = drops.length > 0 ? drops.join('<br>') : '<span style="color:#999;">-</span>';
+
+            const formattedBase = formatExp(node.BaseExp);
+            const formattedJob = formatExp(node.JobExp);
+            const baseExpText = formattedBase ? `Base: ${formattedBase}` : '';
+            const jobExpText = formattedJob ? `Job: ${formattedJob}` : '';
+            const expHtml = [baseExpText, jobExpText].filter(Boolean).join('<br>') || '<span style="color:#999;">0</span>';
+
+            const rewardText = (node.報酬 && node.報酬 !== 'NULL' && node.報酬 !== '') ? node.報酬 : '<span style="color:#999;">-</span>';
+            const contentText = (node.content_text && node.content_text !== 'NULL') ? node.content_text : '-';
+            const clearSteps = (node.clear_steps && node.clear_steps !== 'NULL') ? node.clear_steps : '-';
+
+            const displayId = node.node_id ? Math.floor(Number(node.node_id)) : '-';
+
+            return `
+                <tr>
+                    <td style="text-align:center; font-family: monospace; font-weight: bold;">${displayId}</td>
+                    <td style="font-weight: bold; color: #222;">
+                        ${node.title || '名称未設定'}
+                        ${reqLevelHtml}
+                    </td>
+                    <td class="cls-content" style="font-size: 0.88em; color: #444; line-height: 1.4;">${contentText}</td>
+                    <td class="cls-steps" style="font-size: 0.88em; line-height: 1.4;">${clearSteps}</td>
+                    <td class="cls-drops" style="font-size: 0.85em; color: #333;">${dropsHtml}</td>
+                    <td class="cls-exp" style="font-size: 0.85em; text-align: left; font-family: monospace; line-height: 1.3;">${expHtml}</td>
+                    <td class="cls-reward" style="font-size: 0.85em; color: #d02090; font-weight: bold;">${rewardText}</td>
+                </tr>
+            `;
+        }).join('');
+
+        finalHtml += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    });
+
+    container.innerHTML = finalHtml;
+
+    // 折りたたみ開閉のクリックイベントを設定
+    setupAccordion();
+    
+    // 表示列切り替えチェックボックスのイベントを設定（複数テーブルに対応）
     setupColumnToggles();
+}
+
+function setupAccordion() {
+    document.querySelectorAll('.scene-group-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const targetId = header.getAttribute('data-target');
+            const wrapper = document.getElementById(targetId);
+            
+            if (wrapper) {
+                wrapper.classList.toggle('hidden');
+                header.classList.toggle('collapsed');
+            }
+        });
+    });
 }
 
 function setupColumnToggles() {
     document.querySelectorAll('.toggle-col').forEach(checkbox => {
         const targetClass = checkbox.getAttribute('data-target');
+        
+        // 初期状態の反映
         const elements = document.getElementsByClassName(targetClass);
         for (let el of elements) {
             el.style.display = checkbox.checked ? '' : 'none';
         }
 
         checkbox.addEventListener('change', (e) => {
-            const target = e.target.getAttribute('data-target');
-            const els = document.getElementsByClassName(target);
+            const els = document.getElementsByClassName(targetClass);
             for (let el of els) {
                 el.style.display = e.target.checked ? '' : 'none';
             }
