@@ -2,7 +2,8 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>アーチャー - エリシア・アーカイブス</title>
+    <meta name="description" id="meta-description" content="マップ詳細ページです。">
+    <title>マップ詳細 - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -10,14 +11,50 @@
     <div class="wrapper">
         <div class="container">
             <nav id="sidebar-nav"></nav>
+            
             <main>
-                <div class="item-content">
-                    あいうえお
+                <div id="map-detail-content" class="item-content">
+                    <h1 id="map-name">読み込み中...</h1>
+                    <div id="map-info"></div>
                 </div>
             </main>
         </div>
     </div>
     
     <script src="common.js"></script>
+    <script>
+        // Supabaseの設定（ご自身の環境に合わせて書き換えてください）
+        const supabaseUrl = 'YOUR_SUPABASE_URL';
+        const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = supabaseClient.createClient(supabaseUrl, supabaseKey);
+
+        async function loadMapDetail() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mapId = urlParams.get('id') || '1';
+
+            // マップデータの取得
+            const { data, error } = await supabase
+                .from('maps')
+                .select('*')
+                .eq('id', mapId)
+                .single();
+
+            if (data) {
+                // 1. ページタイトルを更新
+                document.getElementById('map-name').textContent = data.map_name;
+                
+                // 2. SEO用の description を動的に書き換え
+                const metaDesc = document.getElementById('meta-description');
+                const descriptionText = `${data.map_name}の攻略情報です。隣接マップやNPC情報、駅馬車の行き先などを詳しくまとめています。`;
+                metaDesc.setAttribute('content', descriptionText);
+
+                // 3. コンテンツの描画処理（※既存の描画ロジックをここに記述）
+                console.log("マップデータを取得しました:", data);
+            }
+        }
+
+        // ページ読み込み時に実行
+        window.addEventListener('DOMContentLoaded', loadMapDetail);
+    </script>
 </body>
 </html>
