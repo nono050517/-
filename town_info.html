@@ -1,91 +1,60 @@
-<script>
-    // 既存のSupabase設定
-    const supabaseUrl = 'YOUR_SUPABASE_URL';
-    const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
-    const supabase = supabaseClient.createClient(supabaseUrl, supabaseKey);
-
-    // CSVデータから抽出した「街」の一覧データ（IDと名前）
-    const townList = [
-        { id: 1, name: "王宮前広場" },
-        { id: 2, name: "エリシア北地区" },
-        { id: 3, name: "エリシア南地区" },
-        { id: 4, name: "リール野営地" },
-        { id: 5, name: "辺境の村コッツ" },
-        { id: 6, name: "港町マールケン" },
-        { id: 7, name: "黒鷲城下街" },
-        { id: 8, name: "シトレイユ村" },
-        { id: 9, name: "要塞都市フォーゲルブルグ" },
-        { id: 10, name: "死者の都オルクス" },
-        { id: 11, name: "砂漠の村イドリス" },
-        { id: 12, name: "フェルドエイクの塔" },
-        { id: 13, name: "クァンタ自由市" },
-        { id: 14, name: "空中都市ノンフィニス" },
-        { id: 15, name: "ピグクトゥック村" },
-        { id: 100, name: "ダグベ村" }
-    ];
-
-    // 街一覧をナビゲーション内に描画する関数
-    function renderTownList() {
-        const navElement = document.getElementById('sidebar-nav');
-        if (!navElement) return;
-
-        // 現在表示している街のIDを取得
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentMapId = urlParams.get('id') || '1';
-
-        // タイトルを追加
-        const title = document.createElement('h2');
-        title.className = 'section-category';
-        title.textContent = '街一覧';
-        navElement.appendChild(title);
-
-        // リンク用リストの作成
-        const ul = document.createElement('ul');
-        ul.className = 'town-list';
-
-        townList.forEach(town => {
-            const li = document.createElement('li');
-            const a = document.createElement('a');
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" id="meta-description" content="マップ詳細ページです。">
+    <title>マップ詳細 - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
             
-            // クリックすると ?id=〇〇 に遷移するリンク 
-            a.href = `town_info.html?id=${town.id}`;
-            a.textContent = town.name;
-            
-            // 現在地（アクティブ）の街にクラスを付与
-            if (town.id.toString() === currentMapId) {
-                a.className = 'active-town'; 
+            <main>
+                <div id="map-detail-content" class="item-content">
+                    <h1 id="map-name">読み込み中...</h1>
+                    <div id="map-info"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="common.js"></script>
+    <script>
+        // Supabaseの設定（ご自身の環境に合わせて書き換えてください）
+        const supabaseUrl = 'YOUR_SUPABASE_URL';
+        const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = supabaseClient.createClient(supabaseUrl, supabaseKey);
+
+        async function loadMapDetail() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mapId = urlParams.get('id') || '1';
+
+            // マップデータの取得
+            const { data, error } = await supabase
+                .from('maps')
+                .select('*')
+                .eq('id', mapId)
+                .single();
+
+            if (data) {
+                // 1. ページタイトルを更新
+                document.getElementById('map-name').textContent = data.map_name;
+                
+                // 2. SEO用の description を動的に書き換え
+                const metaDesc = document.getElementById('meta-description');
+                const descriptionText = `${data.map_name}の攻略情報です。隣接マップやNPC情報、駅馬車の行き先などを詳しくまとめています。`;
+                metaDesc.setAttribute('content', descriptionText);
+
+                // 3. コンテンツの描画処理（※既存の描画ロジックをここに記述）
+                console.log("マップデータを取得しました:", data);
             }
-
-            li.appendChild(a);
-            ul.appendChild(li);
-        });
-
-        navElement.appendChild(ul);
-    }
-
-    // 既存のloadMapDetail関数
-    async function loadMapDetail() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const mapId = urlParams.get('id') || '1';
-
-        const { data, error } = await supabase
-            .from('maps')
-            .select('*')
-            .eq('id', mapId)
-            .single();
-
-        if (data) {
-            document.getElementById('map-name').textContent = data.map_name;
-            const metaDesc = document.getElementById('meta-description');
-            const descriptionText = `${data.map_name}の攻略情報です。隣接マップやNPC情報、駅馬車の行き先などを詳しくまとめています。`;
-            metaDesc.setAttribute('content', descriptionText);
-            console.log("マップデータを取得しました:", data);
         }
-    }
 
-    // ページ読み込み時に両方を実行
-    window.addEventListener('DOMContentLoaded', () => {
-        renderTownList(); // 街一覧の描画
-        loadMapDetail();  // 街詳細の読み込み
-    });
-</script>
+        // ページ読み込み時に実行
+        window.addEventListener('DOMContentLoaded', loadMapDetail);
+    </script>
+</body>
+</html>
