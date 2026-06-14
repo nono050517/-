@@ -7,14 +7,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <header class="page-header"></header>
-
     <div class="wrapper">
-        <nav id="sidebar" class="sidebar">
-            <div id="wiki-sidebar-container"></div>
-        </nav>
+        <nav id="sidebar-nav"></nav>
         
-        <main class="main-content">
+        <main>
             <h2 class="page-title" id="map-title">マップ詳細：読み込み中...</h2>
             
             <h3 class="section-category"> 1．基本情報</h3>
@@ -86,12 +82,7 @@
             'southwest', 'south', 'southeast'
         ];
 
-        // メニューが重複するのを防ぐためのフラグ（一度走ったら二度とメニュー作成処理を割り込ませない）
-        let isMapDataLoaded = false;
-
         async function loadMapDetails() {
-            if (isMapDataLoaded) return; // 既にロード中なら処理を飛ばす
-            
             const fieldId = getMapIdParam();
             if (!fieldId) {
                 document.getElementById('map-title').innerText = "エラー: マップIDが指定されていません。";
@@ -99,8 +90,6 @@
             }
 
             try {
-                isMapDataLoaded = true; // ロード開始フラグを立てる
-
                 // 1. map_field テーブルから基本情報と隣接マップの取得
                 const { data: mapData, error: mapError } = await supabase
                     .from('map_field')
@@ -201,8 +190,8 @@
             }
         }
 
-        // ページ読み込み時に実行
-        document.addEventListener('DOMContentLoaded', loadMapDetails);
+        // 【修正】イベントの衝突を避けるため、アーチャーのページと完全に同じ実行タイミングに変更しました
+        window.onload = loadMapDetails;
     </script>
 </body>
 </html>
