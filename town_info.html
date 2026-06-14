@@ -6,6 +6,41 @@
     <title>マップ詳細 - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* 隣接マップを3x3のグリッドで直感的に配置するための簡易スタイル */
+        .grid-map-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 400px;
+            margin: 20px 0;
+        }
+        .grid-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 50px;
+        }
+        .map-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            text-align: center;
+            text-decoration: none;
+            color: #333;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .map-btn:hover {
+            background: #e0e0e0;
+        }
+        .current-map {
+            background: #ddd;
+            font-size: 0.9e;
+        }
+    </style>
 </head>
 <body>
     <div class="wrapper">
@@ -14,8 +49,10 @@
             
             <main>
                 <div id="map-detail-content" class="item-content">
-                    <h1 id="map-name">読み込み中...</h1>
-                    <div id="map-info"></div>
+                    <h1 id="map-name" class="page-title">読み込み中...</h1>
+                    
+                    <div id="map-info">
+                        </div>
                 </div>
             </main>
         </div>
@@ -23,33 +60,133 @@
     
     <script src="common.js"></script>
     <script>
-        // Supabaseの設定（ご自身の環境に合わせて書き換えてください）
+        // Supabaseの設定（環境に合わせて書き換えてください）
         const supabaseUrl = 'YOUR_SUPABASE_URL';
         const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
         const supabase = supabaseClient.createClient(supabaseUrl, supabaseKey);
 
         async function loadMapDetail() {
             const urlParams = new URLSearchParams(window.location.search);
+            // デフォルトは id=1 の街を表示
             const mapId = urlParams.get('id') || '1';
 
-            // マップデータの取得
-            const { data, error } = await supabase
-                .from('maps')
+            // --------------------------------------------------
+            // 1. 各テーブルからデータを非同期で取得
+            // --------------------------------------------------
+            // map_field から現在のマップの基本情報と隣接情報を取得
+            const { data: mapData, error: mapError } = await supabase
+                .from('map_field')
                 .select('*')
                 .eq('id', mapId)
                 .single();
 
-            if (data) {
-                // 1. ページタイトルを更新
-                document.getElementById('map-name').textContent = data.map_name;
+            // fast_travel からこの街（map_id）から行ける駅馬車情報を取得
+            const { data: travelData, error: travelError } = await supabase
+                .from('fast_travel')
+                .select('*')
+                .eq('map_id', mapId);
+
+            // map_field_unique からこの街（map_id）の特殊入場・NPC条件を取得
+            const { data: uniqueData, error: uniqueError } = await supabase
+                .from('map_field_unique')
+                .select('*')
+                .eq('map_id', mapId);
+
+            // --------------------------------------------------
+            // 2. HTMLの書き換えと生成
+            // --------------------------------------------------
+            if (mapData) {
+                // ページタイトルとSEO descriptionの更新
+                document.getElementById('map-name').textContent = mapData.map_name;
                 
-                // 2. SEO用の description を動的に書き換え
                 const metaDesc = document.getElementById('meta-description');
-                const descriptionText = `${data.map_name}の攻略情報です。隣接マップやNPC情報、駅馬車の行き先などを詳しくまとめています。`;
+                const descriptionText = `${mapData.map_name}の攻略情報です。隣接マップやNPC情報、駅馬車の行き先などを詳しくまとめています。`;
                 metaDesc.setAttribute('content', descriptionText);
 
-                // 3. コンテンツの描画処理（※既存の描画ロジックをここに記述）
-                console.log("マップデータを取得しました:", data);
+                // メインコンテンツの組み立て開始
+                let htmlContent = '';
+
+                // --- セクション①：隣接マップ（3x3 グリッド配置） ---
+                htmlContent += `<h2 class="section-category">隣接エリア（方角）</h2>`;
+                htmlContent += `<div class="grid-map-container">`;
+                
+                // 3x3の配置用配列（[北西, 北, 北東, 西, 中央(自マップ), 東, 南西, 南, 南東]）
+                // CSVのカラム名「north_id」「south_id」等に合わせて調整してください
+                const gridLayout = [
+                    { name: "北西", id: mapData.northwest_id, label: mapData.northwest_name },
+                    { name: "北",   id: mapData.north_id,     label: mapData.north_name },
+                    { name: "北東", id: mapData.northeast_id, label: mapData.northeast_name },
+                    { name: "西",   id: mapData.west_id,      label: mapData.west_name },
+                    { name: "現在地", id: null,               label: mapData.map_name },
+                    { name: "東",   id: mapData.east_id,      label: mapData.east_name },
+                    { name: "南西", id: mapData.southwest_id, label: mapData.southwest_name },
+                    { name: "南",   id: mapData.south_id,     label: mapData.south_name },
+                    { name: "南東", id: mapData.southeast_id, label: mapData.southeast_name }
+                ];
+
+                gridLayout.forEach(cell => {
+                    htmlContent += `<div class="grid-cell">`;
+                    if (cell.name === "現在地") {
+                        htmlContent += `<div class="map-btn current-map">${cell.label}</div>`;
+                    } else if (cell.id) {
+                        // クリックしたら ?id=〇〇 にジャンプして情報を切り替える
+                        htmlContent += `<a href="town_info.html?id=${cell.id}" class="map-btn">${cell.name}<br><small>${cell.label || 'エリア'}</small></a>`;
+                    } else {
+                        htmlContent += ``; // 道がない場所は空欄
+                    }
+                    htmlContent += `</div>`;
+                });
+                htmlContent += `</div>`;
+
+                // --- セクション②：駅馬車・高速移動（fast_travel） ---
+                htmlContent += `<h2 class="section-category">通常駅馬車・移動商人</h2>`;
+                if (travelData && travelData.length > 0) {
+                    htmlContent += `<ul class="travel-list">`;
+                    travelData.forEach(row => {
+                        // カラム名（type, destination_name, destination_idなど）は実環境に合わせて微調整してください
+                        const typeBadge = row.type ? `[${row.type}] ` : '';
+                        if (row.destination_id) {
+                            htmlContent += `<li>${typeBadge}<a href="town_info.html?id=${row.destination_id}">${row.destination_name} 行き</a></li>`;
+                        } else {
+                            htmlContent += `<li>${typeBadge}${row.destination_name} 行き</li>`;
+                        }
+                    });
+                    htmlContent += `</ul>`;
+                } else {
+                    htmlContent += `<p>このエリアに駅馬車や定期便はありません。</p>`;
+                }
+
+                // --- セクション③：特殊入場・NPC情報（map_field_unique） ---
+                htmlContent += `<h2 class="section-category">特殊入場・関連NPC条件</h2>`;
+                if (uniqueData && uniqueData.length > 0) {
+                    htmlContent += `<table class="info-table" border="1" style="border-collapse: collapse; width: 100%; text-align: left;">`;
+                    htmlContent += `<thead>
+                                        <tr>
+                                            <th>対象（石像/NPC名）</th>
+                                            <th>入場・発生条件</th>
+                                        </tr>
+                                    </thead>`;
+                    htmlContent += `<tbody>`;
+                    uniqueData.forEach(row => {
+                        // カラム名（target_name, condition_textなど）は実環境に合わせて微調整してください
+                        const target = row.target_name || row.対象 || '不明';
+                        const condition = row.condition_text || row.条件 || 'なし';
+                        htmlContent += `<tr>
+                                            <td><strong>${target}</strong></td>
+                                            <td>${condition}</td>
+                                        </tr>`;
+                    });
+                    htmlContent += `</tbody></table>`;
+                } else {
+                    htmlContent += `<p>特筆すべき特殊入場条件や限定NPCはありません。</p>`;
+                }
+
+                // すべての生成HTMLを流し込む
+                document.getElementById('map-info').innerHTML = htmlContent;
+                console.log("街のデータを正常に展開しました:", mapData);
+            } else {
+                document.getElementById('map-name').textContent = "データが見つかりません";
+                document.getElementById('map-info').innerHTML = "<p>指定された街・マップの情報は存在しないか、読み込めませんでした。</p>";
             }
         }
 
