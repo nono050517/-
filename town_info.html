@@ -5,53 +5,106 @@
     <title>マップ詳細 - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* マップ詳細ページ内を「左に街リスト」「右に情報」の2カラムにするスタイル */
+        .map-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        .map-sidebar {
+            width: 200px;
+            min-width: 200px;
+            background-color: #fff;
+            border-right: 2px style dashed #ccc; /* Wiki風の区切り線 */
+            padding-right: 15px;
+        }
+        .map-main-data {
+            flex-grow: 1;
+        }
+        .town-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .town-list li {
+            margin-bottom: 8px;
+        }
+        .town-list a {
+            text-decoration: none;
+            color: #1e90ff;
+            font-size: 0.95em;
+        }
+        .town-list a:hover {
+            text-decoration: underline;
+        }
+        /* 現在選んでいる街をわかりやすくする装飾 */
+        .town-list a.active {
+            font-weight: bold;
+            color: #d02090;
+        }
+    </style>
 </head>
 <body>
+    <header class="page-header"></header>
+
     <div class="wrapper">
         <nav id="sidebar-nav"></nav>
         
-        <main>
-            <h2 class="page-title" id="map-title">マップ詳細：読み込み中...</h2>
-            
-            <h3 class="section-category"> 1．基本情報</h3>
-            <div class="item-content">
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-                    <tr>
-                        <th style="border: 1px solid #ccc; padding: 8px; background-color: #f2f2f2; text-align: left; width: 30%;">マップ種別</th>
-                        <td style="border: 1px solid #ccc; padding: 8px;" id="map-type">-</td>
-                    </tr>
-                    <tr>
-                        <th style="border: 1px solid #ccc; padding: 8px; background-color: #f2f2f2; text-align: left;">通常駅馬車</th>
-                        <td style="border: 1px solid #ccc; padding: 8px;" id="has-stagecoach">-</td>
-                    </tr>
-                    <tr>
-                        <th style="border: 1px solid #ccc; padding: 8px; background-color: #f2f2f2; text-align: left;">特別な馬車</th>
-                        <td style="border: 1px solid #ccc; padding: 8px;" id="has-specialcoach">-</td>
-                    </tr>
-                </table>
-            </div>
-
-            <h3 class="section-category"> 2．隣接マップ情報</h3>
-            <div class="item-content">
-                <p>周囲の方角と繋がっている隣接エリアの一覧です。クリックすると該当のマップページへ移動します。</p>
-                <div id="adjacent-maps-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 500px; margin: 15px auto; text-align: center;">
+        <main class="main-content">
+            <div class="map-container">
+                
+                <div class="map-sidebar">
+                    <h3 style="font-size: 1em; margin-top: 0; border-bottom: 2px solid #ccc; padding-bottom: 5px;">■ 街一覧</h3>
+                    <ul id="inner-town-list" class="town-list">
+                        <li>読み込み中...</li>
+                    </ul>
                 </div>
-            </div>
 
-            <h3 class="section-category"> 3．街からの移動・交通（駅馬車等）</h3>
-            <div class="item-content">
-                <div id="fast-travel-section">
-                    <p>このマップから利用できる移動サービスはありません。</p>
-                </div>
-            </div>
+                <div class="map-main-data">
+                    <h2 class="page-title" id="map-title">マップ詳細：読み込み中...</h2>
+                    
+                    <h3 class="section-category"> 1．基本情報</h3>
+                    <div class="item-content">
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                            <tr>
+                                <th style="border: 1px solid #ccc; padding: 8px; background-color: #f2f2f2; text-align: left; width: 30%;">マップ種別</th>
+                                <td style="border: 1px solid #ccc; padding: 8px;" id="map-type">-</td>
+                            </tr>
+                            <tr>
+                                <th style="border: 1px solid #ccc; padding: 8px; background-color: #f2f2f2; text-align: left;">通常駅馬車</th>
+                                <td style="border: 1px solid #ccc; padding: 8px;" id="has-stagecoach">-</td>
+                            </tr>
+                            <tr>
+                                <th style="border: 1px solid #ccc; padding: 8px; background-color: #f2f2f2; text-align: left;">特別な馬車</th>
+                                <td style="border: 1px solid #ccc; padding: 8px;" id="has-specialcoach">-</td>
+                            </tr>
+                        </table>
+                    </div>
 
-            <h3 class="section-category"> 4．特殊入場・ダンジョン条件</h3>
-            <div class="item-content">
-                <div id="unique-entrance-section">
-                    <p>特別な入場条件やギミック情報はありません。</p>
+                    <h3 class="section-category"> 2．隣接マップ情報</h3>
+                    <div class="item-content">
+                        <p>周囲の方角と繋がっている隣接エリアの一覧です。クリックすると該当のマップページへ移動します。</p>
+                        <div id="adjacent-maps-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 500px; margin: 15px auto; text-align: center;">
+                        </div>
+                    </div>
+
+                    <h3 class="section-category"> 3．街からの移動・交通（駅馬車等）</h3>
+                    <div class="item-content">
+                        <div id="fast-travel-section">
+                            <p>このマップから利用できる移動サービスはありません。</p>
+                        </div>
+                    </div>
+
+                    <h3 class="section-category"> 4．特殊入場・ダンジョン条件</h3>
+                    <div class="item-content">
+                        <div id="unique-entrance-section">
+                            <p>特別な入場条件やギミック情報はありません。</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </main>
+
+            </div></main>
     </div>
 
     <script src="common.js"></script>
@@ -66,7 +119,7 @@
         // URLパラメータから現在の「field_id（マップID）」を取得
         function getMapIdParam() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id');
+            return urlParams.get('id') || '1'; // 指定がなければとりあえずID:1を出す
         }
 
         // 8方向の定義マッピング
@@ -75,22 +128,66 @@
             west: "西 ←", center: "中央 ☉", east: "東 →",
             southwest: "南西 ↙", south: "南 ↓", southeast: "南東 ↘"
         };
-        // グリッド配置順（3x3で綺麗に並べるため）
         const GRID_ORDER = [
             'northwest', 'north', 'northeast',
             'west', 'center', 'east',
             'southwest', 'south', 'southeast'
         ];
 
+        // 🌟【新機能】内側の左メニューに街一覧をSupabaseから呼んで一発生成する関数
+        async function loadInnerTownList(currentId) {
+            try {
+                const { data: towns, error } = await supabase
+                    .from('map_field')
+                    .select('field_id, map_name, map_type')
+                    .eq('map_type', 'town') // 「街」だけを引っ張る
+                    .order('field_id', { ascending: true });
+
+                if (error) return;
+
+                const listContainer = document.getElementById('inner-town-list');
+                listContainer.innerHTML = ''; // クリア
+
+                towns.forEach(town => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = `map_info.html?id=${town.field_id}`;
+                    a.innerText = `・${town.map_name}`;
+                    
+                    // 今見ている街だったら色を変える（アクティブ状態）
+                    if (String(town.field_id) === String(currentId)) {
+                        a.classList.add('active');
+                    }
+
+                    // 🛑 クリックしたとき、右側だけをパッと入れ替える魔法
+                    a.addEventListener('click', function(e) {
+                        e.preventDefault(); // ページ全体のガチ移動を止める
+                        
+                        // URLのうしろを「?id=今回のID」にこっそり書き換える
+                        const newUrl = `map_info.html?id=${town.field_id}`;
+                        history.pushState(null, null, newUrl);
+
+                        // 再び中身をロードする（これによって右側だけが入れ替わる！）
+                        loadMapDetails();
+                    });
+
+                    li.appendChild(a);
+                    listContainer.appendChild(li);
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // メインの詳細データをロードする関数
         async function loadMapDetails() {
             const fieldId = getMapIdParam();
-            if (!fieldId) {
-                document.getElementById('map-title').innerText = "エラー: マップIDが指定されていません。";
-                return;
-            }
+            
+            // 街一覧メニュー側も現在の選択状態に合わせるために更新
+            loadInnerTownList(fieldId);
 
             try {
-                // 1. map_field テーブルから基本情報と隣接マップの取得
+                // 1. map_field から基本情報取得
                 const { data: mapData, error: mapError } = await supabase
                     .from('map_field')
                     .select('*')
@@ -111,9 +208,7 @@
                 // 8方向＋中央の移動ボタンをグリッド状に生成
                 const gridContainer = document.getElementById('adjacent-maps-grid');
                 if (gridContainer) {
-                    gridContainer.innerHTML = ''; // クリア
-
-                    // 方角ごとに、移動先がある場合はリンクボタンを、無い場合はグレーアウトした枠を生成
+                    gridContainer.innerHTML = '';
                     for (const dir of GRID_ORDER) {
                         const targetId = mapData[dir];
                         const btn = document.createElement('div');
@@ -125,7 +220,14 @@
                             btn.style.backgroundColor = "#e6f7ff";
                             btn.style.cursor = "pointer";
                             btn.style.fontWeight = "bold";
+                            
+                            // グリッド内のリンクも、クリック時に右側だけ変えるように設定
                             btn.innerHTML = `<a href="map_info.html?id=${targetId}" style="text-decoration: none; color: #1e90ff;">${DIRECTION_LABELS[dir]}<br><span style="font-size:0.75em; font-weight:normal; color:#666;">ID: ${targetId}</span></a>`;
+                            btn.querySelector('a').addEventListener('click', function(e) {
+                                e.preventDefault();
+                                history.pushState(null, null, `map_info.html?id=${targetId}`);
+                                loadMapDetails();
+                            });
                         } else {
                             btn.style.backgroundColor = "#f5f5f5";
                             btn.style.color = "#aaa";
@@ -135,37 +237,50 @@
                     }
                 }
 
-                // 2. fast_travel (通常駅馬車) テーブルから行き先一覧を取得
+                // 2. fast_travel (通常駅馬車) テーブル
                 const { data: travelData, error: travelError } = await supabase
                     .from('fast_travel')
                     .select('*')
                     .eq('field_id', fieldId);
 
-                if (!travelError && travelData && travelData.length > 0) {
-                    const travelSection = document.getElementById('fast-travel-section');
-                    if (travelSection) {
+                const travelSection = document.getElementById('fast-travel-section');
+                if (travelSection) {
+                    if (!travelError && travelData && travelData.length > 0) {
                         let html = `<p>この場所の <strong>${travelData[0].target || '移動NPC'}</strong> から以下の目的地へ移動できます：</p>`;
                         html += `<ul style="padding-left: 20px;">`;
                         travelData.forEach(row => {
+                            const destId = row.next_field_id || row.field_id_dest;
                             html += `<li style="margin-bottom: 5px;">
                                 <span class="cls-cond" style="color: #1e90ff; font-weight: bold;">[${row.select || '移動'}]</span> 
-                                <a href="map_info.html?id=${row.next_field_id || row.field_id_dest}" style="font-weight: bold; color: #d02090;">${row.next_map_name || row.map_name_dest || '未知のエリア'}</a>
+                                <a href="map_info.html?id=${destId}" class="travel-link" data-id="${destId}" style="font-weight: bold; color: #d02090;">${row.next_map_name || row.map_name_dest || '未知のエリア'}</a>
                             </li>`;
                         });
                         html += `</ul>`;
                         travelSection.innerHTML = html;
+
+                        // 駅馬車リンクにも右側切り替え魔法をかける
+                        travelSection.querySelectorAll('.travel-link').forEach(link => {
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const tid = this.getAttribute('data-id');
+                                history.pushState(null, null, `map_info.html?id=${tid}`);
+                                loadMapDetails();
+                            });
+                        });
+                    } else {
+                        travelSection.innerHTML = '<p>このマップから利用できる移動サービスはありません。</p>';
                     }
                 }
 
-                // 3. map_field_unique (特殊入場) テーブルから特殊条件を取得
+                // 3. map_field_unique (特殊入場) テーブル
                 const { data: uniqueData, error: uniqueError } = await supabase
                     .from('map_field_unique')
                     .select('*')
                     .eq('field_id', fieldId);
 
-                if (!uniqueError && uniqueData && uniqueData.length > 0) {
-                    const uniqueSection = document.getElementById('unique-entrance-section');
-                    if (uniqueSection) {
+                const uniqueSection = document.getElementById('unique-entrance-section');
+                if (uniqueSection) {
+                    if (!uniqueError && uniqueData && uniqueData.length > 0) {
                         let html = `<table style="width: 100%; border-collapse: collapse;">
                             <tr style="background-color: #f2f2f2;">
                                 <th style="border: 1px solid #ccc; padding: 6px;">対象オブジェクト/NPC</th>
@@ -175,12 +290,24 @@
                         uniqueData.forEach(row => {
                             html += `<tr>
                                 <td style="border: 1px solid #ccc; padding: 6px; font-weight:bold;">${row.target || '-'}</td>
-                                <td style="border: 1px solid #ccc; padding: 6px;"><a href="map_info.html?id=${row.next_field_ID}">${row.next_field || '特殊マップ'}</a> ${row.備考 ? `(${row.備考})` : ''}</td>
+                                <td style="border: 1px solid #ccc; padding: 6px;"><a href="map_info.html?id=${row.next_field_ID}" class="unique-link" data-id="${row.next_field_ID}">${row.next_field || '特殊マップ'}</a> ${row.備考 ? `(${row.備考})` : ''}</td>
                                 <td style="border: 1px solid #ccc; padding: 6px; color: #d02090; font-weight:bold;">${row.条件 || 'なし'}</td>
                             </tr>`;
                         });
                         html += `</table>`;
                         uniqueSection.innerHTML = html;
+
+                        // 特殊移動リンクにも右側切り替え魔法をかける
+                        uniqueSection.querySelectorAll('.unique-link').forEach(link => {
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const uid = this.getAttribute('data-id');
+                                history.pushState(null, null, `map_info.html?id=${uid}`);
+                                loadMapDetails();
+                            });
+                        });
+                    } else {
+                        uniqueSection.innerHTML = '<p>特別な入場条件やギミック情報はありません。</p>';
                     }
                 }
 
@@ -190,7 +317,7 @@
             }
         }
 
-        // 【修正】イベントの衝突を避けるため、アーチャーのページと完全に同じ実行タイミングに変更しました
+        // ページ読み込み時に実行（独立タイミング）
         window.onload = loadMapDetails;
     </script>
 </body>
