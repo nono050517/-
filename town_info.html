@@ -2,49 +2,76 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>テスト画面 - エリシア・アーカイブス</title>
+    <title>マップ詳細 - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 画面を左メニュー(200px)と右メインに分けるシンプルなスタイル */
-        .map-container {
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-            margin-top: 50px;
-        }
-        .map-sidebar {
-            width: 200px;
-            min-width: 200px;
-            background-color: #f9f9f9;
-            border-right: 2px dashed #ccc;
-            padding: 15px;
-        }
-        .map-main-data {
-            flex-grow: 1;
-            font-size: 5em; /* 「あ」をめちゃくちゃ大きく表示します */
-            color: red;
-            font-weight: bold;
-            padding: 20px;
-        }
+        .map-container { display: flex; gap: 20px; align-items: flex-start; }
+        .map-sidebar { width: 200px; min-width: 200px; background-color: #fff; border-right: 2px dashed #ccc; padding-right: 15px; }
+        .map-main-data { flex-grow: 1; }
+        .town-list { list-style: none; padding: 0; margin: 0; }
+        .town-list li { margin-bottom: 8px; }
+        .town-list a { text-decoration: none; color: #1e90ff; font-size: 0.95em; }
+        .town-list a.active { font-weight: bold; color: #d02090; }
     </style>
 </head>
 <body>
-
+    <header class="page-header"></header>
     <div class="wrapper">
+        <nav id="sidebar-nav"></nav>
         <main class="main-content">
             <div class="map-container">
-                
                 <div class="map-sidebar">
-                    <h3 style="margin-top: 0;">■ テストメニュー</h3>
-                    <p style="font-size: 0.9em; color: #666;">※common.jsを外してテスト中</p>
+                    <h3>■ 街一覧</h3>
+                    <ul id="inner-town-list" class="town-list"><li>読み込み中...</li></ul>
                 </div>
-
                 <div class="map-main-data">
-                    あ
+                    <h2 id="map-title">読み込み中...</h2>
+                    <div id="map-type">-</div>
+                    <div id="has-stagecoach">-</div>
+                    <div id="has-specialcoach">-</div>
+                    <div id="adjacent-maps-grid"></div>
+                    <div id="fast-travel-section"></div>
+                    <div id="unique-entrance-section"></div>
                 </div>
-
             </div>
         </main>
     </div>
 
-    </body>
+    <script src="common.js"></script>
+    
+    <script>
+        // 設定値
+        const SUPABASE_URL = "https://your-supabase-url.supabase.co";
+        const SUPABASE_ANON_KEY = "your-anon-key";
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ページ全体が読み込まれた瞬間に動くように設定！
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log("ページ読み込み開始");
+            
+            // データの読み込み処理をここに集約
+            await loadMapDetails();
+        });
+
+        async function loadMapDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fieldId = urlParams.get('id') || '1';
+
+            // データ取得と表示
+            const { data, error } = await supabase
+                .from('map_field')
+                .select('*')
+                .eq('field_id', fieldId)
+                .single();
+
+            if (data) {
+                document.getElementById('map-title').innerText = data.map_name;
+                // 他の要素もここに書いていく
+            } else {
+                document.getElementById('map-title').innerText = "データが見つかりません";
+            }
+        }
+    </script>
+</body>
 </html>
