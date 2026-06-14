@@ -2,69 +2,220 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="description" id="meta-description" content="街一覧ページです。">
-    <title>街一覧 - エリシア・アーカイブス</title>
+    <title>街情報 - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css">
+    
+    <meta id="meta-description" name="description" content="">
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* 街一覧サイドバー用の追加CSSスタイル */
+        .town-layout {
+            display: flex;
+            gap: 20px;
+        }
+        .town-sidebar {
+            width: 250px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .town-sidebar h3 {
+            margin-top: 0;
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+            font-size: 1.1em;
+        }
+        #town-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #town-list li {
+            margin-bottom: 8px;
+        }
+        #town-list li a {
+            display: block;
+            padding: 6px 10px;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        #town-list li a:hover {
+            background-color: #e0e0e0;
+        }
+        /* 現在選択されている街のハイライト表示 */
+        #town-list li a.active-town {
+            background-color: #007acc;
+            color: #fff;
+            font-weight: bold;
+        }
+        .town-main {
+            flex: 1;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+        .error {
+            color: #cc0000;
+        }
+    </style>
 </head>
 <body>
     <div class="wrapper">
         <div class="container">
-            <nav id="sidebar-nav"></nav>
-            
-            <main>
-                <div class="item-content">
-                    <h1>エリシアの街一覧</h1>
-                    <hr>
-                    <ul id="town-list" style="font-size: 1.2rem; line-height: 2;">
-                        <li>読み込み中...</li>
+            <h1 class="page-title" id="main-title">街情報データベース</h1>
+
+            <div class="town-layout">
+                <aside class="town-sidebar">
+                    <h3>街一覧</h3>
+                    <ul id="town-list">
+                        <li class="loading">データを読み込み中...</li>
                     </ul>
-                </div>
-            </main>
+                </aside>
+
+                <main class="town-main">
+                    <h2 class="page-title" id="town-name-display">街を選択してください</h2>
+                    
+                    <h3 class="section-category">■ 基本情報</h3>
+                    <div class="item-content" id="town-base-info">
+                        <p class="loading">データを読み込み中...</p>
+                    </div>
+
+                    <h3 class="section-category">■ 隣接移動・馬車情報</h3>
+                    <div class="item-content" id="town-travel-info">
+                        <p class="loading">データを読み込み中...</p>
+                    </div>
+                </main>
+            </div>
         </div>
     </div>
-    
-    <script src="common.js"></script>
+
     <script>
-        // Supabaseの設定
-        const supabaseUrl = 'YOUR_SUPABASE_URL';
-        const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
-        const supabase = supabaseClient.createClient(supabaseUrl, supabaseKey);
+        // ==========================================
+        // 1. Supabase の初期化設定
+        // ※実際の「YOUR_SUPABASE_URL」と「YOUR_SUPABASE_ANON_KEY」に書き換えてください。
+        // ==========================================
+        const SUPABASE_URL = "https://YOUR_SUPABASE_URL.supabase.co";
+        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        async function loadTowns() {
+        // URLから現在の「id（field_id）」パラメータを取得
+        const urlParams = new URLSearchParams(window.location.search);
+        // パラメータがなければデフォルトとして ID: 1 (王宮前広場) を割り当て
+        const currentTownId = urlParams.get('id') || '1';
+
+        /**
+         * 処理 A: Supabaseから map_type='town' のデータをすべて取得して左側の「街一覧」を描画する
+         */
+        async function fetchAndRenderTownList() {
             const townListElement = document.getElementById('town-list');
+            try {
+                // map_field.csv の通り、テーブル名を 'map_fields' と仮定して取得
+                const { data: towns, error } = await supabase
+                    .from('map_fields') 
+                    .select('field_id, map_name')
+                    .eq('map_type', 'town')
+                    .order('field_id', { ascending: true });
 
-            // 1. maps テーブルから、カテゴリが '街' または 'town' のデータを取得
-            // ※もしお使いのテーブルのカラム名が 'is_town' (boolean) などの場合は、
-            //  .eq('is_town', true) など、環境に合わせて調整してください。
-            const { data, error } = await supabase
-                .from('maps')
-                .select('map_name') // ひとまず名前だけ取得
-                .eq('category', '街'); // カラム名「category」の値が「街」のもの
+                if (error) throw error;
 
-            // エラーハンドリング
-            if (error) {
-                console.error("データ取得エラー:", error);
-                townListElement.innerHTML = `<li style="color:red;">データの読み込みに失敗しました</li>`;
-                return;
-            }
+                townListElement.innerHTML = ''; // ローディング表示をクリア
 
-            // 2. 画面への表示処理
-            if (data && data.length > 0) {
-                townListElement.innerHTML = ''; // 「読み込み中...」を消去
-                
-                data.forEach(town => {
+                if (!towns || towns.length === 0) {
+                    townListElement.innerHTML = '<li>街の情報が見つかりませんでした。</li>';
+                    return;
+                }
+
+                // 取得データをリスト要素に変換して流し込み
+                towns.forEach(town => {
                     const li = document.createElement('li');
-                    li.textContent = town.map_name;
+                    const a = document.createElement('a');
+                    
+                    // クリック時にURLパラメータに ?id=〇〇 を付与して自身をリロード
+                    a.href = `?id=${town.field_id}`;
+                    a.textContent = town.map_name;
+
+                    // 現在表示中（URLのidと一致）の街であればアクティブクラスを付与
+                    if (String(town.field_id) === String(currentTownId)) {
+                        a.classList.add('active-town');
+                    }
+
+                    li.appendChild(a);
                     townListElement.appendChild(li);
                 });
-            } else {
-                townListElement.innerHTML = '<li>街のデータが見つかりませんでした。</li>';
+
+            } catch (error) {
+                console.error('街一覧の取得に失敗しました:', error.message);
+                townListElement.innerHTML = '<li class="error">一覧の読み込みに失敗しました。</li>';
             }
         }
 
-        // ページ読み込み時に実行
-        window.addEventListener('DOMContentLoaded', loadTowns);
+        /**
+         * 処理 B: 現在の currentTownId に基づいて特定の街の情報を詳細エリアに表示し、SEO設定を行う
+         */
+        async function loadTownDetail() {
+            const nameDisplay = document.getElementById('town-name-display');
+            const baseInfoDiv = document.getElementById('town-base-info');
+            const travelInfoDiv = document.getElementById('town-travel-info');
+            const metaDescription = document.getElementById('meta-description');
+
+            try {
+                // 現在のIDに該当するマップデータを1件取得
+                const { data: townData, error } = await supabase
+                    .from('map_fields')
+                    .select('*')
+                    .eq('field_id', currentTownId)
+                    .single();
+
+                if (error) throw error;
+
+                if (!townData) {
+                    nameDisplay.textContent = "データなし";
+                    baseInfoDiv.innerHTML = "<p>該当する街の情報がテーブルに登録されていません。</p>";
+                    return;
+                }
+
+                // 1. 画面表示の更新
+                nameDisplay.textContent = townData.map_name;
+                document.title = `${townData.map_name} - エリシア・アーカイブス`;
+
+                // 2. SEO対策：description タグを現在の街情報に合わせて動的に生成
+                const descriptionText = `MMORPGエリシアオンラインのマップ「${townData.map_name}」の詳細データページです。隣接ルートや施設、駅馬車の有無などを掲載しています。`;
+                metaDescription.setAttribute('content', descriptionText);
+
+                // 3. 基本情報の組み立て（CSVにある特馬、駅馬カラムの状況を判定）
+                baseInfoDiv.innerHTML = `
+                    <p><strong>マップID:</strong> ${townData.field_id}</p>
+                    <p><strong>特別馬（特馬）の利用:</strong> ${townData.特馬でいける === '〇' ? '可能' : '不可'}</p>
+                    <p><strong>駅馬車（駅馬）の配置:</strong> ${townData.駅馬がある === '〇' ? 'あり' : 'なし'}</p>
+                `;
+
+                // 4. 隣接・馬車情報の表示（簡易版の仮組み立て）
+                // ※もし別テーブル(fast_travel等)から行き先を引っ張るリレーションを組む場合はここに追記します。
+                travelInfoDiv.innerHTML = `
+                    <p>このエリアから他のマップへ歩いて移動、または駅馬車を利用して冒険を進めることができます。</p>
+                    <p>方角データ（参考）: 北=${townData['north（北）'] || '-'}, 東=${townData['east（東）'] || '-'}, 南=${townData['south（南）'] || '-'}, 西=${townData['west（西）'] || '-'}</p>
+                `;
+
+            } catch (error) {
+                console.error('詳細データの取得に失敗しました:', error.message);
+                nameDisplay.textContent = "エラー";
+                baseInfoDiv.innerHTML = "<p class='error'>詳細データの読み込みに失敗しました。</p>";
+                travelInfoDiv.innerHTML = "";
+            }
+        }
+
+        // ページ読み込み完了時に実行するトリガー
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAndRenderTownList(); // 一覧表示を実行
+            loadTownDetail();         // 詳細表示を実行
+        });
     </script>
 </body>
 </html>
