@@ -16,7 +16,7 @@
             width: 200px;
             min-width: 200px;
             background-color: #fff;
-            border-right: 2px dashed #ccc; /* ❌ style を削除して修正 */
+            border-right: 2px dashed #ccc;
             padding-right: 15px;
         }
         .map-main-data {
@@ -115,7 +115,6 @@
         const SUPABASE_URL = "https://your-supabase-url.supabase.co";
         const SUPABASE_ANON_KEY = "your-anon-key";
         
-        // ⭕ 頭のSを大文字に修正して、正しくクライアントを初期化
         const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // URLパラメータから現在の「field_id（マップID）」を取得
@@ -142,7 +141,7 @@
                 const { data: towns, error } = await supabase
                     .from('map_field')
                     .select('field_id, map_name, map_type')
-                    .eq('map_type', 'town') // 「街」だけを引っ張る
+                    .eq('map_type', 'town')
                     .order('field_id', { ascending: true });
 
                 if (error) return;
@@ -157,19 +156,14 @@
                     a.href = `map_info.html?id=${town.field_id}`;
                     a.innerText = `・${town.map_name}`;
                     
-                    // 今見ている街だったら色を変える（アクティブ状態）
                     if (String(town.field_id) === String(currentId)) {
                         a.classList.add('active');
                     }
 
-                    // クリックしたとき、右側だけをパッと入れ替える処理
                     a.addEventListener('click', function(e) {
-                        e.preventDefault(); // ページ全体のガチ移動を止める
-                        
+                        e.preventDefault();
                         const newUrl = `map_info.html?id=${town.field_id}`;
                         history.pushState(null, null, newUrl);
-
-                        // 再び中身をロードする
                         loadMapDetails();
                     });
 
@@ -185,7 +179,6 @@
         async function loadMapDetails() {
             const fieldId = getMapIdParam();
             
-            // 街一覧メニュー側も現在の選択状態に合わせるために更新
             loadInnerTownList(fieldId);
 
             try {
@@ -197,17 +190,26 @@
                     .single();
 
                 if (mapError || !mapData) {
-                    document.getElementById('map-title').innerText = "マップデータが見つかりませんでした。";
+                    const titleEl = document.getElementById('map-title');
+                    if (titleEl) titleEl.innerText = "マップデータが見つかりませんでした。";
                     return;
                 }
 
-                // 画面への基本情報ハメ込み
-                document.getElementById('map-title').innerText = `エリア詳細：${mapData.map_name}`;
-                document.getElementById('map-type').innerText = mapData.map_type === 'town' ? '街（Town）' : '戦闘地域（Field/Dungeon）';
-                document.getElementById('has-stagecoach').innerText = mapData.駅馬がある || '×';
-                document.getElementById('has-specialcoach').innerText = mapData.特馬でいける || '×';
+                // 画面への基本情報ハメ込み（存在チェック付きで安全に）
+                const titleEl = document.getElementById('map-title');
+                if (titleEl) titleEl.innerText = `エリア詳細：${mapData.map_name}`;
+                
+                const typeEl = document.getElementById('map-type');
+                if (typeEl) typeEl.innerText = mapData.map_type === 'town' ? '街（Town）' : '戦闘地域（Field/Dungeon）';
+                
+                const stageEl = document.getElementById('has-stagecoach');
+                if (stageEl) stageEl.innerText = mapData.駅馬がある || '×';
+                
+                const specEl = document.getElementById('has-specialcoach');
+                if (specEl) specEl.innerText = mapData.特馬でいける || '×';
 
                 // 8方向＋中央の移動ボタンをグリッド状に生成
+                // ⭕ ハイフン「-」に修正して確実にHTMLのエリアを捕まえます！
                 const gridContainer = document.getElementById('adjacent-maps-grid');
                 if (gridContainer) {
                     gridContainer.innerHTML = '';
@@ -232,13 +234,14 @@
                         } else {
                             btn.style.backgroundColor = "#f5f5f5";
                             btn.style.color = "#aaa";
-                            btn.style.innerHTML = `${DIRECTION_LABELS[dir]}<br><span style="font-size:0.75em;">-</span>`;
+                            // ⭕ 安全に文字を書き込みます
+                            btn.innerHTML = `${DIRECTION_LABELS[dir]}<br><span style="font-size:0.75em;">-</span>`;
                         }
                         gridContainer.appendChild(btn);
                     }
                 }
 
-                // 2. fast_travel (通常駅馬車) テーブル
+                // 2. fast_travel (通常駅馬車) テーブルから取得
                 const { data: travelData, error: travelError } = await supabase
                     .from('fast_travel')
                     .select('*')
@@ -272,7 +275,7 @@
                     }
                 }
 
-                // 3. map_field_unique (特殊入場) テーブル
+                // 3. map_field_unique (特殊入場) テーブルから取得
                 const { data: uniqueData, error: uniqueError } = await supabase
                     .from('map_field_unique')
                     .select('*')
@@ -312,11 +315,11 @@
 
             } catch (e) {
                 console.error(e);
-                document.getElementById('map-title').innerText = "エラーが発生しました。";
+                const titleEl = document.getElementById('map-title');
+                if (titleEl) titleEl.innerText = "エラーが発生しました。";
             }
         }
 
-        // ⭕ window.onload ではなく、DOMの準備ができたらすぐ動くように安全策をとる
         document.addEventListener("DOMContentLoaded", loadMapDetails);
     </script>
 </body>
