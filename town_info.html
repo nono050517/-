@@ -16,7 +16,7 @@
             width: 200px;
             min-width: 200px;
             background-color: #fff;
-            border-right: 2px style dashed #ccc; /* Wiki風の区切り線 */
+            border-right: 2px dashed #ccc; /* ❌ style を削除して修正 */
             padding-right: 15px;
         }
         .map-main-data {
@@ -104,7 +104,8 @@
                     </div>
                 </div>
 
-            </div></main>
+            </div>
+        </main>
     </div>
 
     <script src="common.js"></script>
@@ -114,7 +115,8 @@
         const SUPABASE_URL = "https://your-supabase-url.supabase.co";
         const SUPABASE_ANON_KEY = "your-anon-key";
         
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // ⭕ 頭のSを大文字に修正して、正しくクライアントを初期化
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // URLパラメータから現在の「field_id（マップID）」を取得
         function getMapIdParam() {
@@ -134,7 +136,7 @@
             'southwest', 'south', 'southeast'
         ];
 
-        // 🌟【新機能】内側の左メニューに街一覧をSupabaseから呼んで一発生成する関数
+        // 内側の左メニューに街一覧をSupabaseから呼んで一発生成する関数
         async function loadInnerTownList(currentId) {
             try {
                 const { data: towns, error } = await supabase
@@ -146,6 +148,7 @@
                 if (error) return;
 
                 const listContainer = document.getElementById('inner-town-list');
+                if (!listContainer) return;
                 listContainer.innerHTML = ''; // クリア
 
                 towns.forEach(town => {
@@ -159,15 +162,14 @@
                         a.classList.add('active');
                     }
 
-                    // 🛑 クリックしたとき、右側だけをパッと入れ替える魔法
+                    // クリックしたとき、右側だけをパッと入れ替える処理
                     a.addEventListener('click', function(e) {
                         e.preventDefault(); // ページ全体のガチ移動を止める
                         
-                        // URLのうしろを「?id=今回のID」にこっそり書き換える
                         const newUrl = `map_info.html?id=${town.field_id}`;
                         history.pushState(null, null, newUrl);
 
-                        // 再び中身をロードする（これによって右側だけが入れ替わる！）
+                        // 再び中身をロードする
                         loadMapDetails();
                     });
 
@@ -221,7 +223,6 @@
                             btn.style.cursor = "pointer";
                             btn.style.fontWeight = "bold";
                             
-                            // グリッド内のリンクも、クリック時に右側だけ変えるように設定
                             btn.innerHTML = `<a href="map_info.html?id=${targetId}" style="text-decoration: none; color: #1e90ff;">${DIRECTION_LABELS[dir]}<br><span style="font-size:0.75em; font-weight:normal; color:#666;">ID: ${targetId}</span></a>`;
                             btn.querySelector('a').addEventListener('click', function(e) {
                                 e.preventDefault();
@@ -231,7 +232,7 @@
                         } else {
                             btn.style.backgroundColor = "#f5f5f5";
                             btn.style.color = "#aaa";
-                            btn.innerHTML = `${DIRECTION_LABELS[dir]}<br><span style="font-size:0.75em;">-</span>`;
+                            btn.style.innerHTML = `${DIRECTION_LABELS[dir]}<br><span style="font-size:0.75em;">-</span>`;
                         }
                         gridContainer.appendChild(btn);
                     }
@@ -258,7 +259,6 @@
                         html += `</ul>`;
                         travelSection.innerHTML = html;
 
-                        // 駅馬車リンクにも右側切り替え魔法をかける
                         travelSection.querySelectorAll('.travel-link').forEach(link => {
                             link.addEventListener('click', function(e) {
                                 e.preventDefault();
@@ -297,7 +297,6 @@
                         html += `</table>`;
                         uniqueSection.innerHTML = html;
 
-                        // 特殊移動リンクにも右側切り替え魔法をかける
                         uniqueSection.querySelectorAll('.unique-link').forEach(link => {
                             link.addEventListener('click', function(e) {
                                 e.preventDefault();
@@ -317,8 +316,8 @@
             }
         }
 
-        // ページ読み込み時に実行（独立タイミング）
-        window.onload = loadMapDetails;
+        // ⭕ window.onload ではなく、DOMの準備ができたらすぐ動くように安全策をとる
+        document.addEventListener("DOMContentLoaded", loadMapDetails);
     </script>
 </body>
 </html>
