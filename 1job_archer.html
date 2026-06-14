@@ -2,315 +2,180 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>マップ詳細 - エリシア・アーカイブス</title>
+    <title>アーチャー - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        /* マップ詳細ページ内を「左に街リスト」「右に情報」の2カラムにするスタイル */
-        .map-container {
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-        }
-        .map-sidebar {
-            width: 200px;
-            min-width: 200px;
-            background-color: #fff;
-            border-right: 2px dashed #ccc;
-            padding-right: 15px;
-        }
-        .map-main-data {
-            flex-grow: 1;
-        }
-        .town-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .town-list li {
-            margin-bottom: 8px;
-        }
-        .town-list a {
-            text-decoration: none;
-            color: #1e90ff;
-            font-size: 0.95em;
-        }
-        .town-list a:hover {
-            text-decoration: underline;
-        }
-        /* 現在選んでいる街をわかりやすくする装飾 */
-        .town-list a.active {
-            font-weight: bold;
-            color: #d02090;
-        }
-    </style>
 </head>
 <body>
-    <header class="page-header"></header>
-
     <div class="wrapper">
-        <nav id="sidebar-nav"></nav>
-        
-        <main class="main-content">
-            <div class="map-container">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title">職業詳細：アーチャー (Archer)</h2>
                 
-                <div class="map-sidebar">
-                    <h3 style="font-size: 1em; margin-top: 0; border-bottom: 2px solid #ccc; padding-bottom: 5px;">■ 街一覧</h3>
-                    <ul id="inner-town-list" class="town-list">
-                        <li>読み込み中...</li>
-                    </ul>
+                <h3 class="section-category"> 1．職能と役割</h3>
+                <div class="item-content">
+                    遠距離攻撃に特化した職業であり、すべての遠距離火力職の基本となるジョブです。<br>
+                    盾を装備できないという防御面の弱点はあるものの、それを補って余りある弓の強力な攻撃性能を誇ります。<br>
+                    最大射程を活かした立ち回りが、生存と火力の鍵となります。
                 </div>
 
-                <div class="map-main-data">
-                    <h2 class="page-title" id="map-title">マップ詳細：読み込み中...</h2>
+                <h3 class="section-category"> 2．転職データ</h3>
+                <div class="item-content">
+                    <p style="padding-left: 1em; text-indent: -1em;">■見習いからの転職: JobLv10以上で試験開始。訓練エリアの固定型モンスター（Lv15）5体を5分以内に倒す必要があります。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">■他職からの転職: 「たまはがね、鉄、金、銀、銅」を揃えて持参する、素材の収集能力を試す試験内容となっています。</p>
+                    <p><strong>■主な派生二次職:</strong> BaseLv50および指定職業のJobLv40で転職可能。</p>
+                        <ul style="list-style-position: outside; margin-left: 1.5em;">
+                            <li><strong>レンジャー:</strong> アーチャー ＆ ローグ (各JobLv40)</li>
+                            <li><strong>グレネディア:</strong> アーチャー ＆ ウィザード (各JobLv40)</li>
+                            <li><strong>マスケッティア:</strong> アーチャー ＆ 武士 (各JobLv40)</li>
+                            <li><strong>フェンサー:</strong> アーチャー ＆ ソードマン (各JobLv40)</li>
+                        </ul>
+                </div>
+
+                <h3 class="section-category"> 3．育成・運用の手引き</h3>
+                <div class="item-content">
+                    <p>物理攻撃力だけでなく、属性相性やステータス配分が運用のポイントとなります。</p>
                     
-                    <h3 class="section-category"> 1．基本情報</h3>
-                    <div class="item-content">
-                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-                            <tr>
-                                <th style="border: 1px solid #ccc; padding: 8px; background-color: #f2f2f2; text-align: left; width: 30%;">マップ種別</th>
-                                <td style="border: 1px solid #ccc; padding: 8px;" id="map-type">-</td>
-                            </tr>
-                            <tr>
-                                <th style="border: 1px solid #ccc; padding: 8px; background-color: #f2f2f2; text-align: left;">通常駅馬車</th>
-                                <td style="border: 1px solid #ccc; padding: 8px;" id="has-stagecoach">-</td>
-                            </tr>
-                            <tr>
-                                <th style="border: 1px solid #ccc; padding: 8px; background-color: #f2f2f2; text-align: left;">特別な馬車</th>
-                                <td style="border: 1px solid #ccc; padding: 8px;" id="has-specialcoach">-</td>
-                            </tr>
-                        </table>
-                    </div>
+                    <p><strong>ステータス配分:</strong></p>
+                    <ul style="list-style-position: outside; margin-left: 1.5em;">
+                        <li><strong>DEX:</strong> 攻撃力・命中率・詠唱速度に影響する最重要ステータス。</li>
+                        <li><strong>AGI:</strong> 回避能力と攻撃速度を重視する場合に推奨。</li>
+                        <li><strong>INT:</strong> 最大SP量に影響。魔法職とのハイブリッド（セージ等）を目指す場合は重要となります。</li>
+                    </ul>
 
-                    <h3 class="section-category"> 2．隣接マップ情報</h3>
-                    <div class="item-content">
-                        <p>周囲の方角と繋がっている隣接エリアの一覧です。クリックすると該当のマップページへ移動します。</p>
-                        <div id="adjacent-maps-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 500px; margin: 15px auto; text-align: center;">
-                        </div>
-                    </div>
-
-                    <h3 class="section-category"> 3．街からの移動・交通（駅馬車等）</h3>
-                    <div class="item-content">
-                        <div id="fast-travel-section">
-                            <p>このマップから利用できる移動サービスはありません。</p>
-                        </div>
-                    </div>
-
-                    <h3 class="section-category"> 4．特殊入場・ダンジョン条件</h3>
-                    <div class="item-content">
-                        <div id="unique-entrance-section">
-                            <p>特別な入場条件やギミック情報はありません。</p>
-                        </div>
-                    </div>
+                    <p style="padding-left: 1em; text-indent: -1em;">・レベル上げのコツ: 各種属性攻撃スキル（ブレイズ、ウィンディ、ダーク等）が揃っているため、敵の弱点属性を突くことが効率化への近道です。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・物理職への恩恵: スキル「野伏せ」は1分間ATKを大幅に上昇させるため、剣を主力とする近接火力職にとっても、アーチャーを経由して習得する価値が非常に高い重要スキルです。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・魔法職としての運用: 魔法職のステータスのままレベルを上げる場合は、MATKが上がる「団扇」などの装備を活用し、魔法（エクソシズム等）を主体に戦う手法も有効です。</p>
+                    <p style="padding-left: 1em; text-indent: -1em;">・特定状況での活躍: 「パラライズショット」は通常時は目立ちませんが、一部のボス戦で非常に有用なため、余裕がある時にレベルを上げておくと重宝します。</p>
                 </div>
 
-            </div>
-        </main>
+                <h3 class="section-category"> 4．習得可能スキル（取得レベル順）</h3>
+                <div class="item-content">
+                    <table id="skill-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 7%;">取得Lv</th>
+                                <th style="width: 7%;">PSV/ACT</th>
+                                <th style="width: 21%;">スキル名</th>
+                                <th style="width: 70%;">説明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skill-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">スキルデータを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
     </div>
 
     <script src="common.js"></script>
 
-    <script>
-        // 【重要】ご自身のSupabaseのURLとAnon Keyに書き換えてください
-        const SUPABASE_URL = "https://your-supabase-url.supabase.co";
-        const SUPABASE_ANON_KEY = "your-anon-key";
-        
-        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<script>
+async function loadarcherSkills() {
+    // 1. 基本データの取得
+    // clientが正しく初期化されていることを確認してください
+    const { data: skills, error: skillError } = await client
+        .from('skills_list')
+        .select('*')
+        .eq('job_id', 10) 
+        .order('習得レベル', { ascending: true });
 
-        // URLパラメータから現在の「field_id（マップID）」を取得
-        function getMapIdParam() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id') || '1'; // 指定がなければとりあえずID:1を出す
-        }
+    const { data: effects } = await client.from('skill_effects').select('*');
 
-        // 8方向の定義マッピング
-        const DIRECTION_LABELS = {
-            north: "北 ↑", northwest: "北西 ↖", northeast: "北東 ↗",
-            west: "西 ←", center: "中央 ☉", east: "東 →",
-            southwest: "南西 ↙", south: "南 ↓", southeast: "南東 ↘"
-        };
-        const GRID_ORDER = [
-            'northwest', 'north', 'northeast',
-            'west', 'center', 'east',
-            'southwest', 'south', 'southeast'
-        ];
+    if (skillError) {
+        console.error("Skill Error:", skillError);
+        return;
+    }
 
-        // 内側の左メニューに街一覧をSupabaseから呼んで一発生成する関数
-        async function loadInnerTownList(currentId) {
-            try {
-                const { data: towns, error } = await supabase
-                    .from('map_field')
-                    .select('field_id, map_name, map_type')
-                    .eq('map_type', 'town')
-                    .order('field_id', { ascending: true });
+    // --- 表示切替用チェックボックス ---
+    const table = document.getElementById('skill-table');
+    if (table && !document.getElementById('skill-controls')) {
+        const controlDiv = document.createElement('div');
+        controlDiv.id = 'skill-controls';
+        controlDiv.style.cssText = "margin-bottom: 10px; padding: 8px; background: #fdfdfd; border: 1px solid #ddd; border-radius: 5px; font-size: 0.85em;";
+        controlDiv.innerHTML = `
+            <strong style="margin-right:10px;">表示設定:</strong>
+            <label style="margin-right:8px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-cond" checked> 取得条件</label>
+            <label style="margin-right:8px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-effect" checked> ステータス効果</label>
+            <label style="margin-right:8px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-sp" checked> 消費SP</label>
+            <label style="margin-right:8px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-attr" checked> 属性</label>
+            <label style="margin-right:8px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-time" checked> 効果時間</label>
+            <label style="margin-right:8px; cursor:pointer;"><input type="checkbox" class="toggle-col" data-target="cls-weapon" checked> 装備可能武器</label>
+        `;
+        table.parentNode.insertBefore(controlDiv, table);
+    }
 
-                if (error) return;
+    const tbody = document.getElementById('skill-body');
+    if (skills && skills.length > 0) {
+        tbody.innerHTML = skills.map(skill => {
+            const weaponTypes = ['片手剣', '両手剣', 'メイス', 'ナックル', '弓矢', '片手斧', '両手斧', 'ハンマー', 'クロスボウ', '調理器具', '銃器', '二刀', '片手槍', '両手槍', '突剣'];
+            const activeWeapons = weaponTypes.filter(w => skill[w] === '〇');
+            let weaponText = activeWeapons.length >= 13 ? "全武器使用可能" : (activeWeapons.join('/') || "-");
 
-                const listContainer = document.getElementById('inner-town-list');
-                if (!listContainer) return;
-                listContainer.innerHTML = ''; // クリア
-
-                towns.forEach(town => {
-                    const li = document.createElement('li');
-                    const a = document.createElement('a');
-                    a.href = `map_info.html?id=${town.field_id}`;
-                    a.innerText = `・${town.map_name}`;
-                    
-                    if (String(town.field_id) === String(currentId)) {
-                        a.classList.add('active');
-                    }
-
-                    a.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const newUrl = `map_info.html?id=${town.field_id}`;
-                        history.pushState(null, null, newUrl);
-                        loadMapDetails();
-                    });
-
-                    li.appendChild(a);
-                    listContainer.appendChild(li);
-                });
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        // メインの詳細データをロードする関数
-        async function loadMapDetails() {
-            const fieldId = getMapIdParam();
+            const spHtml = (skill.消費SP && skill.消費SP !== 'NULL') ? `<span class="cls-sp">【消費SP】${skill.消費SP} </span>` : '';
+            const attrHtml = (skill.属性 && skill.属性 !== 'NULL') ? `<span class="cls-attr">【属性】${skill.属性} </span>` : '';
             
-            loadInnerTownList(fieldId);
+            let timeText = '';
+            if (skill['効果時間(min)'] && skill['効果時間(min)'] !== '0') timeText = `【効果時間】${skill['効果時間(min)']}分 `;
+            else if (skill['効果時間(s)'] && skill['効果時間(s)'] !== '0') timeText = `【効果時間】${skill['効果時間(s)']}秒 `;
+            const timeHtml = timeText ? `<span class="cls-time">${timeText}</span>` : '';
 
-            try {
-                // 1. map_field から基本情報取得
-                const { data: mapData, error: mapError } = await supabase
-                    .from('map_field')
-                    .select('*')
-                    .eq('field_id', fieldId)
-                    .single();
+            return `
+                <tr>
+                    <td style="text-align:center; padding: 4px;">${skill.習得レベル || '-'}</td>
+                    <td style="text-align:center; padding: 4px;">${skill['PSV/ACT'] || '-'}</td>
+                    <td class="row-skill" style="font-weight: bold; padding: 4px;">${skill.スキル名}</td>
+                    <td style="padding: 6px 10px; line-height: 1.3;">
+                        <div style="font-weight: bold; color: #000; margin-bottom: 2px;">${skill.説明 || '-'}</div>
+                        <div id="stats-${skill.No}" class="stats-list" style="margin-bottom: 2px;"></div>
+                        <div class="meta-container" style="font-size: 0.85em; color: #666;">
+                            ${spHtml || attrHtml || timeHtml ? `
+                            <div style="background: #f8f9fa; border: 1px solid #eee; padding: 1px 6px; border-radius: 4px; display: inline-block;">
+                                ${spHtml}${attrHtml}${timeHtml}
+                            </div>` : ''}
+                        </div>
+                        <div class="cls-weapon" style="font-size: 0.8em; color: #888; margin-top: 3px; padding-top: 2px; border-top: 1px dashed #eee;">
+                            <span style="background: #eee; color: #666; padding: 0px 3px; border-radius: 2px; font-size: 0.9em;">武器</span> ${weaponText}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
 
-                if (mapError || !mapData) {
-                    document.getElementById('map-title').innerText = "マップデータが見つかりませんでした。";
-                    return;
-                }
-
-                // 画面への基本情報ハメ込み
-                document.getElementById('map-title').innerText = `エリア詳細：${mapData.map_name}`;
-                document.getElementById('map-type').innerText = mapData.map_type === 'town' ? '街（Town）' : '戦闘地域（Field/Dungeon）';
-                document.getElementById('has-stagecoach').innerText = mapData.駅馬がある || '×';
-                document.getElementById('has-specialcoach').innerText = mapData.特馬でいける || '×';
-
-                // 8方向＋中央の移動ボタンをグリッド状に生成
-                const gridContainer = document.getElementById('adjacent-maps-grid');
-                if (gridContainer) {
-                    gridContainer.innerHTML = '';
-                    for (const dir of GRID_ORDER) {
-                        const targetId = mapData[dir];
-                        const btn = document.createElement('div');
-                        btn.style.padding = "10px";
-                        btn.style.border = "1px solid #ccc";
-                        btn.style.borderRadius = "4px";
-                        
-                        if (targetId) {
-                            btn.style.backgroundColor = "#e6f7ff";
-                            btn.style.cursor = "pointer";
-                            btn.style.fontWeight = "bold";
-                            
-                            btn.innerHTML = `<a href="map_info.html?id=${targetId}" style="text-decoration: none; color: #1e90ff;">${DIRECTION_LABELS[dir]}<br><span style="font-size:0.75em; font-weight:normal; color:#666;">ID: ${targetId}</span></a>`;
-                            btn.querySelector('a').addEventListener('click', function(e) {
-                                e.preventDefault();
-                                history.pushState(null, null, `map_info.html?id=${targetId}`);
-                                loadMapDetails();
-                            });
-                        } else {
-                            btn.style.backgroundColor = "#f5f5f5";
-                            btn.style.color = "#aaa";
-                            // ⭕ btn.style.innerHTML から btn.innerHTML にバグ修正
-                            btn.innerHTML = `${DIRECTION_LABELS[dir]}<br><span style="font-size:0.75em;">-</span>`;
-                        }
-                        gridContainer.appendChild(btn);
+        if (effects) {
+            effects.forEach(eff => {
+                const targetDiv = document.getElementById(`stats-${eff.No}`);
+                if (targetDiv) {
+                    let html = '';
+                    if (eff.習得条件 && eff.習得条件 !== 'NULL') {
+                        html += `<div class="cls-cond" style="font-size: 0.82em; color: #1e90ff; font-weight: bold; margin-bottom: 1px;">取得条件: ${eff.習得条件}</div>`;
                     }
-                }
-
-                // 2. fast_travel (通常駅馬車) テーブルから取得
-                const { data: travelData, error: travelError } = await supabase
-                    .from('fast_travel')
-                    .select('*')
-                    .eq('field_id', fieldId);
-
-                const travelSection = document.getElementById('fast-travel-section');
-                if (travelSection) {
-                    if (!travelError && travelData && travelData.length > 0) {
-                        let html = `<p>この場所の <strong>${travelData[0].target || '移動NPC'}</strong> から以下の目的地へ移動できます：</p>`;
-                        html += `<ul style="padding-left: 20px;">`;
-                        travelData.forEach(row => {
-                            const destId = row.next_field_id || row.field_id_dest;
-                            html += `<li style="margin-bottom: 5px;">
-                                <span class="cls-cond" style="color: #1e90ff; font-weight: bold;">[${row.select || '移動'}]</span> 
-                                <a href="map_info.html?id=${destId}" class="travel-link" data-id="${destId}" style="font-weight: bold; color: #d02090;">${row.next_map_name || row.map_name_dest || '未知のエリア'}</a>
-                            </li>`;
-                        });
-                        html += `</ul>`;
-                        travelSection.innerHTML = html;
-
-                        travelSection.querySelectorAll('.travel-link').forEach(link => {
-                            link.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                const tid = this.getAttribute('data-id');
-                                history.pushState(null, null, `map_info.html?id=${tid}`);
-                                loadMapDetails();
-                            });
-                        });
-                    } else {
-                        travelSection.innerHTML = '<p>このマップから利用できる移動サービスはありません。</p>';
+                    if (eff.項目 && eff.変化値) {
+                        const sign = (!String(eff.変化値).includes('-')) ? '+' : '';
+                        html += `<span class="cls-effect" style="color: #d02090; font-size: 0.92em; font-weight: bold; margin-right: 10px; display: inline-block;">${eff.項目} ${sign}${eff.変化値}</span>`;
                     }
+                    targetDiv.innerHTML += html;
                 }
-
-                // 3. map_field_unique (特殊入場) テーブルから取得
-                const { data: uniqueData, error: uniqueError } = await supabase
-                    .from('map_field_unique')
-                    .select('*')
-                    .eq('field_id', fieldId);
-
-                const uniqueSection = document.getElementById('unique-entrance-section');
-                if (uniqueSection) {
-                    if (!uniqueError && uniqueData && uniqueData.length > 0) {
-                        let html = `<table style="width: 100%; border-collapse: collapse;">
-                            <tr style="background-color: #f2f2f2;">
-                                <th style="border: 1px solid #ccc; padding: 6px;">対象オブジェクト/NPC</th>
-                                <th style="border: 1px solid #ccc; padding: 6px;">遷移先マップ</th>
-                                <th style="border: 1px solid #ccc; padding: 6px;">条件・備考</th>
-                            </tr>`;
-                        uniqueData.forEach(row => {
-                            html += `<tr>
-                                <td style="border: 1px solid #ccc; padding: 6px; font-weight:bold;">${row.target || '-'}</td>
-                                <td style="border: 1px solid #ccc; padding: 6px;"><a href="map_info.html?id=${row.next_field_ID}" class="unique-link" data-id="${row.next_field_ID}">${row.next_field || '特殊マップ'}</a> ${row.備考 ? `(${row.備考})` : ''}</td>
-                                <td style="border: 1px solid #ccc; padding: 6px; color: #d02090; font-weight:bold;">${row.条件 || 'なし'}</td>
-                            </tr>`;
-                        });
-                        html += `</table>`;
-                        uniqueSection.innerHTML = html;
-
-                        uniqueSection.querySelectorAll('.unique-link').forEach(link => {
-                            link.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                const uid = this.getAttribute('data-id');
-                                history.pushState(null, null, `map_info.html?id=${uid}`);
-                                loadMapDetails();
-                            });
-                        });
-                    } else {
-                        uniqueSection.innerHTML = '<p>特別な入場条件やギミック情報はありません。</p>';
-                    }
-                }
-
-            } catch (e) {
-                console.error(e);
-                document.getElementById('map-title').innerText = "エラーが発生しました。";
-            }
+            });
         }
 
-        document.addEventListener("DOMContentLoaded", loadMapDetails);
-    </script>
-</body>
-</html>
+        // イベントリスナーの設定
+        document.querySelectorAll('.toggle-col').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const targetClass = e.target.getAttribute('data-target');
+                const elements = document.getElementsByClassName(targetClass);
+                for (let el of elements) {
+                    el.style.display = e.target.checked ? '' : 'none';
+                }
+            });
+        });
+    }
+}
+
+// ここを修正：関数名と一致させる
+window.addEventListener('DOMContentLoaded', loadarcherSkills);
+</script>
