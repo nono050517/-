@@ -10,7 +10,9 @@
     <header class="page-header"></header>
 
     <div class="wrapper">
-        <nav id="sidebar" class="sidebar"></nav>
+        <nav id="sidebar" class="sidebar">
+            <div id="wiki-sidebar-container"></div>
+        </nav>
         
         <main class="main-content">
             <h2 class="page-title" id="map-title">マップ詳細：読み込み中...</h2>
@@ -84,7 +86,12 @@
             'southwest', 'south', 'southeast'
         ];
 
+        // メニューが重複するのを防ぐためのフラグ（一度走ったら二度とメニュー作成処理を割り込ませない）
+        let isMapDataLoaded = false;
+
         async function loadMapDetails() {
+            if (isMapDataLoaded) return; // 既にロード中なら処理を飛ばす
+            
             const fieldId = getMapIdParam();
             if (!fieldId) {
                 document.getElementById('map-title').innerText = "エラー: マップIDが指定されていません。";
@@ -92,6 +99,8 @@
             }
 
             try {
+                isMapDataLoaded = true; // ロード開始フラグを立てる
+
                 // 1. map_field テーブルから基本情報と隣接マップの取得
                 const { data: mapData, error: mapError } = await supabase
                     .from('map_field')
