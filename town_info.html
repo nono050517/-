@@ -100,6 +100,7 @@
         <div class="container">
             <nav id="sidebar-nav"></nav>
             
+            <nav id="sidebar-nav"></nav>
             <main>
                 <h2 class="page-title" id="map-main-title">エリア情報読み込み中...</h2>
                 <div class="item-content" id="map-type-badge" style="font-weight: bold; color: #777; margin-bottom: 15px;">
@@ -133,7 +134,7 @@
     <script src="common.js"></script>
 
     <script>
-        // 1. Supabaseの初期化設定（window. をつけて迷子エラーを完全に防ぎます！）
+        // 1. Supabaseの初期化設定
         const SUPABASE_URL = "https://gqfbtbthbyasvscfeypt.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxZmJ0YnRoYnlhc3ZzY2ZleXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzODU1MDksImV4cCI6MjAzMzk2MTUwOX0.w9R7YpAnm6W5vTcoFhS7eU9R_N9y6p7579VvR7VvR7M";
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -157,35 +158,53 @@
             return urlParams.get('id') || '1'; // 指定がなければID:1（王宮前広場）を表示
         }
 
+        // ★最強の防衛機能：カラム名に「north（北）」のような日本語が混ざっていても先頭一致で自動検知して安全に値を抜く関数
+        function getSafeValue(obj, key) {
+            if (!obj) return null;
+            if (obj[key] !== undefined && obj[key] !== null) return obj[key];
+            
+            // 例: 'north' で探して見つからなければ、前方一致で 'north（北）' を見つけてくる
+            const realKey = Object.keys(obj).find(k => k.toLowerCase().startsWith(key.toLowerCase()));
+            return realKey ? obj[realKey] : null;
+        }
+
         // メイン処理：すべてのデータを並列取得して画面に反映
         async function loadMapDetailData() {
             const currentId = getCurrentMapId();
+            // ★防衛機能：DBのint8(整数型)との型エラーを防ぐため、強制的に「きれいな数値」に変換
+            const numericId = parseInt(currentId, 10) || 1;
 
             try {
-                // 全マップの名前リストを事前取得して、数字IDを日本語名に変換できるようにする
-                const { data: allMaps } = await supabase.from('map_field').select('field_id, map_name');
+                // 全マップの名前対応リスト（逆引きキャッシュ）を構築
+                const { data: allMaps } = await supabase.from('map_field').select('*');
                 const nameResolver = {};
                 if (allMaps) {
-                    allMaps.forEach(m => { nameResolver[m.field_id] = m.map_name; });
+                    allMaps.forEach(m => {
+                        const fid = getSafeValue(m, 'field_id') || m.id;
+                        const mname = getSafeValue(m, 'map_name');
+                        if (fid) nameResolver[fid] = mname;
+                    });
                 }
 
-                // 3つのテーブルから現在のマップIDに一致するデータを一本釣り
+                // ★防衛機能：データが重複して入っていてもクラッシュしないよう、.single() をやめて .limit(1) で安全に1件だけ一本釣り
                 const [mapRes, fastRes, uniqueRes] = await Promise.all([
-                    supabase.from('map_field').select('*').eq('field_id', currentId).single(),
-                    supabase.from('fast_travel').select('*').eq('field_id', currentId),
-                    supabase.from('map_field_unique').select('*').eq('field_id', currentId)
+                    supabase.from('map_field').select('*').eq('field_id', numericId).limit(1),
+                    supabase.from('fast_travel').select('*').eq('field_id', numericId),
+                    supabase.from('map_field_unique').select('*').eq('field_id', numericId)
                 ]);
 
-                if (mapRes.error || !mapRes.data) {
+                if (mapRes.error || !mapRes.data || mapRes.data.length === 0) {
                     document.getElementById('map-main-title').innerText = "マップデータが見つかりません";
                     return;
                 }
 
-                const mapData = mapRes.data;
+                const mapData = mapRes.data[0];
+                const mapName = getSafeValue(mapData, 'map_name') || "未知のエリア";
+                const mapType = getSafeValue(mapData, 'map_type') || "UNKNOWN";
 
                 // タイトルと種別の反映
-                document.getElementById('map-main-title').innerText = `マップ詳細：${mapData.map_name}`;
-                document.getElementById('map-type-badge').innerText = `エリア種別: ${mapData.map_type ? mapData.map_type.toUpperCase() : 'UNKNOWN'}`;
+                document.getElementById('map-main-title').innerText = `マップ詳細：${mapName}`;
+                document.getElementById('map-type-badge').innerText = `エリア種別: ${mapType.toUpperCase()}`;
 
                 // --- ① 3x3隣接移動グリッドの生成 ---
                 const gridContainer = document.getElementById('map-direction-grid');
@@ -196,11 +215,11 @@
                         gridContainer.innerHTML += `
                             <div class="map-grid-btn center-map">
                                 <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
-                                <div>${mapData.map_name}</div>
+                                <div>${mapName}</div>
                             </div>
                         `;
                     } else {
-                        const targetId = mapData[dir]; // 移動先のID番号
+                        const targetId = getSafeValue(mapData, dir); // 日本語括弧混じりでも安全に取得
                         if (targetId && targetId !== 'NULL' && targetId !== '') {
                             const targetName = nameResolver[targetId] || `マップID: ${targetId}`;
                             gridContainer.innerHTML += `
@@ -226,15 +245,19 @@
 
                 if (fastRes.data && fastRes.data.length > 0) {
                     fastRes.data.forEach(row => {
-                        // 重複する目的地ID（field_id_1など）をキー配列から安全に自動抽出
+                        const target = getSafeValue(row, 'target');
+                        const select = getSafeValue(row, 'select');
+                        
+                        // ★防衛機能：CSV内で「field_id」「map_name」が出発地と目的地で重複してリネームされた問題への対策
+                        // オブジェクトのキー配列の一番後ろ（目的地側）を自動で確実につかみ取る
                         const keys = Object.keys(row);
-                        const destIdKey = keys.find(k => k.includes('field_id') && k !== 'field_id') || keys[5]; 
+                        const destIdKey = keys.filter(k => k.toLowerCase().includes('field_id')).pop();
                         const destId = row[destIdKey];
                         const destName = nameResolver[destId] || "未知のエリア";
 
                         fastTravelList.innerHTML += `
                             <li>
-                                <strong>【${row.target}】</strong>に話しかけて<strong>「${row.select}」</strong>を選択 ➡️ 
+                                <strong>【${target}】</strong>に話しかけて<strong>「${select}」</strong>を選択 ➡️ 
                                 <a href="town_info.html?id=${destId}" class="travel-link">${destName}</a> へ移動
                             </li>
                         `;
@@ -249,13 +272,19 @@
 
                 if (uniqueRes.data && uniqueRes.data.length > 0) {
                     uniqueRes.data.forEach(row => {
-                        const conditionHtml = row.条件 ? `<span class="badge-condition">条件: ${row.条件}</span>` : '';
-                        const memoHtml = row.備考 ? ` <span style="color:#666; font-size:0.9em;">(${row.備考})</span>` : '';
+                        const target = getSafeValue(row, 'target');
+                        const nextField = getSafeValue(row, 'next_field');
+                        const nextFieldId = getSafeValue(row, 'next_field_id');
+                        const condition = getSafeValue(row, '条件') || getSafeValue(row, 'conditions');
+                        const memo = getSafeValue(row, '備考') || getSafeValue(row, 'memo');
+
+                        const conditionHtml = condition ? `<span class="badge-condition">条件: ${condition}</span>` : '';
+                        const memoHtml = memo ? ` <span style="color:#666; font-size:0.9em;">(${memo})</span>` : '';
 
                         uniqueTravelList.innerHTML += `
                             <li>
-                                🗿 エリア内の<strong>【${row.target}】</strong>を調べる ➡️ 
-                                <a href="town_info.html?id=${row.next_field_ID}" class="travel-link">${row.next_field}</a> へ移動
+                                🗿 エリア内の<strong>【${target}】</strong>を調べる ➡️ 
+                                <a href="town_info.html?id=${nextFieldId}" class="travel-link">${nextField}</a> へ移動
                                 ${conditionHtml}${memoHtml}
                             </li>
                         `;
@@ -271,7 +300,7 @@
                     metaDesc.name = "description";
                     document.head.appendChild(metaDesc);
                 }
-                metaDesc.content = `${mapData.map_name}のマップ移動ルート、駅馬車・定期船の行き先、出現NPCなどの攻略データ一覧です。 - エリシア・アーカイブス`;
+                metaDesc.content = `${mapName}のマップ移動ルート、駅馬車・定期船の行き先、出現NPCなどの攻略データ一覧です。 - エリシア・アーカイブス`;
 
             } catch (err) {
                 console.error("データ取得中にエラーが発生しました:", err);
