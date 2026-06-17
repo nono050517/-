@@ -2,220 +2,277 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>街情報 - エリシア・アーカイブス</title>
+    <title>エリア詳細 - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css">
-    
-    <meta id="meta-description" name="description" content="">
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
-        /* 街一覧サイドバー用の追加CSSスタイル */
-        .town-layout {
+        /* 3x3マップ移動グリッドの専用スタイル */
+        .map-grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 450px;
+            margin: 15px 0;
+        }
+        .map-grid-btn {
             display: flex;
-            gap: 20px;
-        }
-        .town-sidebar {
-            width: 250px;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 15px;
-            box-sizing: border-box;
-        }
-        .town-sidebar h3 {
-            margin-top: 0;
-            border-bottom: 2px solid #333;
-            padding-bottom: 5px;
-            font-size: 1.1em;
-        }
-        #town-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        #town-list li {
-            margin-bottom: 8px;
-        }
-        #town-list li a {
-            display: block;
-            padding: 6px 10px;
-            color: #333;
-            text-decoration: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 5px;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
             border-radius: 4px;
-            transition: background-color 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.82em;
+            font-weight: bold;
+            text-align: center;
+            min-height: 50px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        #town-list li a:hover {
-            background-color: #e0e0e0;
+        .map-grid-btn:hover {
+            background: #f0f0f0;
+            border-color: #999;
         }
-        /* 現在選択されている街のハイライト表示 */
-        #town-list li a.active-town {
-            background-color: #007acc;
-            color: #fff;
+        .map-grid-btn.center-map {
+            background: #fff0f5;
+            border-color: #ffb6c1;
+            color: #d02090;
+            cursor: default;
+            pointer-events: none;
+        }
+        .map-grid-btn.empty {
+            background: #eee;
+            color: #aaa;
+            border-color: #ddd;
+            cursor: not-allowed;
+            pointer-events: none;
+            box-shadow: none;
+        }
+        .direction-label {
+            font-size: 0.75em;
+            color: #666;
+            margin-bottom: 2px;
+        }
+        /* トラベルリンク（駅馬車・特殊ワープ）のスタイル */
+        .travel-list {
+            list-style: none;
+            padding-left: 0;
+            margin: 10px 0;
+        }
+        .travel-list li {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: #fcedf2;
+            border-left: 4px solid #d02090;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.9em;
+        }
+        .travel-link {
+            color: #1e90ff;
+            text-decoration: none;
             font-weight: bold;
         }
-        .town-main {
-            flex: 1;
+        .travel-link:hover {
+            text-decoration: underline;
         }
-        .loading {
-            color: #666;
+        .badge-condition {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 0.75em;
+            background: #ff4500;
+            color: #fff;
+            border-radius: 3px;
+            margin-left: 8px;
+            font-weight: normal;
+        }
+        .no-data {
+            color: #999;
             font-style: italic;
-        }
-        .error {
-            color: #cc0000;
         }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <div class="container">
-            <h1 class="page-title" id="main-title">街情報データベース</h1>
+            <nav id="sidebar-nav"></nav>
+            
+            <main>
+                <h2 class="page-title" id="map-main-title">読み込み中...</h2>
+                <div class="item-content" id="map-type-badge" style="font-weight: bold; color: #777; margin-bottom: 15px;">
+                    エリア種別: --
+                </div>
 
-            <div class="town-layout">
-                <aside class="town-sidebar">
-                    <h3>街一覧</h3>
-                    <ul id="town-list">
-                        <li class="loading">データを読み込み中...</li>
+                <h3 class="section-category">🗺️ 隣接マップ（徒歩移動ルート）</h3>
+                <div class="item-content">
+                    <p style="font-size: 0.85em; color: #555; margin-bottom: 10px;">ボタンをクリックすると、そのマップの詳細情報へ切り替わります。</p>
+                    <div class="map-grid-container" id="map-direction-grid">
+                        </div>
+                </div>
+
+                <h3 class="section-category">🐴 駅馬車・定期船（Fast Travel）</h3>
+                <div class="item-content">
+                    <ul class="travel-list" id="fast-travel-list">
+                        <li class="no-data">読み込み中...</li>
                     </ul>
-                </aside>
+                </div>
 
-                <main class="town-main">
-                    <h2 class="page-title" id="town-name-display">街を選択してください</h2>
-                    
-                    <h3 class="section-category">■ 基本情報</h3>
-                    <div class="item-content" id="town-base-info">
-                        <p class="loading">データを読み込み中...</p>
-                    </div>
-
-                    <h3 class="section-category">■ 隣接移動・馬車情報</h3>
-                    <div class="item-content" id="town-travel-info">
-                        <p class="loading">データを読み込み中...</p>
-                    </div>
-                </main>
-            </div>
+                <h3 class="section-category">🗿 特殊オブジェクト・調べる移動</h3>
+                <div class="item-content">
+                    <ul class="travel-list" id="unique-travel-list">
+                        <li class="no-data">読み込み中...</li>
+                    </ul>
+                </div>
+            </main>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // 1. Supabase の初期化設定
-        // ※実際の「YOUR_SUPABASE_URL」と「YOUR_SUPABASE_ANON_KEY」に書き換えてください。
-        // ==========================================
-        const SUPABASE_URL = "https://YOUR_SUPABASE_URL.supabase.co";
+        // 1. Supabaseの初期化設定（★ご自身の情報に書き換えてください）
+        const SUPABASE_URL = "YOUR_SUPABASE_URL";
         const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // URLから現在の「id（field_id）」パラメータを取得
-        const urlParams = new URLSearchParams(window.location.search);
-        // パラメータがなければデフォルトとして ID: 1 (王宮前広場) を割り当て
-        const currentTownId = urlParams.get('id') || '1';
+        // 方角のカラム定義と表示名マッピング
+        const DIRECTION_FIELDS = {
+            northwest: "北西 ↖", north: "北 ↑", northeast: "北東 ↗",
+            west: "西 ←",       center: "現在地 ☉", east: "東 →",
+            southwest: "南西 ↙", south: "南 ↓", southeast: "南東 ↘"
+        };
 
-        /**
-         * 処理 A: Supabaseから map_type='town' のデータをすべて取得して左側の「街一覧」を描画する
-         */
-        async function fetchAndRenderTownList() {
-            const townListElement = document.getElementById('town-list');
+        const GRID_LAYOUT = [
+            'northwest', 'north', 'northeast',
+            'west',      'center', 'east',
+            'southwest', 'south', 'southeast'
+        ];
+
+        // URLパラメータから現在の「マップID」を取得
+        function getCurrentMapId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id') || '1'; // 指定がなければとりあえずID:1（王宮前広場）を出す
+        }
+
+        // メイン処理：すべてのデータを並列取得して画面にハメ込む
+        async function loadMapDetailData() {
+            const currentId = getCurrentMapId();
+
             try {
-                // map_field.csv の通り、テーブル名を 'map_fields' と仮定して取得
-                const { data: towns, error } = await supabase
-                    .from('map_fields') 
-                    .select('field_id, map_name')
-                    .eq('map_type', 'town')
-                    .order('field_id', { ascending: true });
+                // IDから名前を逆引きするために、map_fieldテーブルから全マップの名前リストを事前取得
+                const { data: allMaps } = await supabase.from('map_field').select('field_id, map_name');
+                const nameResolver = {};
+                if (allMaps) {
+                    allMaps.forEach(m => { nameResolver[m.field_id] = m.map_name; });
+                }
 
-                if (error) throw error;
+                // 3つのテーブルから現在のマップIDに一致するデータを一本釣り
+                const [mapRes, fastRes, uniqueRes] = await Promise.all([
+                    supabase.from('map_field').select('*').eq('field_id', currentId).single(),
+                    supabase.from('fast_travel').select('*').eq('field_id', currentId),
+                    supabase.from('map_field_unique').select('*').eq('field_id', currentId)
+                ]);
 
-                townListElement.innerHTML = ''; // ローディング表示をクリア
-
-                if (!towns || towns.length === 0) {
-                    townListElement.innerHTML = '<li>街の情報が見つかりませんでした。</li>';
+                if (mapRes.error || !mapRes.data) {
+                    document.getElementById('map-main-title').innerText = "マップデータが見つかりません";
                     return;
                 }
 
-                // 取得データをリスト要素に変換して流し込み
-                towns.forEach(town => {
-                    const li = document.createElement('li');
-                    const a = document.createElement('a');
-                    
-                    // クリック時にURLパラメータに ?id=〇〇 を付与して自身をリロード
-                    a.href = `?id=${town.field_id}`;
-                    a.textContent = town.map_name;
+                const mapData = mapRes.data;
 
-                    // 現在表示中（URLのidと一致）の街であればアクティブクラスを付与
-                    if (String(town.field_id) === String(currentTownId)) {
-                        a.classList.add('active-town');
+                // タイトルと種別の反映
+                document.getElementById('map-main-title').innerText = `マップ詳細：${mapData.map_name}`;
+                document.getElementById('map-type-badge').innerText = `エリア種別: ${mapData.map_type ? mapData.map_type.toUpperCase() : 'UNKNOWN'}`;
+
+                // --- ① 3x3隣接移動グリッドの生成 ---
+                const gridContainer = document.getElementById('map-direction-grid');
+                gridContainer.innerHTML = '';
+
+                GRID_LAYOUT.forEach(dir => {
+                    if (dir === 'center') {
+                        // 中央（現在地）のマス
+                        gridContainer.innerHTML += `
+                            <div class="map-grid-btn center-map">
+                                <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
+                                <div>${mapData.map_name}</div>
+                            </div>
+                        `;
+                    } else {
+                        // 東西南北などの隣接マス
+                        const targetId = mapData[dir]; // カラム（northなど）に入っている移動先ID番号
+                        if (targetId && targetId !== 'NULL') {
+                            const targetName = nameResolver[targetId] || `マップID: ${targetId}`;
+                            gridContainer.innerHTML += `
+                                <a href="map_detail.html?id=${targetId}" class="map-grid-btn">
+                                    <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
+                                    <div>${targetName}</div>
+                                </a>
+                            `;
+                        } else {
+                            // 繋がっていない方角
+                            gridContainer.innerHTML += `
+                                <div class="map-grid-btn empty">
+                                    <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
+                                    <div>ー</div>
+                                </div>
+                            `;
+                        }
                     }
-
-                    li.appendChild(a);
-                    townListElement.appendChild(li);
                 });
 
-            } catch (error) {
-                console.error('街一覧の取得に失敗しました:', error.message);
-                townListElement.innerHTML = '<li class="error">一覧の読み込みに失敗しました。</li>';
-            }
-        }
+                // --- ② 駅馬車・定期船（fast_travel）の反映 ---
+                const fastTravelList = document.getElementById('fast-travel-list');
+                fastTravelList.innerHTML = '';
 
-        /**
-         * 処理 B: 現在の currentTownId に基づいて特定の街の情報を詳細エリアに表示し、SEO設定を行う
-         */
-        async function loadTownDetail() {
-            const nameDisplay = document.getElementById('town-name-display');
-            const baseInfoDiv = document.getElementById('town-base-info');
-            const travelInfoDiv = document.getElementById('town-travel-info');
-            const metaDescription = document.getElementById('meta-description');
+                if (fastRes.data && fastRes.data.length > 0) {
+                    fastRes.data.forEach(row => {
+                        // 重複キー対策として、オブジェクト内から動的に目的地IDと目的地名を取得
+                        const keys = Object.keys(row);
+                        const destIdKey = keys.find((k, idx) => k === 'field_id' && idx > 1) || keys[5]; 
+                        const destNameKey = keys.find((k, idx) => k === 'map_name' && idx > 2) || keys[6];
 
-            try {
-                // 現在のIDに該当するマップデータを1件取得
-                const { data: townData, error } = await supabase
-                    .from('map_fields')
-                    .select('*')
-                    .eq('field_id', currentTownId)
-                    .single();
+                        const destId = row[destIdKey];
+                        const destName = row[destNameKey] || nameResolver[destId] || "未知のエリア";
 
-                if (error) throw error;
-
-                if (!townData) {
-                    nameDisplay.textContent = "データなし";
-                    baseInfoDiv.innerHTML = "<p>該当する街の情報がテーブルに登録されていません。</p>";
-                    return;
+                        fastTravelList.innerHTML += `
+                            <li>
+                                <strong>【${row.target}】</strong>の選択肢から<strong>「${row.select}」</strong>を選択 ➡️ 
+                                <a href="map_detail.html?id=${destId}" class="travel-link">${destName}</a> へ移動
+                            </li>
+                        `;
+                    });
+                } else {
+                    fastTravelList.innerHTML = '<li class="no-data">このエリアに利用可能な駅馬車・定期船はありません。</li>';
                 }
 
-                // 1. 画面表示の更新
-                nameDisplay.textContent = townData.map_name;
-                document.title = `${townData.map_name} - エリシア・アーカイブス`;
+                // --- ③ 特殊オブジェクト移動（map_field_unique）の反映 ---
+                const uniqueTravelList = document.getElementById('unique-travel-list');
+                uniqueTravelList.innerHTML = '';
 
-                // 2. SEO対策：description タグを現在の街情報に合わせて動的に生成
-                const descriptionText = `MMORPGエリシアオンラインのマップ「${townData.map_name}」の詳細データページです。隣接ルートや施設、駅馬車の有無などを掲載しています。`;
-                metaDescription.setAttribute('content', descriptionText);
+                if (uniqueRes.data && uniqueRes.data.length > 0) {
+                    uniqueRes.data.forEach(row => {
+                        const conditionHtml = row.条件 ? `<span class="badge-condition">条件: ${row.conditions || row.条件}</span>` : '';
+                        const memoHtml = row.備考 ? ` <span style="color:#666; font-size:0.9em;">(${row.備考})</span>` : '';
 
-                // 3. 基本情報の組み立て（CSVにある特馬、駅馬カラムの状況を判定）
-                baseInfoDiv.innerHTML = `
-                    <p><strong>マップID:</strong> ${townData.field_id}</p>
-                    <p><strong>特別馬（特馬）の利用:</strong> ${townData.特馬でいける === '〇' ? '可能' : '不可'}</p>
-                    <p><strong>駅馬車（駅馬）の配置:</strong> ${townData.駅馬がある === '〇' ? 'あり' : 'なし'}</p>
-                `;
+                        uniqueTravelList.innerHTML += `
+                            <li>
+                                🗺️ エリア内の<strong>【${row.target}】</strong>を調べる ➡️ 
+                                <a href="map_detail.html?id=${row.next_field_ID}" class="travel-link">${row.next_field}</a> へ移動
+                                ${conditionHtml}${memoHtml}
+                            </li>
+                        `;
+                    });
+                } else {
+                    uniqueTravelList.innerHTML = '<li class="no-data">このエリアに特殊オブジェクトによる移動ルートはありません。</li>';
+                }
 
-                // 4. 隣接・馬車情報の表示（簡易版の仮組み立て）
-                // ※もし別テーブル(fast_travel等)から行き先を引っ張るリレーションを組む場合はここに追記します。
-                travelInfoDiv.innerHTML = `
-                    <p>このエリアから他のマップへ歩いて移動、または駅馬車を利用して冒険を進めることができます。</p>
-                    <p>方角データ（参考）: 北=${townData['north（北）'] || '-'}, 東=${townData['east（東）'] || '-'}, 南=${townData['south（南）'] || '-'}, 西=${townData['west（西）'] || '-'}</p>
-                `;
-
-            } catch (error) {
-                console.error('詳細データの取得に失敗しました:', error.message);
-                nameDisplay.textContent = "エラー";
-                baseInfoDiv.innerHTML = "<p class='error'>詳細データの読み込みに失敗しました。</p>";
-                travelInfoDiv.innerHTML = "";
+            } catch (err) {
+                console.error("データ取得中にエラーが発生しました:", err);
+                document.getElementById('map-main-title').innerText = "エラーが発生しました（コンソールを確認してください）";
             }
         }
 
-        // ページ読み込み完了時に実行するトリガー
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchAndRenderTownList(); // 一覧表示を実行
-            loadTownDetail();         // 詳細表示を実行
-        });
+        // 画面読み込み完了時に処理を実行
+        document.addEventListener('DOMContentLoaded', loadMapDetailData);
     </script>
 </body>
 </html>
