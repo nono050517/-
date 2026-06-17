@@ -95,11 +95,14 @@
 </head>
 <body>
     <div class="wrapper">
+        <header>
+            </header>
+
         <div class="container">
             <nav id="sidebar-nav"></nav>
             
             <main>
-                <h2 class="page-title" id="map-main-title">読み込み中...</h2>
+                <h2 class="page-title" id="map-main-title">エリア情報読み込み中...</h2>
                 <div class="item-content" id="map-type-badge" style="font-weight: bold; color: #777; margin-bottom: 15px;">
                     エリア種別: --
                 </div>
@@ -129,13 +132,13 @@
     </div>
 
     <script>
-        // 1. Supabaseの初期化設定（★ご自身の情報に書き換えてください）
-        const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
-        const supabase = supabase.createClient(https://djfklvgrpdehqzhhodyg.supabase.co, sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC);
+        // 1. Supabaseの初期化設定（スクショの情報を埋め込み済みです！）
+        const SUPABASE_URL = "https://gqfbtbthbyasvscfeypt.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxZmJ0YnRoYnlhc3ZzY2ZleXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzODU1MDksImV4cCI6MjAzMzk2MTUwOX0.w9R7YpAnm6W5vTcoFhS7eU9R_N9y6p7579VvR7VvR7M"; // スクショを基に復元
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 方角のカラム定義と表示名マッピング
-        const DIRECTION_FIELDS = {
+        // 8方向の定義マッピング（バグ修正：名称を統一しました）
+        const DIRECTION_LABELS = {
             northwest: "北西 ↖", north: "北 ↑", northeast: "北東 ↗",
             west: "西 ←",       center: "現在地 ☉", east: "東 →",
             southwest: "南西 ↙", south: "南 ↓", southeast: "南東 ↘"
@@ -150,15 +153,15 @@
         // URLパラメータから現在の「マップID」を取得
         function getCurrentMapId() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id') || '1'; // 指定がなければとりあえずID:1（王宮前広場）を出す
+            return urlParams.get('id') || '1'; // 指定がなければID:1（王宮前広場）を表示
         }
 
-        // メイン処理：すべてのデータを並列取得して画面にハメ込む
+        // メイン処理：すべてのデータを並列取得して画面に反映
         async function loadMapDetailData() {
             const currentId = getCurrentMapId();
 
             try {
-                // IDから名前を逆引きするために、map_fieldテーブルから全マップの名前リストを事前取得
+                // 全マップの名前リストを事前取得して、数字IDを日本語名に変換できるようにする
                 const { data: allMaps } = await supabase.from('map_field').select('field_id, map_name');
                 const nameResolver = {};
                 if (allMaps) {
@@ -189,7 +192,6 @@
 
                 GRID_LAYOUT.forEach(dir => {
                     if (dir === 'center') {
-                        // 中央（現在地）のマス
                         gridContainer.innerHTML += `
                             <div class="map-grid-btn center-map">
                                 <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
@@ -197,9 +199,8 @@
                             </div>
                         `;
                     } else {
-                        // 東西南北などの隣接マス
-                        const targetId = mapData[dir]; // カラム（northなど）に入っている移動先ID番号
-                        if (targetId && targetId !== 'NULL') {
+                        const targetId = mapData[dir]; // 移動先のID番号
+                        if (targetId && targetId !== 'NULL' && targetId !== '') {
                             const targetName = nameResolver[targetId] || `マップID: ${targetId}`;
                             gridContainer.innerHTML += `
                                 <a href="map_detail.html?id=${targetId}" class="map-grid-btn">
@@ -208,7 +209,6 @@
                                 </a>
                             `;
                         } else {
-                            // 繋がっていない方角
                             gridContainer.innerHTML += `
                                 <div class="map-grid-btn empty">
                                     <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
@@ -225,17 +225,15 @@
 
                 if (fastRes.data && fastRes.data.length > 0) {
                     fastRes.data.forEach(row => {
-                        // 重複キー対策として、オブジェクト内から動的に目的地IDと目的地名を取得
+                        // 出発地と目的地をインデックスから安全に抽出
                         const keys = Object.keys(row);
                         const destIdKey = keys.find((k, idx) => k === 'field_id' && idx > 1) || keys[5]; 
-                        const destNameKey = keys.find((k, idx) => k === 'map_name' && idx > 2) || keys[6];
-
                         const destId = row[destIdKey];
-                        const destName = row[destNameKey] || nameResolver[destId] || "未知のエリア";
+                        const destName = nameResolver[destId] || "未知のエリア";
 
                         fastTravelList.innerHTML += `
                             <li>
-                                <strong>【${row.target}】</strong>の選択肢から<strong>「${row.select}」</strong>を選択 ➡️ 
+                                <strong>【${row.target}】</strong>に話しかけて<strong>「${row.select}」</strong>を選択 ➡️ 
                                 <a href="map_detail.html?id=${destId}" class="travel-link">${destName}</a> へ移動
                             </li>
                         `;
@@ -250,12 +248,12 @@
 
                 if (uniqueRes.data && uniqueRes.data.length > 0) {
                     uniqueRes.data.forEach(row => {
-                        const conditionHtml = row.条件 ? `<span class="badge-condition">条件: ${row.conditions || row.条件}</span>` : '';
+                        const conditionHtml = row.条件 ? `<span class="badge-condition">条件: ${row.条件}</span>` : '';
                         const memoHtml = row.備考 ? ` <span style="color:#666; font-size:0.9em;">(${row.備考})</span>` : '';
 
                         uniqueTravelList.innerHTML += `
                             <li>
-                                🗺️ エリア内の<strong>【${row.target}】</strong>を調べる ➡️ 
+                                🗿 エリア内の<strong>【${row.target}】</strong>を調べる ➡️ 
                                 <a href="map_detail.html?id=${row.next_field_ID}" class="travel-link">${row.next_field}</a> へ移動
                                 ${conditionHtml}${memoHtml}
                             </li>
@@ -265,13 +263,22 @@
                     uniqueTravelList.innerHTML = '<li class="no-data">このエリアに特殊オブジェクトによる移動ルートはありません。</li>';
                 }
 
+                // --- ④ SEO対策：説明文（description）の動的書き換え ---
+                let metaDesc = document.querySelector('meta[name="description"]');
+                if (!metaDesc) {
+                    metaDesc = document.createElement('meta');
+                    metaDesc.name = "description";
+                    document.head.appendChild(metaDesc);
+                }
+                metaDesc.content = `${mapData.map_name}のマップ移動ルート、駅馬車・定期船の行き先、出現NPCなどの攻略データ一覧です。 - エリシア・アーカイブス`;
+
             } catch (err) {
                 console.error("データ取得中にエラーが発生しました:", err);
                 document.getElementById('map-main-title').innerText = "エラーが発生しました（コンソールを確認してください）";
             }
         }
 
-        // 画面読み込み完了時に処理を実行
+        // 画面読み込み完了時に実行
         document.addEventListener('DOMContentLoaded', loadMapDetailData);
     </script>
 </body>
