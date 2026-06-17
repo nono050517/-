@@ -95,8 +95,7 @@
 </head>
 <body>
     <div class="wrapper">
-        <header>
-            </header>
+        <header></header>
 
         <div class="container">
             <nav id="sidebar-nav"></nav>
@@ -131,13 +130,15 @@
         </div>
     </div>
 
-    <script>
-        // 1. Supabaseの初期化設定（スクショの情報を埋め込み済みです！）
-        const SUPABASE_URL = "https://gqfbtbthbyasvscfeypt.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxZmJ0YnRoYnlhc3ZzY2ZleXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzODU1MDksImV4cCI6MjAzMzk2MTUwOX0.w9R7YpAnm6W5vTcoFhS7eU9R_N9y6p7579VvR7VvR7M"; // スクショを基に復元
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <script src="common.js"></script>
 
-        // 8方向の定義マッピング（バグ修正：名称を統一しました）
+    <script>
+        // 1. Supabaseの初期化設定（window. をつけて迷子エラーを完全に防ぎます！）
+        const SUPABASE_URL = "https://gqfbtbthbyasvscfeypt.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxZmJ0YnRoYnlhc3ZzY2ZleXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzODU1MDksImV4cCI6MjAzMzk2MTUwOX0.w9R7YpAnm6W5vTcoFhS7eU9R_N9y6p7579VvR7VvR7M";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 8方向の定義マッピング
         const DIRECTION_LABELS = {
             northwest: "北西 ↖", north: "北 ↑", northeast: "北東 ↗",
             west: "西 ←",       center: "現在地 ☉", east: "東 →",
@@ -203,7 +204,7 @@
                         if (targetId && targetId !== 'NULL' && targetId !== '') {
                             const targetName = nameResolver[targetId] || `マップID: ${targetId}`;
                             gridContainer.innerHTML += `
-                                <a href="map_detail.html?id=${targetId}" class="map-grid-btn">
+                                <a href="town_info.html?id=${targetId}" class="map-grid-btn">
                                     <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
                                     <div>${targetName}</div>
                                 </a>
@@ -225,16 +226,16 @@
 
                 if (fastRes.data && fastRes.data.length > 0) {
                     fastRes.data.forEach(row => {
-                        // 出発地と目的地をインデックスから安全に抽出
+                        // 重複する目的地ID（field_id_1など）をキー配列から安全に自動抽出
                         const keys = Object.keys(row);
-                        const destIdKey = keys.find((k, idx) => k === 'field_id' && idx > 1) || keys[5]; 
+                        const destIdKey = keys.find(k => k.includes('field_id') && k !== 'field_id') || keys[5]; 
                         const destId = row[destIdKey];
                         const destName = nameResolver[destId] || "未知のエリア";
 
                         fastTravelList.innerHTML += `
                             <li>
                                 <strong>【${row.target}】</strong>に話しかけて<strong>「${row.select}」</strong>を選択 ➡️ 
-                                <a href="map_detail.html?id=${destId}" class="travel-link">${destName}</a> へ移動
+                                <a href="town_info.html?id=${destId}" class="travel-link">${destName}</a> へ移動
                             </li>
                         `;
                     });
@@ -254,7 +255,7 @@
                         uniqueTravelList.innerHTML += `
                             <li>
                                 🗿 エリア内の<strong>【${row.target}】</strong>を調べる ➡️ 
-                                <a href="map_detail.html?id=${row.next_field_ID}" class="travel-link">${row.next_field}</a> へ移動
+                                <a href="town_info.html?id=${row.next_field_ID}" class="travel-link">${row.next_field}</a> へ移動
                                 ${conditionHtml}${memoHtml}
                             </li>
                         `;
