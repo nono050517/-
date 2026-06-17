@@ -100,7 +100,6 @@
         <div class="container">
             <nav id="sidebar-nav"></nav>
             
-            <nav id="sidebar-nav"></nav>
             <main>
                 <h2 class="page-title" id="map-main-title">エリア情報読み込み中...</h2>
                 <div class="item-content" id="map-type-badge" style="font-weight: bold; color: #777; margin-bottom: 15px;">
@@ -158,20 +157,17 @@
             return urlParams.get('id') || '1'; // 指定がなければID:1（王宮前広場）を表示
         }
 
-        // ★最強の防衛機能：カラム名に「north（北）」のような日本語が混ざっていても先頭一致で自動検知して安全に値を抜く関数
+        // カラム名に日本語やブレがあっても安全に値を抜くための防衛関数
         function getSafeValue(obj, key) {
             if (!obj) return null;
             if (obj[key] !== undefined && obj[key] !== null) return obj[key];
-            
-            // 例: 'north' で探して見つからなければ、前方一致で 'north（北）' を見つけてくる
             const realKey = Object.keys(obj).find(k => k.toLowerCase().startsWith(key.toLowerCase()));
             return realKey ? obj[realKey] : null;
         }
 
-        // メイン処理：すべてのデータを並列取得して画面に反映
+        // メメイン処理：すべてのデータを並列取得して画面に反映
         async function loadMapDetailData() {
             const currentId = getCurrentMapId();
-            // ★防衛機能：DBのint8(整数型)との型エラーを防ぐため、強制的に「きれいな数値」に変換
             const numericId = parseInt(currentId, 10) || 1;
 
             try {
@@ -180,13 +176,14 @@
                 const nameResolver = {};
                 if (allMaps) {
                     allMaps.forEach(m => {
-                        const fid = getSafeValue(m, 'field_id') || m.id;
+                        // ★修正：実際の列名「field_id」を最優先で取得するようにしました！
+                        const fid = m.field_id || m.id || getSafeValue(m, 'field_id') || getSafeValue(m, 'id');
                         const mname = getSafeValue(m, 'map_name');
                         if (fid) nameResolver[fid] = mname;
                     });
                 }
 
-                // ★防衛機能：データが重複して入っていてもクラッシュしないよう、.single() をやめて .limit(1) で安全に1件だけ一本釣り
+                // ★修正箇所：検索列を「id」から、実際の列名である「field_id」へ完全書き換え！
                 const [mapRes, fastRes, uniqueRes] = await Promise.all([
                     supabase.from('map_field').select('*').eq('field_id', numericId).limit(1),
                     supabase.from('fast_travel').select('*').eq('field_id', numericId),
@@ -194,6 +191,7 @@
                 ]);
 
                 if (mapRes.error || !mapRes.data || mapRes.data.length === 0) {
+                    console.error("マップが見つかりません。DBエラー:", mapRes.error);
                     document.getElementById('map-main-title').innerText = "マップデータが見つかりません";
                     return;
                 }
@@ -219,7 +217,7 @@
                             </div>
                         `;
                     } else {
-                        const targetId = getSafeValue(mapData, dir); // 日本語括弧混じりでも安全に取得
+                        const targetId = getSafeValue(mapData, dir);
                         if (targetId && targetId !== 'NULL' && targetId !== '') {
                             const targetName = nameResolver[targetId] || `マップID: ${targetId}`;
                             gridContainer.innerHTML += `
@@ -248,8 +246,6 @@
                         const target = getSafeValue(row, 'target');
                         const select = getSafeValue(row, 'select');
                         
-                        // ★防衛機能：CSV内で「field_id」「map_name」が出発地と目的地で重複してリネームされた問題への対策
-                        // オブジェクトのキー配列の一番後ろ（目的地側）を自動で確実につかみ取る
                         const keys = Object.keys(row);
                         const destIdKey = keys.filter(k => k.toLowerCase().includes('field_id')).pop();
                         const destId = row[destIdKey];
@@ -293,7 +289,7 @@
                     uniqueTravelList.innerHTML = '<li class="no-data">このエリアに特殊オブジェクトによる移動ルートはありません。</li>';
                 }
 
-                // --- ④ SEO対策：説明文（description）の動的書き換え ---
+                // --- ④ SEO対策 ---
                 let metaDesc = document.querySelector('meta[name="description"]');
                 if (!metaDesc) {
                     metaDesc = document.createElement('meta');
