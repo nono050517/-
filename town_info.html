@@ -18,25 +18,24 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // プロジェクト情報
-        const SUPABASE_URL = "https://gqfbtbthbyasvscfeypt.supabase.co";
+        // ★あなたが今コピーしてくれた、本物の正しいURLに修正しました！
+        const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
         
         const titleEl = document.getElementById('test-title');
         const errorBox = document.getElementById('error-box');
 
-        // Supabaseが読み込めているかチェック
+        // ライブラリの初期化
         if (typeof supabase === 'undefined') {
             errorBox.style.display = 'block';
-            errorBox.innerText = "❌ 初期化エラー:\nSupabaseのライブラリが読み込めませんでした。（URL間違ってるかも）";
+            errorBox.innerText = "❌ ライブラリ読み込みエラー:\nSupabaseのライブラリがブラウザに認識されていません。";
             titleEl.innerText = "初期化に失敗しました";
         } else {
-            // クライアントの作成
             const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
             async function fetchOnlyMapName() {
                 try {
-                    // id=1（王宮前広場）のデータを1件だけ直接狙い撃ち
+                    // map_field テーブルから id: 1 のデータを取得
                     const { data, error } = await supabaseClient
                         .from('map_field')
                         .select('map_name')
@@ -48,6 +47,7 @@
                         errorBox.innerHTML = `❌ Supabaseからエラーが返ってきました：\n【コード】: ${error.code}\n【メッセージ】: ${error.message}`;
                         titleEl.innerText = "データ取得エラー";
                     } else if (data && data.length > 0) {
+                        // ✨大成功のメッセージ！
                         titleEl.innerText = `🎉 取得成功！ 街の名前は… 【 ${data[0].map_name} 】です！`;
                     } else {
                         titleEl.innerText = `⚠️ 接続はできましたが、ID: 1 のデータが見つかりません。`;
@@ -59,7 +59,6 @@
                 }
             }
 
-            // 実行！
             fetchOnlyMapName();
         }
     </script>
