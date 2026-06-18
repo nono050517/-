@@ -92,8 +92,12 @@
         }
         /* NPCリスト用の青基調スタイル */
         .npc-list li {
+            padding: 8px 12px;
+            margin-bottom: 6px;
             background: #e6f2ff;
             border-left: 4px solid #1e90ff;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.9em;
         }
         .travel-link {
             color: #1e90ff;
@@ -169,13 +173,12 @@
     <script src="common.js"></script>
 
     <script>
-        // ★今コピーしてきてもらった「本物の正しいURL」と「本物の正しいキー」で完全固定！
+        // ★Supabase接続情報
         const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
         
         let supabaseClient;
         try {
-            // 安全な初期化処理
             if (typeof supabase !== 'undefined' && supabase.createClient) {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             } else {
@@ -297,19 +300,30 @@
                 gridContainer.innerHTML = '<div class="map-grid-btn empty">データなし</div>';
             }
 
-            // --- ④ npcs（配置NPCデータ）の取得と反映 ---
+            // --- ④ npc（配置NPCデータ）の取得と反映 ---
             const npcMainList = document.getElementById('npc-main-list');
             try {
-                const npcRes = await supabaseClient.from('npcs').select('*').eq('map_id', numericId);
+                // テーブル名を 'npc'、結合キーを 'field_id' に修正
+                const npcRes = await supabaseClient.from('npc').select('*').eq('field_id', numericId);
+                
                 if (npcRes.error) {
-                    showErrorLog(`npcsエラー: ${npcRes.error.message}`);
+                    showErrorLog(`npcテーブルエラー: ${npcRes.error.message}`);
                     npcMainList.innerHTML = `<li class="no-data" style="color:red;">⚠️ NPCデータの取得失敗</li>`;
                 } else if (npcRes.data && npcRes.data.length > 0) {
                     npcMainList.innerHTML = '';
                     npcRes.data.forEach(row => {
-                        const name = row.npc_name || "街の住人";
-                        const job = row.npc_job ? `【${row.npc_job}】` : '';
-                        const options = [row.option1, row.option2, row.option3, row.option4].filter(Boolean).join(' / ');
+                        const name = row.npc_name || getSafeValue(row, 'npc_name') || "街の住人";
+                        
+                        // 将来的に職業(npc_job)や選択肢が追加されたとき用の安全処理
+                        const jobVal = row.npc_job || getSafeValue(row, 'npc_job');
+                        const job = jobVal ? `【${jobVal}】` : '';
+                        
+                        const options = [
+                            row.option1 || getSafeValue(row, 'option1'), 
+                            row.option2 || getSafeValue(row, 'option2'), 
+                            row.option3 || getSafeValue(row, 'option3'), 
+                            row.option4 || getSafeValue(row, 'option4')
+                        ].filter(Boolean).join(' / ');
                         const optHtml = options ? `<br><span style="color:#666; font-size:0.85em;">🗣️ 機能: ${options}</span>` : '';
 
                         npcMainList.innerHTML += `
