@@ -12,27 +12,26 @@
         <hr>
         
         <h2 id="test-title" style="color: #333; margin-top: 20px;">データを読み込み中...</h2>
-
         <div id="error-box" style="margin-top: 20px; padding: 15px; background: #fff0f0; border-left: 5px solid red; color: red; font-weight: bold; display: none; white-space: pre-wrap;"></div>
     </div>
 
     <script>
-        // プロジェクト情報（正しいキーに修正！）
+        // ★スクショで確認した「本物の大正解キー」に戻します！
         const SUPABASE_URL = "https://gqfbtbthbyasvscfeypt.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxZmJ0YnRoYnlhc3ZzY2ZleXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzODU1MDksImV4cCI6MjAzMzk2MTUwOX0.w9R7YpAnm6W5vTcoFhS7eU9R_N9y6p7579VvR7VvR7M";
         
         let supabaseClient;
         const titleEl = document.getElementById('test-title');
         const errorBox = document.getElementById('error-box');
 
-        // ライブラリの読み込み形式のズレを絶対に防ぐ初期化処理
         try {
+            // ライブラリの初期化
             if (window.supabase && window.supabase.createClient) {
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             } else if (typeof supabase !== 'undefined' && supabase.createClient) {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             } else {
-                throw new Error("Supabaseライブラリをブラウザが認識できていません。ブラウザが古いか、読み込み順の不具合です。");
+                throw new Error("Supabaseライブラリをブラウザが認識できていません。");
             }
         } catch(e) {
             errorBox.style.display = 'block';
@@ -49,7 +48,7 @@
             const numericId = parseInt(currentId, 10) || 1;
 
             try {
-                // map_fieldテーブルから、map_nameだけを1件つかみ取りにいく処理
+                // map_fieldテーブルから、map_nameだけを1件取得
                 const { data, error } = await supabaseClient
                     .from('map_field')
                     .select('map_name')
@@ -57,15 +56,14 @@
                     .limit(1);
 
                 if (error) {
-                    // もしSupabase側が拒否した場合は、理由をカンニングペーパーのように直書きする
                     errorBox.style.display = 'block';
                     errorBox.innerHTML = `❌ Supabaseからエラーが返ってきました：\n【コード】: ${error.code}\n【メッセージ】: ${error.message}`;
                     titleEl.innerText = "データ取得エラー";
                 } else if (data && data.length > 0) {
-                    // ✨大成功！街の名前がポロッと取れたらこれが出ます！
+                    // ✨大勝利のメッセージ
                     titleEl.innerText = `🎉 取得成功！ 街の名前は… 【 ${data[0].map_name} 】です！`;
                 } else {
-                    titleEl.innerText = `⚠️ 接続はできましたが、ID: ${numericId} のデータがテーブル内に見つかりません（空っぽです）`;
+                    titleEl.innerText = `⚠️ 接続はできましたが、ID: ${numericId} のデータがテーブル内に見つかりません。`;
                 }
             } catch (err) {
                 errorBox.style.display = 'block';
@@ -74,7 +72,6 @@
             }
         }
 
-        // ページを開いた瞬間に実行
         window.addEventListener('DOMContentLoaded', fetchOnlyMapName);
     </script>
 </body>
