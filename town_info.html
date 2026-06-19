@@ -242,4 +242,170 @@
             west: "西 ←",      center: "中央 ☉", east: "東 →",
             southwest: "南西 ↙", south: "南 ↓", southeast: "南東 ↘"
         };
-        const GRID_ORDER =
+        const GRID_ORDER = [
+            'northwest', 'north', 'northeast',
+            'west', 'center', 'east',
+            'southwest', 'south', 'southeast'
+        ];
+
+        // URLパラメータから現在のID(field_id)を取得
+        function getMapIdParam() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id') || '1'; // デフォルトはID: 1（王宮前広場など）
+        }
+
+        // ページ読み込み時のメイン処理
+        document.addEventListener('DOMContentLoaded', async () => {
+            const currentId = getMapIdParam();
+            
+            // 1. 左側の街一覧メニューを描画
+            await renderTownList(currentId);
+            
+            // 2. 中央のマップ詳細データを読み込んで表示
+            await loadMapDetail(currentId);
+            
+            // 3. 右側のフィルターボタンのクリックイベントを設定
+            setupFilterButtons();
+        });
+
+        // 左サイドバー：街一覧を生成する関数
+        async function renderTownList(currentId) {
+            const container = document.getElementById('town-list-container');
+            try {
+                // map_type が town のものをすべて取得（テーブル名は実際の環境に合わせ map_field や maps に変更してください）
+                const { data: towns, error } = await supabaseClient
+                    .from('map_field') 
+                    .select('field_id, map_name')
+                    .eq('map_type', 'town')
+                    .order('field_id', { ascending: true });
+
+                if (error) throw error;
+
+                if (towns && towns.length > 0) {
+                    container.innerHTML = towns.map(town => {
+                        const isActive = String(town.field_id) === String(currentId) ? 'active-town' : '';
+                        return `<li><a href="town_info.html?id=${town.field_id}" class="town-link ${isActive}">${town.map_name}</a></li>`;
+                    }).join('');
+                } else {
+                    container.innerHTML = '<li>街データが見つかりません</li>';
+                }
+            } catch (err) {
+                console.error("街一覧取得エラー:", err);
+                container.innerHTML = `<li style="color:red;">エラー: 読み込めませんでした</li>`;
+            }
+        }
+
+        // 中央メイン：マップデータをSupabaseから3本同時に引いて流し込む関数
+        async function loadMapDetail(mapId) {
+            const loadingMsg = document.getElementById('loading-message');
+            const dataBox = document.getElementById('detail-data-box');
+            const mapNameHeader = document.getElementById('current-map-name');
+
+            try {
+                // A. マップ基本＆隣接情報の取得
+                const { data: mapData, error: mapErr } = await supabaseClient
+                    .from('map_field')
+                    .select('*')
+                    .eq('field_id', mapId)
+                    .single();
+                if (mapErr) throw mapErr;
+
+                // 画面タイトルとSEOのdescriptionを更新
+                mapNameHeader.innerText = `マップ詳細：${mapData.map_name}`;
+                document.title = `${mapData.map_name} - 詳細データ | エリシア・アーカイブス`;
+
+                // 3x3グリッドボタンの生成
+                const gridContainer = document.getElementById('map-grid');
+                gridContainer.innerHTML = GRID_ORDER.map(dir => {
+                    if (dir === 'center') {
+                        return `<div class="map-grid-btn center-map"><span class="direction-label">${DIRECTION_LABELS[dir]}</span>${mapData.map_name}</div>`;
+                    }
+                    const destinationId = mapData[dir];
+                    if (destinationId) {
+                        return `<a href="town_info.html?id=${destinationId}" class="map-grid-btn"><span class="direction-label">${DIRECTION_LABELS[dir]}</span>ID: ${destinationId}へ</a>`;
+                    } else {
+                        return `<div class="map-grid-btn empty"><span class="direction-label">${DIRECTION_LABELS[dir]}</span>-</div>`;
+                    }
+                }).join('');
+
+                // B. 駅馬車データの取得
+                const fastTravelList = document.getElementById('fast-travel-list');
+                const { data: fetchTravel, error: travelErr } = await supabaseClient
+                    .from('fast_travel')
+                    .select('*')
+                    .eq('field_id', mapId);
+
+                if (!travelErr && fetchTravel && fetchTravel.length > 0) {
+                    fastTravelList.innerHTML = fetchTravel.map(row => 
+                        `<li><span class="badge badge-teleport">駅馬車</span> <b>${row.destination_name || '未知の街'}</b> 行き (費用: ${row.price || 0}G)</li>`
+                    ).join('');
+                } else {
+                    fastTravelList.innerHTML = '<li>この街に利用可能な駅馬車はありません。</li>';
+                }
+
+                // C. 配置NPCデータの取得 (テーブル名 npcs や npc に適宜合わせてください)
+                const npcList = document.getElementById('npc-list');
+                const { data: fetchNpcs, error: npcErr } = await supabaseClient
+                    .from('npcs')
+                    .select('*')
+                    .eq('field_id', mapId);
+
+                if (!npcErr && fetchNpcs && fetchNpcs.length > 0) {
+                    npcList.innerHTML = fetchNpcs.map(npc => {
+                        let jobBadge = npc.npc_job ? `<span class="badge badge-shop">${npc.npc_job}</span>` : `<span class="badge badge-quest">住民</span>`;
+                        // optionがあれば並べる
+                        let options = [npc.option1, npc.option2, npc.option3, npc.option4].filter(Boolean);
+                        let optionText = options.length > 0 ? ` <small style="color:#666;">[選択肢: ${options.join(' / ')}]</small>` : '';
+                        return `<li>${jobBadge} <b>${npc.npc_name}</b>${optionText}</li>`;
+                    }).join('');
+                } else {
+                    npcList.innerHTML = '<li>このマップにNPCは登録されていません。</li>';
+                }
+
+                // ローディングを消してメインボックスを表示
+                loadingMsg.classList.add('hidden-section');
+                dataBox.classList.remove('hidden-section');
+
+            } catch (err) {
+                console.error("データ読み込みエラー:", err);
+                loadingMsg.innerHTML = `<span style="color:red; font-weight:bold;">データ読み込みに失敗しました。テーブル名や列名を確認してください。<br>エラー内容: ${err.message}</span>`;
+            }
+        }
+
+        // 右側：フィルター（タブ切り替え）の仕組み
+        function setupFilterButtons() {
+            const buttons = document.querySelectorAll('.filter-btn');
+            const secMove = document.getElementById('section-move');
+            const secNpc = document.getElementById('section-npc');
+            const secMonster = document.getElementById('section-monster');
+
+            buttons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // アクティブなボタンの見た目を切り替え
+                    buttons.forEach(b => b.classList.remove('active-filter'));
+                    e.target.classList.add('active-filter');
+
+                    const target = e.target.getAttribute('data-target');
+
+                    // いったん全部表示してから、選ばれたもの以外を隠す
+                    secMove.classList.remove('hidden-section');
+                    secNpc.classList.remove('hidden-section');
+                    secMonster.classList.remove('hidden-section');
+
+                    if (target === 'move') {
+                        secNpc.classList.add('hidden-section');
+                        secMonster.classList.add('hidden-section');
+                    } else if (target === 'npc') {
+                        secMove.classList.add('hidden-section');
+                        secMonster.classList.add('hidden-section');
+                    } else if (target === 'monster') {
+                        secMove.classList.add('hidden-section');
+                        secNpc.classList.add('hidden-section');
+                    }
+                    // 'all' の場合は何も隠さないので全部出ます
+                });
+            });
+        }
+    </script>
+</body>
+</html>
