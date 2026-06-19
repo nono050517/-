@@ -8,11 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* ==========================================================================
-           メイン表示枠（.item-content）の内側だけで独立して動く3分割（ドリルダウン）スタイル
-           ※サイト全体の共通メニューバー（#sidebar）のレイアウトとは絶対に衝突しません
-           ========================================================================== */
-        
+        /* メインコンテンツ枠（.item-content）の中だけで動く3分割スタイル */
         .map-drilldown-box {
             display: flex;
             gap: 15px;
@@ -22,7 +18,6 @@
             margin-top: 10px;
         }
 
-        /* 【内・左】メイン枠の中の左側：拠点・街一覧ペイン */
         .pane-town-list {
             width: 150px;
             background: #fff;
@@ -65,7 +60,6 @@
             border-left: 3px solid #ffb6c1;
         }
 
-        /* 【内・中】メイン枠の中央：マップ詳細 ＆ 3x3移動 ＆ NPC名前リスト */
         .pane-map-center {
             flex: 1;
             background: #fff;
@@ -73,11 +67,10 @@
             border-radius: 6px;
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            min-width: 0; /* 文字あふれバグ防止 */
+            min-width: 0; 
             box-sizing: border-box;
         }
 
-        /* 3x3 隣接マップ移動グリッド */
         .map-grid-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -108,7 +101,6 @@
         .map-grid-btn.empty { background: #eee; color: #aaa; border-color: #ddd; pointer-events: none; }
         .direction-label { font-size: 0.7em; color: #777; margin-bottom: 2px; }
 
-        /* 配置NPCリスト用 */
         .npc-ul {
             list-style: none;
             padding: 0;
@@ -132,7 +124,6 @@
             color: #d02090;
         }
 
-        /* 【内・右】メイン枠の右側：ポチッと選んだNPCの詳細表示パネル */
         .pane-npc-right {
             width: 250px;
             background: #fafafa;
@@ -164,12 +155,11 @@
     <div class="wrapper container">
         
         <aside id="sidebar" class="sidebar">
-            </aside>
+             <ul id="nav-menus"></ul>
+        </aside>
 
         <main class="main-content">
-            
             <div class="item-content">
-                
                 <div class="map-drilldown-box">
                     
                     <div class="pane-town-list">
@@ -194,22 +184,19 @@
 
                     <div class="pane-npc-right" id="npc-detail-display-panel">
                         <div class="npc-pane-placeholder">
-                            👈 左のリストからNPCを選ぶと、<br>Toggle（切り替え）でここに詳しい選択肢が表示されます。
+                            👈 左のリストからNPCを選ぶと、<br>ここに詳しい選択肢が表示されます。
                         </div>
                     </div>
 
                 </div>
-
             </div>
-            
         </main>
-
     </div>
 
     <script src="common.js"></script>
 
     <script>
-        // 🛠️ あなたのSupabase設定に書き換えてください
+        // ご自身のSupabaseのURLとキーに書き換えてください
         const SUPABASE_URL = "https://your-supabase-url.supabase.co"; 
         const SUPABASE_ANON_KEY = "your-anon-key";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -221,32 +208,20 @@
         };
         const GRID_ORDER = ['northwest', 'north', 'northeast', 'west', 'center', 'east', 'southwest', 'south', 'southeast'];
 
-        // NPCデータを安全に保持するためのページ専用の箱
         let currentLoadedNpcs = []; 
 
-        // URLの「?id=〇〇」を安全に取得（無ければデフォルトで1:王宮前広場）
         function getMapIdParam() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('id') || '1'; 
         }
 
-        // ページを開いた時の実行処理
         document.addEventListener('DOMContentLoaded', async () => {
             const currentMapId = getMapIdParam();
-            
-            // 1. 内左の街一覧を生成
             await renderTownListPane(currentMapId);
-            
-            // 2. 内中央のマップ詳細（3x3グリッド）を生成
             await loadMapFieldDetail(currentMapId);
-            
-            // 3. 内中央の配置NPCリストを生成
             await loadNpcList(currentMapId);
         });
 
-        /* ========================================================
-           【処理1】内・左：map_fieldテーブルから街（town）の一覧を出す
-           ======================================================== */
         async function renderTownListPane(currentId) {
             const ul = document.getElementById('town-list-ul');
             if (!ul) return;
@@ -279,9 +254,6 @@
             });
         }
 
-        /* ========================================================
-           【処理2】内・中：map_fieldから3x3グリッド移動を組み立てる
-           ======================================================== */
         async function loadMapFieldDetail(mapId) {
             const titleEl = document.getElementById('map-name-title');
             const badgeEl = document.getElementById('map-type-badge');
@@ -336,9 +308,6 @@
             else if (el) el.textContent = `エリア ${id}`;
         }
 
-        /* ========================================================
-           【処理3】内・中：NPC一覧の取得
-           ======================================================== */
         async function loadNpcList(mapId) {
             const ul = document.getElementById('npc-list-ul');
             if (!ul) return;
@@ -371,9 +340,6 @@
             }
         }
 
-        /* ========================================================
-           【処理4】内・右：クリックされたら右パネルに詳細を展開
-           ======================================================== */
         function showNpcDetail(npcId, clickedLi) {
             document.querySelectorAll('#npc-list-ul li').forEach(el => el.classList.remove('active-npc-item'));
             clickedLi.classList.add('active-npc-item');
