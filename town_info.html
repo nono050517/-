@@ -9,6 +9,8 @@
 </head>
 <body>
 
+    <header id="header" class="header"></header>
+
     <div class="wrapper container">
         
         <aside id="sidebar" class="sidebar">
@@ -18,10 +20,10 @@
         <main id="main-content" class="main-content">
             
             <div class="item-content">
-                <h2 class="page-title" id="map-name-title">マップ情報（画面リセット）</h2>
-                <p style="color: #666; font-size: 0.9em; line-height: 1.6;">
-                    3分割のレイアウトを一旦すべて削除し、初期状態にリセットしました。<br>
-                    まずは「上のタイトル」と「左のメニュー」が正しく表示されているか確認してください。
+                <h2 class="page-title">メニュー復旧テスト</h2>
+                <p>
+                    左側のメニューが無事に復活しているか確認してください！<br>
+                    （※教えていただいたSupabaseのキーは、メニュー復活確認後に次のステップで組み込みます）
                 </p>
             </div>
             
@@ -31,13 +33,5 @@
 
     <script src="common.js"></script>
 
-    <script>
-        const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co"; 
-        const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // ※現状は画面をリセットしているため、データを引っ張ってくる処理は書いていません。
-        // メニューが復活したのを確認できたら、ここから少しずつ追加していきましょう！
-    </script>
 </body>
 </html>
