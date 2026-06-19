@@ -9,18 +9,20 @@
     
     <style>
         /* ==========================================================================
-           メインコンテンツ枠（main）の中だけで独立して動く3分割（ドリルダウン）スタイル
-           ※左側の共通メニューバー（sidebar）のデザインとは絶対に干渉しません
+           メイン表示枠（.item-content）の内側だけで独立して動く3分割（ドリルダウン）スタイル
+           ※サイト全体の共通メニューバー（#sidebar）のレイアウトとは絶対に衝突しません
            ========================================================================== */
-        .map-drilldown-wrapper {
+        
+        .map-drilldown-box {
             display: flex;
             gap: 15px;
             align-items: flex-start;
             width: 100%;
             box-sizing: border-box;
+            margin-top: 10px;
         }
 
-        /* 【内左】メイン枠の中の左側：拠点・街一覧ペイン */
+        /* 【内・左】メイン枠の中の左側：拠点・街一覧ペイン */
         .pane-town-list {
             width: 150px;
             background: #fff;
@@ -29,6 +31,7 @@
             padding: 12px;
             flex-shrink: 0;
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            box-sizing: border-box;
         }
 
         .pane-town-list h3 {
@@ -62,7 +65,7 @@
             border-left: 3px solid #ffb6c1;
         }
 
-        /* 【内中】メイン枠の中央：マップ詳細 ＆ 3x3移動 ＆ NPC名前リスト */
+        /* 【内・中】メイン枠の中央：マップ詳細 ＆ 3x3移動 ＆ NPC名前リスト */
         .pane-map-center {
             flex: 1;
             background: #fff;
@@ -71,6 +74,7 @@
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
             min-width: 0; /* 文字あふれバグ防止 */
+            box-sizing: border-box;
         }
 
         /* 3x3 隣接マップ移動グリッド */
@@ -128,7 +132,7 @@
             color: #d02090;
         }
 
-        /* 【内右】メイン枠の右側：ポチッと選んだNPCの詳細表示パネル */
+        /* 【内・右】メイン枠の右側：ポチッと選んだNPCの詳細表示パネル */
         .pane-npc-right {
             width: 250px;
             background: #fafafa;
@@ -160,41 +164,44 @@
     <div class="wrapper container">
         
         <aside id="sidebar" class="sidebar">
-            <ul id="nav-menus"></ul>
-        </aside>
+            </aside>
 
-        <main id="main-content" class="main-content" style="flex: 1; min-width: 0;">
+        <main class="main-content">
             
-            <div class="map-drilldown-wrapper">
+            <div class="item-content">
                 
-                <div class="pane-town-list">
-                    <h3>拠点・街一覧</h3>
-                    <ul id="town-list-ul" class="town-ul">
-                        <li>読み込み中...</li>
-                    </ul>
-                </div>
-
-                <div class="pane-map-center">
-                    <h2 class="page-title" id="map-name-title" style="margin-top: 0; font-size: 1.4em;">マップ情報を読み込み中...</h2>
-                    <div id="map-type-badge" style="font-size:0.8em; color:#777; margin-bottom:15px; margin-top:-5px;"></div>
-
-                    <div class="section-category" style="font-size: 0.9em; margin-bottom: 5px;">隣接マップ移動</div>
-                    <div class="map-grid-container" id="map-grid-order-box">
-                        </div>
-
-                    <div class="section-category" style="font-size: 0.9em; margin-bottom: 5px; margin-top: 20px;">配置NPC・施設</div>
-                    <ul id="npc-list-ul" class="npc-ul">
+                <div class="map-drilldown-box">
+                    
+                    <div class="pane-town-list">
+                        <h3>拠点・街一覧</h3>
+                        <ul id="town-list-ul" class="town-ul">
+                            <li>読み込み中...</li>
                         </ul>
-                </div>
-
-                <div class="pane-npc-right" id="npc-detail-display-panel">
-                    <div class="npc-pane-placeholder">
-                        👈 左のリストからNPCを選ぶと、<br>ここに詳しい選択肢や案内先が表示されます。
                     </div>
+
+                    <div class="pane-map-center">
+                        <h2 class="page-title" id="map-name-title" style="margin-top: 0; font-size: 1.4em;">マップ情報を読み込み中...</h2>
+                        <div id="map-type-badge" style="font-size:0.8em; color:#777; margin-bottom:15px; margin-top:-5px;"></div>
+
+                        <div class="section-category" style="font-size: 0.9em; margin-bottom: 5px;">隣接マップ移動</div>
+                        <div class="map-grid-container" id="map-grid-order-box">
+                            </div>
+
+                        <div class="section-category" style="font-size: 0.9em; margin-bottom: 5px; margin-top: 20px;">配置NPC・施設</div>
+                        <ul id="npc-list-ul" class="npc-ul">
+                            </ul>
+                    </div>
+
+                    <div class="pane-npc-right" id="npc-detail-display-panel">
+                        <div class="npc-pane-placeholder">
+                            👈 左のリストからNPCを選ぶと、<br>Toggle（切り替え）でここに詳しい選択肢が表示されます。
+                        </div>
+                    </div>
+
                 </div>
 
             </div>
-
+            
         </main>
 
     </div>
@@ -238,10 +245,11 @@
         });
 
         /* ========================================================
-           【処理1】内左：map_fieldテーブルから街（town）の一覧を出す
+           【処理1】内・左：map_fieldテーブルから街（town）の一覧を出す
            ======================================================== */
         async function renderTownListPane(currentId) {
             const ul = document.getElementById('town-list-ul');
+            if (!ul) return;
             
             const { data, error } = await supabaseClient
                 .from('map_field')
@@ -262,7 +270,6 @@
                 a.href = `town_info.html?id=${town.field_id}`; 
                 a.textContent = town.map_name;
                 
-                // 現在開いている街ならピンク色にハイライト
                 if (String(town.field_id) === String(currentId)) {
                     a.classList.add('active-town-item');
                 }
@@ -273,7 +280,7 @@
         }
 
         /* ========================================================
-           【処理2】内中：map_fieldから3x3グリッド移動を組み立てる
+           【処理2】内・中：map_fieldから3x3グリッド移動を組み立てる
            ======================================================== */
         async function loadMapFieldDetail(mapId) {
             const titleEl = document.getElementById('map-name-title');
@@ -287,15 +294,15 @@
                 .single();
 
             if (error || !mapData) {
-                titleEl.textContent = "マップデータが見つかりません";
-                badgeEl.textContent = "";
+                if (titleEl) titleEl.textContent = "マップデータが見つかりません";
                 return;
             }
 
-            titleEl.textContent = mapData.map_name;
-            badgeEl.textContent = `エリア種別: ${mapData.map_type.toUpperCase()} (ID: ${mapData.field_id})`;
+            if (titleEl) titleEl.textContent = mapData.map_name;
+            if (badgeEl) badgeEl.textContent = `エリア種別: ${mapData.map_type.toUpperCase()} (ID: ${mapData.field_id})`;
             document.title = `${mapData.map_name} - エリシア·アーカイブス`;
 
+            if (!gridContainer) return;
             gridContainer.innerHTML = '';
             
             GRID_ORDER.forEach(dir => {
@@ -312,8 +319,6 @@
                         a.className = "map-grid-btn";
                         a.href = `town_info.html?id=${targetId}`;
                         a.innerHTML = `<span class="direction-label">${DIRECTION_LABELS[dir]}</span><div id="grid-name-${dir}">読込中...</div>`;
-                        
-                        // 移動先マップの名前を裏で逆引きして書き換える
                         fetchMapNameForGrid(targetId, `grid-name-${dir}`);
                     } else {
                         a.className = "map-grid-btn empty";
@@ -332,10 +337,11 @@
         }
 
         /* ========================================================
-           【処理3】内中：NPC一覧の取得（※NPCテーブルが無い状態でもバグを回避）
-           ======================================================= */
+           【処理3】内・中：NPC一覧の取得
+           ======================================================== */
         async function loadNpcList(mapId) {
             const ul = document.getElementById('npc-list-ul');
+            if (!ul) return;
             
             try {
                 const { data: npcs, error } = await supabaseClient
@@ -348,7 +354,7 @@
                     return;
                 }
 
-                currentLoadedNpcs = npcs; // 箱に保存
+                currentLoadedNpcs = npcs; 
                 ul.innerHTML = '';
 
                 npcs.forEach(npc => {
@@ -356,7 +362,6 @@
                     const jobText = npc.npc_job ? `【${npc.npc_job}】 ` : '';
                     li.textContent = `${jobText}${npc.npc_name}`;
                     
-                    // クリックで右パネルを書き換えるトリガー
                     li.onclick = () => showNpcDetail(npc.id, li);
                     ul.appendChild(li);
                 });
@@ -367,8 +372,8 @@
         }
 
         /* ========================================================
-           【処理4】内右：クリックされたら右パネルに詳細をスッと展開
-           ======================================================= */
+           【処理4】内・右：クリックされたら右パネルに詳細を展開
+           ======================================================== */
         function showNpcDetail(npcId, clickedLi) {
             document.querySelectorAll('#npc-list-ul li').forEach(el => el.classList.remove('active-npc-item'));
             clickedLi.classList.add('active-npc-item');
