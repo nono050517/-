@@ -6,25 +6,53 @@
     <title>街情報 - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* メインコンテンツの中だけで使う「3分割」用スタイル */
+        .map-drilldown-box {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .pane-town-list { width: 150px; background: #fff; border: 1px solid #ddd; padding: 10px; }
+        .pane-map-center { flex: 1; background: #fff; border: 1px solid #ddd; padding: 15px; }
+        .pane-npc-right { width: 250px; background: #fafafa; border: 1px solid #ccc; padding: 15px; min-height: 200px; }
+        .town-ul { list-style: none; padding: 0; }
+        .town-ul li a { display: block; padding: 5px; text-decoration: none; color: #555; }
+        .town-ul li a:hover { background: #fff0f5; color: #d02090; }
+    </style>
 </head>
 <body>
 
     <header id="header" class="header"></header>
 
     <div class="wrapper container">
-        
-        <aside id="sidebar" class="sidebar"></aside>
+        <aside id="sidebar" class="sidebar">
+            <ul id="nav-menus"></ul>
+        </aside>
 
         <main id="main-content" class="main-content">
             <div class="item-content">
-                <h2 class="page-title">メニュー復旧テスト</h2>
-                <p style="color: #333; font-size: 0.9em; line-height: 1.6;">
-                    スクリプトの読み込み順を完全に修正しました。<br>
-                    これで間違いなく、他のページと同じように左メニューとタイトルが表示されます。
-                </p>
+                
+                <div class="map-drilldown-box">
+                    <div class="pane-town-list">
+                        <h3>街一覧</h3>
+                        <ul id="town-list-ul" class="town-ul"><li>読み込み中...</li></ul>
+                    </div>
+                    <div class="pane-map-center">
+                        <h2 id="map-name-title">マップ情報</h2>
+                        <div id="map-grid-order-box"></div>
+                        <ul id="npc-list-ul"></ul>
+                    </div>
+                    <div class="pane-npc-right" id="npc-detail-display-panel">
+                        NPC詳細表示エリア
+                    </div>
+                </div>
+
             </div>
         </main>
-
     </div>
 
     <script>
@@ -35,5 +63,9 @@
 
     <script src="common.js"></script>
 
+    <script>
+        // マップ詳細用のスクリプトはここに記述
+        console.log("Supabase接続確認:", supabaseClient);
+    </script>
 </body>
 </html>
