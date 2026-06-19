@@ -9,10 +9,9 @@
     
     <style>
         /* ==========================================================================
-           メイン表示枠（.item-content）の中だけで動く、独立した3分割スタイル
-           ※サイト全体のヘッダーやメニューバーのデザインとは絶対に衝突しません
+           メインコンテンツ枠（main）の中だけで独立して動く3分割（ドリルダウン）スタイル
+           ※サイト全体の共通メニューバー（sidebar）のデザインとは絶対に干渉しません
            ========================================================================== */
-        
         .map-drilldown-wrapper {
             display: flex;
             gap: 15px;
@@ -22,7 +21,7 @@
             margin-top: 15px;
         }
 
-        /* 【内左】メイン枠の中の左側：街一覧ペイン */
+        /* 【内左】メイン枠の中の左側：拠点・街一覧ペイン */
         .pane-town-list {
             width: 160px;
             background: #fff;
@@ -34,7 +33,7 @@
         }
 
         .pane-town-list h3 {
-            font-size: 0.95em;
+            font-size: 0.9em;
             margin: 0 0 10px 0;
             border-bottom: 2px solid #ffb6c1;
             padding-bottom: 5px;
@@ -159,9 +158,11 @@
 </head>
 <body>
 
-    <div class="wrapper container">
+    <div class="wrapper container" style="display: flex; gap: 20px;">
         
-        <div class="item-content">
+        <aside id="sidebar" class="sidebar"></aside>
+
+        <main id="main-content" class="main-content" style="flex: 1; min-width: 0;">
             
             <div class="map-drilldown-wrapper">
                 
@@ -193,7 +194,7 @@
 
             </div>
 
-        </div>
+        </main>
 
     </div>
 
@@ -258,7 +259,7 @@
             data.forEach(town => {
                 const li = document.createElement('li');
                 const a = document.createElement('a');
-                a.href = `town_info.html?id=${town.field_id}`; // ⚠️ご自身のファイル名（town_info.htmlなど）に合わせてください
+                a.href = `town_info.html?id=${town.field_id}`; 
                 a.textContent = town.map_name;
                 
                 // 現在開いている街ならピンク色にハイライト
@@ -339,10 +340,9 @@
         async function loadNpcList(mapId) {
             const ul = document.getElementById('npc-list-ul');
             
-            // 🌟 もしnpcsテーブルがまだSupabaseに無い場合は、下の例外処理（catch）へ安全に逃がします
             try {
                 const { data: npcs, error } = await supabaseClient
-                    .from('npcs') // ←※もし本番のテーブル名が違ったらここを書き換えてください
+                    .from('npcs') 
                     .select('*')
                     .eq('map_id', mapId);
 
@@ -360,7 +360,7 @@
                     li.textContent = `${jobText}${npc.npc_name}`;
                     
                     // 🌟 ここがドリルダウンのトリガー！クリックで右パネルを書き換える
-                    li.onclick = () => showNpcDetailPane(npc.id, li);
+                    li.onclick = () => showNpcDetail(npc.id, li);
                     ul.appendChild(li);
                 });
 
