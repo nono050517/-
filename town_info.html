@@ -281,21 +281,9 @@
                         } else {
                             const targetId = mapData[dir] || getSafeValue(mapData, dir);
                             // 確実にデータが入っている時だけ処理する（数字でも文字でもOK）
-// 確実にデータが入っている時だけ処理する（数字でも文字でもOK）
-if (targetId !== undefined && targetId !== null && targetId !== 'NULL' && targetId !== '') {
-    const targetStr = String(targetId); // 確実に文字列に変換
-    
-    // ★ここを追加：もし"null"という文字だったらスキップする
-    if (targetStr.toLowerCase() === 'null') {
-        gridContainer.innerHTML += `
-            <div class="map-grid-btn empty">
-                <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
-                <div>ー</div>
-            </div>`;
-        return; // 次の方向へ
-    }
-    
-    const firstTargetId = targetStr.split(',')[0].trim();
+                            if (targetId !== undefined && targetId !== null && targetId !== 'NULL' && targetId !== '') {
+                                const targetStr = String(targetId); // 確実に文字列に変換
+                                const firstTargetId = targetStr.split(',')[0].trim();
                                 const targetName = nameResolver[firstTargetId] || `エリアID: ${firstTargetId}`;
                                 gridContainer.innerHTML += `
                                     <a href="town_info.html?id=${firstTargetId}" class="map-grid-btn">
