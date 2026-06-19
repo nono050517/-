@@ -200,10 +200,21 @@
             'southwest', 'south', 'southeast'
         ];
 
-        // URLパラメータ（?id=〇〇）から現在のマップIDを読み取る（デフォルトは 1 ）
-        function getCurrentMapId() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id') || '1'; 
+// 確実にデータが入っている時だけ処理する（数字でも文字でもOK）
+if (targetId !== undefined && targetId !== null && targetId !== 'NULL' && targetId !== '') {
+    const targetStr = String(targetId); // 確実に文字列に変換
+    
+    // ★ここを追加：もし"null"という文字だったらスキップする
+    if (targetStr.toLowerCase() === 'null') {
+        gridContainer.innerHTML += `
+            <div class="map-grid-btn empty">
+                <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
+                <div>ー</div>
+            </div>`;
+        return; // 次の方向へ
+    }
+    
+    const firstTargetId = targetStr.split(',')[0].trim();
         }
 
         function getSafeValue(obj, key) {
