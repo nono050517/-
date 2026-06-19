@@ -6,372 +6,38 @@
     <title>街情報 - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <style>
-        /* メインコンテンツ枠（.item-content）の中だけで動く3分割スタイル */
-        .map-drilldown-box {
-            display: flex;
-            gap: 15px;
-            align-items: flex-start;
-            width: 100%;
-            box-sizing: border-box;
-            margin-top: 10px;
-        }
-
-        .pane-town-list {
-            width: 150px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 12px;
-            flex-shrink: 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            box-sizing: border-box;
-        }
-
-        .pane-town-list h3 {
-            font-size: 0.9em;
-            margin: 0 0 10px 0;
-            border-bottom: 2px solid #ffb6c1;
-            padding-bottom: 5px;
-            color: #333;
-        }
-
-        .town-ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .town-ul li a {
-            display: block;
-            padding: 6px 8px;
-            color: #555;
-            text-decoration: none;
-            font-size: 0.85em;
-            border-radius: 4px;
-            transition: 0.2s;
-        }
-
-        .town-ul li a:hover, .town-ul li a.active-town-item {
-            background: #fff0f5;
-            color: #d02090;
-            font-weight: bold;
-            border-left: 3px solid #ffb6c1;
-        }
-
-        .pane-map-center {
-            flex: 1;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            min-width: 0; 
-            box-sizing: border-box;
-        }
-
-        .map-grid-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            max-width: 380px;
-            margin: 12px 0 25px 0;
-        }
-
-        .map-grid-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 5px;
-            background: #f9f9f9;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            text-decoration: none;
-            color: #333;
-            font-size: 0.8em;
-            font-weight: bold;
-            text-align: center;
-            min-height: 48px;
-            transition: 0.15s;
-        }
-        .map-grid-btn:hover { background: #f0f0f0; border-color: #999; }
-        .map-grid-btn.center-map { background: #fff0f5; border-color: #ffb6c1; color: #d02090; pointer-events: none; }
-        .map-grid-btn.empty { background: #eee; color: #aaa; border-color: #ddd; pointer-events: none; }
-        .direction-label { font-size: 0.7em; color: #777; margin-bottom: 2px; }
-
-        .npc-ul {
-            list-style: none;
-            padding: 0;
-            margin: 10px 0 0 0;
-            border-top: 1px solid #eee;
-        }
-
-        .npc-ul li {
-            padding: 10px 8px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            font-size: 0.85em;
-            color: #444;
-            transition: 0.2s;
-        }
-        .npc-ul li:hover { background: #f9f9f9; }
-        .npc-ul li.active-npc-item {
-            background: #fff0f5;
-            border-left: 4px solid #d02090;
-            font-weight: bold;
-            color: #d02090;
-        }
-
-        .pane-npc-right {
-            width: 250px;
-            background: #fafafa;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            padding: 15px;
-            flex-shrink: 0;
-            box-shadow: inset 0 0 6px rgba(0,0,0,0.01);
-            min-height: 250px;
-            box-sizing: border-box;
-        }
-
-        .npc-pane-placeholder {
-            color: #888;
-            text-align: center;
-            margin-top: 60px;
-            font-size: 0.85em;
-            line-height: 1.6;
-        }
-
-        .render-npc-name { margin: 0 0 8px 0; color: #333; font-size: 1.1em; border-bottom: 2px solid #ffb6c1; padding-bottom: 4px; }
-        .render-option-box { font-size: 0.85em; padding: 5px 0; border-bottom: 1px dashed #ddd; color: #444; }
-        .render-option-box:last-child { border-bottom: none; }
-        .error-announce { color: red; font-weight: bold; font-size: 0.85em; }
-    </style>
 </head>
 <body>
 
     <div class="wrapper container">
         
         <aside id="sidebar" class="sidebar">
-             <ul id="nav-menus"></ul>
+            <ul id="nav-menus"></ul>
         </aside>
 
-        <main class="main-content">
+        <main id="main-content" class="main-content">
+            
             <div class="item-content">
-                <div class="map-drilldown-box">
-                    
-                    <div class="pane-town-list">
-                        <h3>拠点・街一覧</h3>
-                        <ul id="town-list-ul" class="town-ul">
-                            <li>読み込み中...</li>
-                        </ul>
-                    </div>
-
-                    <div class="pane-map-center">
-                        <h2 class="page-title" id="map-name-title" style="margin-top: 0; font-size: 1.4em;">マップ情報を読み込み中...</h2>
-                        <div id="map-type-badge" style="font-size:0.8em; color:#777; margin-bottom:15px; margin-top:-5px;"></div>
-
-                        <div class="section-category" style="font-size: 0.9em; margin-bottom: 5px;">隣接マップ移動</div>
-                        <div class="map-grid-container" id="map-grid-order-box">
-                            </div>
-
-                        <div class="section-category" style="font-size: 0.9em; margin-bottom: 5px; margin-top: 20px;">配置NPC・施設</div>
-                        <ul id="npc-list-ul" class="npc-ul">
-                            </ul>
-                    </div>
-
-                    <div class="pane-npc-right" id="npc-detail-display-panel">
-                        <div class="npc-pane-placeholder">
-                            👈 左のリストからNPCを選ぶと、<br>ここに詳しい選択肢が表示されます。
-                        </div>
-                    </div>
-
-                </div>
+                <h2 class="page-title" id="map-name-title">マップ情報（画面リセット）</h2>
+                <p style="color: #666; font-size: 0.9em; line-height: 1.6;">
+                    3分割のレイアウトを一旦すべて削除し、初期状態にリセットしました。<br>
+                    まずは「上のタイトル」と「左のメニュー」が正しく表示されているか確認してください。
+                </p>
             </div>
+            
         </main>
+
     </div>
 
     <script src="common.js"></script>
 
     <script>
-        // ご自身のSupabaseのURLとキーに書き換えてください
-        const SUPABASE_URL = "https://your-supabase-url.supabase.co"; 
-        const SUPABASE_ANON_KEY = "your-anon-key";
+        const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const DIRECTION_LABELS = {
-            northwest: "北西 ↖", north: "北 ↑", northeast: "北東 ↗",
-            west: "西 ←", center: "中央 ☉", east: "東 →",
-            southwest: "南西 ↙", south: "南 ↓", southeast: "南東 ↘"
-        };
-        const GRID_ORDER = ['northwest', 'north', 'northeast', 'west', 'center', 'east', 'southwest', 'south', 'southeast'];
-
-        let currentLoadedNpcs = []; 
-
-        function getMapIdParam() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id') || '1'; 
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const currentMapId = getMapIdParam();
-            await renderTownListPane(currentMapId);
-            await loadMapFieldDetail(currentMapId);
-            await loadNpcList(currentMapId);
-        });
-
-        async function renderTownListPane(currentId) {
-            const ul = document.getElementById('town-list-ul');
-            if (!ul) return;
-            
-            const { data, error } = await supabaseClient
-                .from('map_field')
-                .select('field_id, map_name')
-                .eq('map_type', 'town')
-                .order('field_id', { ascending: true });
-
-            if (error) { 
-                ul.innerHTML = '<li class="error-announce">街一覧取得エラー</li>'; 
-                console.error(error);
-                return; 
-            }
-            
-            ul.innerHTML = '';
-            data.forEach(town => {
-                const li = document.createElement('li');
-                const a = document.createElement('a');
-                a.href = `town_info.html?id=${town.field_id}`; 
-                a.textContent = town.map_name;
-                
-                if (String(town.field_id) === String(currentId)) {
-                    a.classList.add('active-town-item');
-                }
-                
-                li.appendChild(a);
-                ul.appendChild(li);
-            });
-        }
-
-        async function loadMapFieldDetail(mapId) {
-            const titleEl = document.getElementById('map-name-title');
-            const badgeEl = document.getElementById('map-type-badge');
-            const gridContainer = document.getElementById('map-grid-order-box');
-
-            const { data: mapData, error } = await supabaseClient
-                .from('map_field')
-                .select('*')
-                .eq('field_id', mapId)
-                .single();
-
-            if (error || !mapData) {
-                if (titleEl) titleEl.textContent = "マップデータが見つかりません";
-                return;
-            }
-
-            if (titleEl) titleEl.textContent = mapData.map_name;
-            if (badgeEl) badgeEl.textContent = `エリア種別: ${mapData.map_type.toUpperCase()} (ID: ${mapData.field_id})`;
-            document.title = `${mapData.map_name} - エリシア·アーカイブス`;
-
-            if (!gridContainer) return;
-            gridContainer.innerHTML = '';
-            
-            GRID_ORDER.forEach(dir => {
-                if (dir === 'center') {
-                    const div = document.createElement('div');
-                    div.className = "map-grid-btn center-map";
-                    div.innerHTML = `<span class="direction-label">${DIRECTION_LABELS[dir]}</span><div>${mapData.map_name}</div>`;
-                    gridContainer.appendChild(div);
-                } else {
-                    const targetId = mapData[dir];
-                    const a = document.createElement('a');
-                    
-                    if (targetId && targetId !== 'NULL') {
-                        a.className = "map-grid-btn";
-                        a.href = `town_info.html?id=${targetId}`;
-                        a.innerHTML = `<span class="direction-label">${DIRECTION_LABELS[dir]}</span><div id="grid-name-${dir}">読込中...</div>`;
-                        fetchMapNameForGrid(targetId, `grid-name-${dir}`);
-                    } else {
-                        a.className = "map-grid-btn empty";
-                        a.innerHTML = `<span class="direction-label">${DIRECTION_LABELS[dir]}</span><div>-</div>`;
-                    }
-                    gridContainer.appendChild(a);
-                }
-            });
-        }
-
-        async function fetchMapNameForGrid(id, elementId) {
-            const { data } = await supabaseClient.from('map_field').select('map_name').eq('field_id', id).single();
-            const el = document.getElementById(elementId);
-            if (el && data) el.textContent = data.map_name;
-            else if (el) el.textContent = `エリア ${id}`;
-        }
-
-        async function loadNpcList(mapId) {
-            const ul = document.getElementById('npc-list-ul');
-            if (!ul) return;
-            
-            try {
-                const { data: npcs, error } = await supabaseClient
-                    .from('npcs') 
-                    .select('*')
-                    .eq('map_id', mapId);
-
-                if (error || !npcs || npcs.length === 0) {
-                    ul.innerHTML = '<li style="color:#888; cursor:default;">このエリアにNPCの登録はありません。</li>';
-                    return;
-                }
-
-                currentLoadedNpcs = npcs; 
-                ul.innerHTML = '';
-
-                npcs.forEach(npc => {
-                    const li = document.createElement('li');
-                    const jobText = npc.npc_job ? `【${npc.npc_job}】 ` : '';
-                    li.textContent = `${jobText}${npc.npc_name}`;
-                    
-                    li.onclick = () => showNpcDetail(npc.id, li);
-                    ul.appendChild(li);
-                });
-
-            } catch (e) {
-                ul.innerHTML = '<li style="color:#999; cursor:default;">（NPCデータテーブルは現在準備中です）</li>';
-            }
-        }
-
-        function showNpcDetail(npcId, clickedLi) {
-            document.querySelectorAll('#npc-list-ul li').forEach(el => el.classList.remove('active-npc-item'));
-            clickedLi.classList.add('active-npc-item');
-
-            const npc = currentLoadedNpcs.find(n => n.id === npcId);
-            const panel = document.getElementById('npc-detail-display-panel');
-            if (!npc || !panel) return;
-
-            let optionsHtml = '';
-            const hasSplit = npc.option1 || npc.option2 || npc.option3 || npc.option4;
-            
-            if (hasSplit) {
-                [npc.option1, npc.option2, npc.option3, npc.option4].filter(o => o && o !== 'NULL').forEach(opt => {
-                    optionsHtml += `<div class="render-option-box">🔹 ${opt}</div>`;
-                });
-            } else if (npc.npc_options && npc.npc_options !== 'NULL') {
-                optionsHtml = `<div style="white-space: pre-wrap; font-size:0.9em; line-height:1.6; color:#444;">${npc.npc_options}</div>`;
-            } else {
-                optionsHtml = `<div style="color:#888; font-size:0.9em;">特に選択肢や案内はありません。</div>`;
-            }
-
-            panel.innerHTML = `
-                <h3 class="render-npc-name">${npc.npc_name}</h3>
-                <div style="font-size: 0.8em; color: #666; margin-bottom: 12px;">
-                    <strong>役割：</strong> ${npc.npc_job || '一般市民'}
-                </div>
-                <div style="background:#fff; border:1px solid #ddd; border-radius:6px; padding:12px;">
-                    <strong style="font-size:0.85em; display:block; margin-bottom:6px; color:#333;">会話・機能</strong>
-                    ${optionsHtml}
-                </div>
-            `;
-        }
+        // ※現状は画面をリセットしているため、データを引っ張ってくる処理は書いていません。
+        // メニューが復活したのを確認できたら、ここから少しずつ追加していきましょう！
     </script>
 </body>
 </html>
