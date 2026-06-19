@@ -260,7 +260,7 @@
                 showErrorLog(`マップテーブル通信障害: ${err.message}`);
             }
 
-            // --- ③ 隣接マップグリッドを描画（絶対止まらないプロテクト付き） ---
+            // --- ③ 隣接マップグリッドを描画（鉄壁の最終防御版） ---
             const gridContainer = document.getElementById('map-direction-grid');
             try {
                 if (mapData) {
@@ -280,30 +280,40 @@
                                 </div>`;
                         } else {
                             const targetId = mapData[dir] || getSafeValue(mapData, dir);
-                            // 確実にデータが入っている時だけ処理する（数字でも文字でもOK）
-                            if (targetId !== undefined && targetId !== null && targetId !== 'NULL' && targetId !== '') {
-                                const targetStr = String(targetId); // 確実に文字列に変換
-                                const firstTargetId = targetStr.split(',')[0].trim();
-                                const targetName = nameResolver[firstTargetId] || `エリアID: ${firstTargetId}`;
-                                gridContainer.innerHTML += `
-                                    <a href="town_info.html?id=${firstTargetId}" class="map-grid-btn">
-                                        <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
-                                        <div>${targetName}</div>
-                                    </a>`;
-                            } else {
-                                gridContainer.innerHTML += `
-                                    <div class="map-grid-btn empty">
-                                        <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
-                                        <div>ー</div>
-                                    </div>`;
+                            
+                            // ★超・安全判定：データが存在し、かつ「0」ではなく、文字列にしたときにゴミじゃない場合のみ処理
+                            if (targetId && targetId !== 0 && targetId !== '0') {
+                                const targetStr = String(targetId).trim();
+                                
+                                // 文字列が 'null' や空欄（''）ではないかを最終確認
+                                if (targetStr !== '' && targetStr.toLowerCase() !== 'null' && targetStr.toLowerCase() !== 'undefined') {
+                                    
+                                    // ここまで生き残った本物のデータだけをカンマで区切る
+                                    const firstTargetId = targetStr.split(',')[0].trim();
+                                    const targetName = nameResolver[firstTargetId] || `エリアID: ${firstTargetId}`;
+                                    gridContainer.innerHTML += `
+                                        <a href="town_info.html?id=${firstTargetId}" class="map-grid-btn">
+                                            <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
+                                            <div>${targetName}</div>
+                                        </a>`;
+                                    
+                                    return; // 正常にボタンを作れたらここで終了し、下の「ー」は作らない
+                                }
                             }
+                            
+                            // 上の厳しい審査に落ちたデータ（空っぽ、0、ゴミデータ）はすべて「ー」にする
+                            gridContainer.innerHTML += `
+                                <div class="map-grid-btn empty">
+                                    <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
+                                    <div>ー</div>
+                                </div>`;
                         }
                     });
                 } else {
                     gridContainer.innerHTML = '<div class="map-grid-btn empty">データなし</div>';
                 }
             } catch (err) {
-                showErrorLog(`マップグリッド描画エラー: ${err.message}`);
+                showErrorLog(`マップグリッド描画中に問題発生: ${err.message}`);
                 gridContainer.innerHTML = '<div class="map-grid-btn empty">描画失敗</div>';
             }
 
