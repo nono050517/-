@@ -10,7 +10,7 @@
     <style>
         /* ==========================================================================
            メインコンテンツ枠（main）の中だけで独立して動く3分割（ドリルダウン）スタイル
-           ※サイト全体の共通メニューバー（sidebar）のデザインとは絶対に干渉しません
+           ※左側の共通メニューバー（sidebar）のデザインとは絶対に干渉しません
            ========================================================================== */
         .map-drilldown-wrapper {
             display: flex;
@@ -18,12 +18,11 @@
             align-items: flex-start;
             width: 100%;
             box-sizing: border-box;
-            margin-top: 15px;
         }
 
         /* 【内左】メイン枠の中の左側：拠点・街一覧ペイン */
         .pane-town-list {
-            width: 160px;
+            width: 150px;
             background: #fff;
             border: 1px solid #ddd;
             border-radius: 6px;
@@ -131,7 +130,7 @@
 
         /* 【内右】メイン枠の右側：ポチッと選んだNPCの詳細表示パネル */
         .pane-npc-right {
-            width: 260px;
+            width: 250px;
             background: #fafafa;
             border: 1px solid #ccc;
             border-radius: 6px;
@@ -158,9 +157,11 @@
 </head>
 <body>
 
-    <div class="wrapper container" style="display: flex; gap: 20px;">
+    <div class="wrapper container">
         
-        <aside id="sidebar" class="sidebar"></aside>
+        <aside id="sidebar" class="sidebar">
+            <ul id="nav-menus"></ul>
+        </aside>
 
         <main id="main-content" class="main-content" style="flex: 1; min-width: 0;">
             
@@ -202,8 +203,8 @@
 
     <script>
         // 🛠️ あなたのSupabase設定に書き換えてください
-        const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co"; 
-        const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
+        const SUPABASE_URL = "https://your-supabase-url.supabase.co"; 
+        const SUPABASE_ANON_KEY = "your-anon-key";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const DIRECTION_LABELS = {
@@ -242,7 +243,6 @@
         async function renderTownListPane(currentId) {
             const ul = document.getElementById('town-list-ul');
             
-            // 🌟 確定しているテーブル名「map_field」と列名「field_id」を正確に使用
             const { data, error } = await supabaseClient
                 .from('map_field')
                 .select('field_id, map_name')
@@ -280,7 +280,6 @@
             const badgeEl = document.getElementById('map-type-badge');
             const gridContainer = document.getElementById('map-grid-order-box');
 
-            // 🌟 field_id で現在のマップを1件取得
             const { data: mapData, error } = await supabaseClient
                 .from('map_field')
                 .select('*')
@@ -301,13 +300,11 @@
             
             GRID_ORDER.forEach(dir => {
                 if (dir === 'center') {
-                    // 中心マス（現在地）
                     const div = document.createElement('div');
                     div.className = "map-grid-btn center-map";
                     div.innerHTML = `<span class="direction-label">${DIRECTION_LABELS[dir]}</span><div>${mapData.map_name}</div>`;
                     gridContainer.appendChild(div);
                 } else {
-                    // 隣接方位マス
                     const targetId = mapData[dir];
                     const a = document.createElement('a');
                     
@@ -336,7 +333,7 @@
 
         /* ========================================================
            【処理3】内中：NPC一覧の取得（※NPCテーブルが無い状態でもバグを回避）
-           ======================================================== */
+           ======================================================= */
         async function loadNpcList(mapId) {
             const ul = document.getElementById('npc-list-ul');
             
@@ -359,20 +356,19 @@
                     const jobText = npc.npc_job ? `【${npc.npc_job}】 ` : '';
                     li.textContent = `${jobText}${npc.npc_name}`;
                     
-                    // 🌟 ここがドリルダウンのトリガー！クリックで右パネルを書き換える
+                    // クリックで右パネルを書き換えるトリガー
                     li.onclick = () => showNpcDetail(npc.id, li);
                     ul.appendChild(li);
                 });
 
             } catch (e) {
-                // NPCテーブルがまだデータベースに作られていない場合は、安全にこれを出して処理を止めます
                 ul.innerHTML = '<li style="color:#999; cursor:default;">（NPCデータテーブルは現在準備中です）</li>';
             }
         }
 
         /* ========================================================
            【処理4】内右：クリックされたら右パネルに詳細をスッと展開
-           ======================================================== */
+           ======================================================= */
         function showNpcDetail(npcId, clickedLi) {
             document.querySelectorAll('#npc-list-ul li').forEach(el => el.classList.remove('active-npc-item'));
             clickedLi.classList.add('active-npc-item');
@@ -382,7 +378,6 @@
             if (!npc || !panel) return;
 
             let optionsHtml = '';
-            // option1〜option4に分かれているか、npc_optionsにまとまっているかを自動判定
             const hasSplit = npc.option1 || npc.option2 || npc.option3 || npc.option4;
             
             if (hasSplit) {
