@@ -3,408 +3,531 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>街・マップ詳細 | エリシア・アーカイブス</title>
+    <title id="page-title-meta">マップ詳細 - エリシア・アーカイブス</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        /* 攻略Wiki風 左右分割レイアウト（3カラム） */
-        .wiki-wrapper {
+        /* ==========================================================================
+           このページ専用のレイアウトスタイル（既存のstyle.cssに追加・上書きされます）
+           ========================================================================== */
+        
+        /* 画面全体の左右分割（左：街一覧サイドバー / 右：マップメイン情報） */
+        .map-page-wrapper {
             display: flex;
             gap: 20px;
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 15px;
+            margin-top: 20px;
+            align-items: flex-start;
         }
 
-        /* 左側：街一覧 sidebar */
+        /* 左側：街一覧サイドバー */
         .town-list-sidebar {
-            width: 200px;
-            flex-shrink: 0;
-            background: #fdfaf7;
-            border: 1px solid #e6dbd0;
-            border-radius: 6px;
+            width: 220px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             padding: 15px;
-            align-self: flex-start;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .town-list-sidebar h3 {
+
+        .town-sidebar-title {
             font-size: 1em;
-            margin-top: 0;
-            padding-bottom: 8px;
+            font-weight: bold;
             border-bottom: 2px solid #ffb6c1;
-            color: #d02090;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            color: #333;
         }
-        .town-menu {
+
+        .town-sidebar-menu {
             list-style: none;
             padding: 0;
             margin: 0;
         }
-        .town-menu li {
-            margin-bottom: 8px;
-        }
-        .town-link {
+
+        .town-sidebar-menu li a {
             display: block;
-            padding: 6px 10px;
-            color: #333;
+            padding: 8px 10px;
+            color: #555;
             text-decoration: none;
-            border-radius: 4px;
             font-size: 0.9em;
-            transition: background 0.2s;
+            border-radius: 4px;
+            transition: 0.2s;
         }
-        .town-link:hover {
-            background: #fff0f5;
+
+        .town-sidebar-menu li a:hover {
+            background: #f5f5f5;
             color: #d02090;
         }
-        .town-link.active-town {
-            background: #ffb6c1;
-            color: #fff;
+
+        /* 🌟 現在開いている街のハイライト */
+        .town-sidebar-menu li a.active-town {
+            background: #fff0f5;
+            color: #d02090;
             font-weight: bold;
+            border-left: 4px solid #ffb6c1;
         }
 
-        /* 中央：メイン詳細表示枠 */
-        .map-detail-main {
-            flex-grow: 1;
+        /* 右側：メインコンテンツエリア */
+        .map-main-content {
+            flex: 1;
             background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            padding: 20px;
-            min-height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        /* 右側：フィルター操作ボタン枠 */
-        .filter-sidebar {
-            width: 180px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-self: flex-start;
-        }
-        .filter-sidebar h3 {
-            font-size: 1em;
-            margin: 0 0 5px 0;
-            color: #666;
-            text-align: center;
-        }
-        .filter-btn {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            background: #f5f5f5;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.88em;
-            color: #444;
-            text-align: center;
-            transition: all 0.2s;
-        }
-        .filter-btn:hover {
-            background: #eef;
-            border-color: #999;
-        }
-        .filter-btn.active-filter {
-            background: #e6f2ff;
-            border-color: #0066cc;
-            color: #004499;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        /* 3x3マップ移動グリッドの専用スタイル */
+        /* 3x3 隣接マップ移動グリッド */
         .map-grid-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            max-width: 360px;
-            margin: 15px 0;
+            gap: 10px;
+            max-width: 450px;
+            margin: 20px 0;
         }
+
         .map-grid-btn {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 8px 4px;
+            padding: 12px 5px;
             background: #f9f9f9;
             border: 1px solid #ccc;
             border-radius: 4px;
             text-decoration: none;
             color: #333;
-            font-size: 0.8em;
+            font-size: 0.85em;
             font-weight: bold;
             text-align: center;
-            min-height: 45px;
+            min-height: 55px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: 0.2s;
         }
-        .map-grid-btn:hover:not(.empty):not(.center-map) {
+
+        .map-grid-btn:hover {
             background: #f0f0f0;
             border-color: #999;
         }
+
+        /* 現在地の中心マス */
         .map-grid-btn.center-map {
             background: #fff0f5;
             border-color: #ffb6c1;
             color: #d02090;
             cursor: default;
+            pointer-events: none;
         }
+
+        /* 繋がっていない空マス */
         .map-grid-btn.empty {
             background: #eee;
             color: #aaa;
             border-color: #ddd;
             cursor: not-allowed;
+            pointer-events: none;
+            box-shadow: none;
         }
 
-        /* データ表示用の装飾バッジ */
-        .badge {
-            display: inline-block;
-            padding: 2px 6px;
+        .direction-label {
             font-size: 0.75em;
-            font-weight: bold;
-            border-radius: 4px;
-            color: #fff;
-            margin-right: 5px;
+            color: #777;
+            margin-bottom: 2px;
         }
-        .badge-shop { background: #ff8c00; }
-        .badge-teleport { background: #20b2aa; }
-        .badge-quest { background: #4169e1; }
 
-        /* 非表示クラス（フィルター用） */
-        .hidden-section {
-            display: none !important;
+        /* 🌟 新・NPCドリルダウン（情報掘り下げ）レイアウト */
+        .drilldown-layout {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            margin-top: 15px;
+        }
+
+        /* ドリルダウン左側：NPCリスト */
+        .drilldown-list-col {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .drilldown-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .drilldown-list li {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9em;
+            color: #444;
+        }
+
+        .drilldown-list li:hover {
+            background: #f9f9f9;
+        }
+
+        /* NPCが選択されている状態 */
+        .drilldown-list li.active {
+            background: #fff0f5;
+            border-left: 5px solid #d02090;
+            font-weight: bold;
+            color: #d02090;
+        }
+
+        /* ドリルダウン右側：詳細表示パネル */
+        .drilldown-detail-col {
+            flex: 1.5;
+            background: #fafafa;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 250px;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.01);
+        }
+
+        .placeholder-text {
+            color: #888;
+            text-align: center;
+            margin-top: 70px;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .npc-detail-title {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.2em;
+            border-bottom: 2px solid #ffb6c1;
+            padding-bottom: 5px;
+        }
+
+        .npc-options-box {
+            margin-top: 15px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .npc-option-item {
+            font-size: 0.9em;
+            padding: 6px 0;
+            border-bottom: 1px dashed #eee;
+            color: #444;
+        }
+
+        .npc-option-item:last-child {
+            border-bottom: none;
         }
         
-        .info-section {
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px dashed #ddd;
+        .error-text {
+            color: #ff0000;
+            font-weight: bold;
+            padding: 10px;
         }
     </style>
 </head>
 <body>
 
-    <header class="page-header">
-        <h1 class="page-title">エリシア・アーカイブス</h1>
+    <header class="header">
+        <div class="container">
+            <h1 class="site-title">エリシア・アーカイブス</h1>
+        </div>
     </header>
 
-    <div class="wiki-wrapper">
+    <div class="wrapper container">
         
-        <aside class="town-list-sidebar">
-            <h3>拠点・街一覧</h3>
-            <ul class="town-menu" id="town-list-container">
-                <li>読み込み中...</li>
-            </ul>
-        </aside>
-
-        <main class="map-detail-main" id="map-content-area">
-            <h2 id="current-map-name">マップ詳細</h2>
-            <div id="loading-message">データを読み込んでいます...</div>
+        <div class="map-page-wrapper">
             
-            <div id="detail-data-box" class="hidden-section">
-                <section id="section-move" class="info-section">
-                    <h3>🗺️ 隣接マップ・移動ルート</h3>
-                    <p class="section-category">周囲の繋がり（八方向）</p>
-                    <div class="map-grid-container" id="map-grid"></div>
-                    
-                    <p class="section-category" style="margin-top:15px;">🚌 駅馬車・特殊転送の行き先</p>
-                    <ul id="fast-travel-list"></ul>
-                </section>
-
-                <section id="section-npc" class="info-section">
-                    <h3>👥 配置NPC一覧</h3>
-                    <ul id="npc-list" class="travel-list"></ul>
-                </section>
-
-                <section id="section-monster" class="info-section">
-                    <h3>👾 出現モンスター</h3>
-                    <ul id="monster-list">
-                        <li>※このエリアにはモンスターが出現しないか、データが未登録です。</li>
+            <aside class="town-list-sidebar">
+                <div class="town-sidebar-title">拠点・街一覧</div>
+                <ul id="town-sidebar-container" class="town-sidebar-menu">
                     </ul>
-                </section>
-            </div>
-        </main>
+            </aside>
 
-        <aside class="filter-sidebar">
-            <h3>表示フィルター</h3>
-            <button class="filter-btn active-filter" data-target="all">🌟 すべて表示</button>
-            <button class="filter-btn" data-target="move">🗺️ 移動・駅馬車</button>
-            <button class="filter-btn" data-target="npc">👥 配置NPC</button>
-            <button class="filter-btn" data-target="monster">👾 モンスター</button>
-        </aside>
+            <main class="map-main-content">
+                
+                <h2 class="page-title" id="map-name-title">マップ情報を読み込み中...</h2>
+                <div id="map-type-badge" style="font-size:0.8em; color:#777; margin-top:-10px; margin-bottom:15px;"></div>
 
+                <div class="section-category">隣接マップ移動</div>
+                <div class="map-grid-container" id="map-grid-order-box">
+                    </div>
+
+                <div class="section-category" style="margin-top: 30px;">NPC・施設情報</div>
+                
+                <div class="drilldown-layout">
+                    
+                    <div class="drilldown-list-col">
+                        <ul id="npc-list-container" class="drilldown-list">
+                            <li>NPCデータを読み込み中...</li>
+                        </ul>
+                    </div>
+
+                    <div class="drilldown-detail-col" id="npc-detail-panel">
+                        <div class="placeholder-text">
+                            👈 左のリストからNPCを選ぶと、<br>ここに詳しい選択肢や案内先が表示されます。
+                        </div>
+                    </div>
+
+                </div>
+
+            </main>
+        </div>
     </div>
 
     <script>
-        // 【重要】ご自身のSupabase情報に書き換えてください
-        const SUPABASE_URL = "https://your-supabase-url.supabase.co";
-        const SUPABASE_KEY = "your-anon-key";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // 🛠️ あなたのSupabase設定に書き換えてください
+        const SUPABASE_URL = "https://your-supabase-url.supabase.co"; 
+        const SUPABASE_ANON_KEY = "your-anon-key";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 8方向の配置マッピング定義
+        // 8方向の表示用マッピング定義
         const DIRECTION_LABELS = {
-            northwest: "北西 ↖", north: "北 ↑", northeast: "北東 ↗",
-            west: "西 ←",      center: "中央 ☉", east: "東 →",
-            southwest: "南西 ↙", south: "南 ↓", southeast: "南東 ↘"
+            northwest: "北西 ↖", northwest_id: "northwest",
+            north: "北 ↑", north_id: "north",
+            northeast: "北東 ↗", northeast_id: "northeast",
+            west: "西 ←", west_id: "west",
+            center: "中央 ☉", // 現在地
+            east: "東 →", east_id: "east",
+            southwest: "南西 ↙", southwest_id: "southwest",
+            south: "南 ↓", south_id: "south",
+            southeast: "南東 ↘", southeast_id: "southeast"
         };
+
+        // 3x3グリッドに配置する方位の順番
         const GRID_ORDER = [
             'northwest', 'north', 'northeast',
-            'west', 'center', 'east',
+            'west',      'center', 'east',
             'southwest', 'south', 'southeast'
         ];
 
-        // URLパラメータから現在のID(field_id)を取得
+        // 読み込んだNPCデータを一時保存しておく箱
+        let loadedNpcsData = [];
+
+        // URLパラメータから現在の「id（マップID）」を取得（なければデフォルト1:王宮前広場）
         function getMapIdParam() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id') || '1'; // デフォルトはID: 1（王宮前広場など）
+            return urlParams.get('id') || '1'; 
         }
 
         // ページ読み込み時のメイン処理
         document.addEventListener('DOMContentLoaded', async () => {
-            const currentId = getMapIdParam();
+            const currentMapId = getMapIdParam();
             
-            // 1. 左側の街一覧メニューを描画
-            await renderTownList(currentId);
+            // 1. 左サイドバーの街一覧を表示
+            await renderTownSidebar(currentMapId);
             
-            // 2. 中央のマップ詳細データを読み込んで表示
-            await loadMapDetail(currentId);
+            // 2. 中央のマップ詳細＆3x3移動グリッドを表示
+            await loadMapMainDetail(currentMapId);
             
-            // 3. 右側のフィルターボタンのクリックイベントを設定
-            setupFilterButtons();
+            // 3. NPC一覧を取得してドリルダウンの準備
+            await loadNpcDrilldown(currentMapId);
         });
 
-        // 左サイドバー：街一覧を生成する関数
-        async function renderTownList(currentId) {
-            const container = document.getElementById('town-list-container');
-            try {
-                // map_type が town のものをすべて取得（テーブル名は実際の環境に合わせ map_field や maps に変更してください）
-                const { data: towns, error } = await supabaseClient
-                    .from('map_field') 
-                    .select('field_id, map_name')
-                    .eq('map_type', 'town')
-                    .order('field_id', { ascending: true });
+        /* ==========================================
+           【処理1】左サイドバー：街一覧の生成
+           ========================================== */
+        async function renderTownSidebar(currentId) {
+            const sidebarContainer = document.getElementById('town-sidebar-container');
+            
+            // mapsテーブルから、種別が 'town' のものを全件取得
+            const { data: towns, error } = await supabaseClient
+                .from('maps') 
+                .select('id, map_name')
+                .eq('map_type', 'town')
+                .order('id', { ascending: true });
 
-                if (error) throw error;
-
-                if (towns && towns.length > 0) {
-                    container.innerHTML = towns.map(town => {
-                        const isActive = String(town.field_id) === String(currentId) ? 'active-town' : '';
-                        return `<li><a href="town_info.html?id=${town.field_id}" class="town-link ${isActive}">${town.map_name}</a></li>`;
-                    }).join('');
-                } else {
-                    container.innerHTML = '<li>街データが見つかりません</li>';
-                }
-            } catch (err) {
-                console.error("街一覧取得エラー:", err);
-                container.innerHTML = `<li style="color:red;">エラー: 読み込めませんでした</li>`;
+            if (error) {
+                sidebarContainer.innerHTML = `<li class="error-text">街一覧取得エラー</li>`;
+                console.error(error);
+                return;
             }
-        }
 
-        // 中央メイン：マップデータをSupabaseから3本同時に引いて流し込む関数
-        async function loadMapDetail(mapId) {
-            const loadingMsg = document.getElementById('loading-message');
-            const dataBox = document.getElementById('detail-data-box');
-            const mapNameHeader = document.getElementById('current-map-name');
-
-            try {
-                // A. マップ基本＆隣接情報の取得
-                const { data: mapData, error: mapErr } = await supabaseClient
-                    .from('map_field')
-                    .select('*')
-                    .eq('field_id', mapId)
-                    .single();
-                if (mapErr) throw mapErr;
-
-                // 画面タイトルとSEOのdescriptionを更新
-                mapNameHeader.innerText = `マップ詳細：${mapData.map_name}`;
-                document.title = `${mapData.map_name} - 詳細データ | エリシア・アーカイブス`;
-
-                // 3x3グリッドボタンの生成
-                const gridContainer = document.getElementById('map-grid');
-                gridContainer.innerHTML = GRID_ORDER.map(dir => {
-                    if (dir === 'center') {
-                        return `<div class="map-grid-btn center-map"><span class="direction-label">${DIRECTION_LABELS[dir]}</span>${mapData.map_name}</div>`;
-                    }
-                    const destinationId = mapData[dir];
-                    if (destinationId) {
-                        return `<a href="town_info.html?id=${destinationId}" class="map-grid-btn"><span class="direction-label">${DIRECTION_LABELS[dir]}</span>ID: ${destinationId}へ</a>`;
-                    } else {
-                        return `<div class="map-grid-btn empty"><span class="direction-label">${DIRECTION_LABELS[dir]}</span>-</div>`;
-                    }
-                }).join('');
-
-                // B. 駅馬車データの取得
-                const fastTravelList = document.getElementById('fast-travel-list');
-                const { data: fetchTravel, error: travelErr } = await supabaseClient
-                    .from('fast_travel')
-                    .select('*')
-                    .eq('field_id', mapId);
-
-                if (!travelErr && fetchTravel && fetchTravel.length > 0) {
-                    fastTravelList.innerHTML = fetchTravel.map(row => 
-                        `<li><span class="badge badge-teleport">駅馬車</span> <b>${row.destination_name || '未知の街'}</b> 行き (費用: ${row.price || 0}G)</li>`
-                    ).join('');
-                } else {
-                    fastTravelList.innerHTML = '<li>この街に利用可能な駅馬車はありません。</li>';
+            sidebarContainer.innerHTML = '';
+            
+            towns.forEach(town => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = `town_info.html?id=${town.id}`;
+                a.textContent = town.map_name;
+                
+                // 現在表示している街だったらピンク色にハイライト
+                if (String(town.id) === String(currentId)) {
+                    a.classList.add('active-town');
                 }
-
-                // C. 配置NPCデータの取得 (テーブル名 npcs や npc に適宜合わせてください)
-                const npcList = document.getElementById('npc-list');
-                const { data: fetchNpcs, error: npcErr } = await supabaseClient
-                    .from('npcs')
-                    .select('*')
-                    .eq('field_id', mapId);
-
-                if (!npcErr && fetchNpcs && fetchNpcs.length > 0) {
-                    npcList.innerHTML = fetchNpcs.map(npc => {
-                        let jobBadge = npc.npc_job ? `<span class="badge badge-shop">${npc.npc_job}</span>` : `<span class="badge badge-quest">住民</span>`;
-                        // optionがあれば並べる
-                        let options = [npc.option1, npc.option2, npc.option3, npc.option4].filter(Boolean);
-                        let optionText = options.length > 0 ? ` <small style="color:#666;">[選択肢: ${options.join(' / ')}]</small>` : '';
-                        return `<li>${jobBadge} <b>${npc.npc_name}</b>${optionText}</li>`;
-                    }).join('');
-                } else {
-                    npcList.innerHTML = '<li>このマップにNPCは登録されていません。</li>';
-                }
-
-                // ローディングを消してメインボックスを表示
-                loadingMsg.classList.add('hidden-section');
-                dataBox.classList.remove('hidden-section');
-
-            } catch (err) {
-                console.error("データ読み込みエラー:", err);
-                loadingMsg.innerHTML = `<span style="color:red; font-weight:bold;">データ読み込みに失敗しました。テーブル名や列名を確認してください。<br>エラー内容: ${err.message}</span>`;
-            }
-        }
-
-        // 右側：フィルター（タブ切り替え）の仕組み
-        function setupFilterButtons() {
-            const buttons = document.querySelectorAll('.filter-btn');
-            const secMove = document.getElementById('section-move');
-            const secNpc = document.getElementById('section-npc');
-            const secMonster = document.getElementById('section-monster');
-
-            buttons.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    // アクティブなボタンの見た目を切り替え
-                    buttons.forEach(b => b.classList.remove('active-filter'));
-                    e.target.classList.add('active-filter');
-
-                    const target = e.target.getAttribute('data-target');
-
-                    // いったん全部表示してから、選ばれたもの以外を隠す
-                    secMove.classList.remove('hidden-section');
-                    secNpc.classList.remove('hidden-section');
-                    secMonster.classList.remove('hidden-section');
-
-                    if (target === 'move') {
-                        secNpc.classList.add('hidden-section');
-                        secMonster.classList.add('hidden-section');
-                    } else if (target === 'npc') {
-                        secMove.classList.add('hidden-section');
-                        secMonster.classList.add('hidden-section');
-                    } else if (target === 'monster') {
-                        secMove.classList.add('hidden-section');
-                        secNpc.classList.add('hidden-section');
-                    }
-                    // 'all' の場合は何も隠さないので全部出ます
-                });
+                
+                li.appendChild(a);
+                sidebarContainer.appendChild(li);
             });
+        }
+
+        /* ==========================================
+           【処理2】中央エリア：マップ基本情報＆3x3グリッド
+           ========================================== */
+        async function loadMapMainDetail(mapId) {
+            const titleEl = document.getElementById('map-name-title');
+            const badgeEl = document.getElementById('map-type-badge');
+            const gridContainer = document.getElementById('map-grid-order-box');
+
+            // mapsテーブルから現在のマップデータを1件取得
+            const { data: mapData, error } = await supabaseClient
+                .from('maps')
+                .select('*')
+                .eq('id', mapId)
+                .single();
+
+            if (error || !mapData) {
+                titleEl.textContent = "マップデータが見つかりません";
+                badgeEl.textContent = "";
+                gridContainer.innerHTML = `<div class="error-text">データの読み込みに失敗しました。</div>`;
+                return;
+            }
+
+            // 画面にマップ名と種別をセット
+            titleEl.textContent = mapData.map_name;
+            badgeEl.textContent = `エリア種別: ${mapData.map_type.toUpperCase()} (ID: ${mapData.id})`;
+            
+            // SEO用のブラウザタブ名（title）も書き換える
+            document.title = `${mapData.map_name} - エリシア·アーカイブス`;
+
+            // 3x3グリッドボタンの組み立て
+            gridContainer.innerHTML = '';
+            
+            GRID_ORDER.forEach(direction => {
+                if (direction === 'center') {
+                    // 中央マス（現在地）
+                    const centerBtn = document.createElement('div');
+                    centerBtn.className = "map-grid-btn center-map";
+                    centerBtn.innerHTML = `<span class="direction-label">${DIRECTION_LABELS.center}</span><div>${mapData.map_name}</div>`;
+                    gridContainer.appendChild(centerBtn);
+                } else {
+                    // 隣接方位マス
+                    const targetMapId = mapData[direction]; // カラム（northなど）から移動先IDを取得
+                    const gridBtn = document.createElement('a');
+
+                    if (targetMapId && targetMapId !== 'NULL') {
+                        // 移動先データがある場合：ボタンを生成して名前を非同期で取りにいく
+                        gridBtn.className = "map-grid-btn";
+                        gridBtn.href = `town_info.html?id=${targetMapId}`;
+                        gridBtn.innerHTML = `<span class="direction-label">${DIRECTION_LABELS[direction]}</span><div id="grid-name-${direction}">読み込み中...</div>`;
+                        
+                        // 移動先のマップ名を裏で取得してボタン文字を書き換える
+                        fetchMapNameForGrid(targetMapId, `grid-name-${direction}`);
+                    } else {
+                        // 移動先がない場合：グレーアウトマス
+                        gridBtn.className = "map-grid-btn empty";
+                        gridBtn.innerHTML = `<span class="direction-label">${DIRECTION_LABELS[direction]}</span><div>-</div>`;
+                    }
+                    gridContainer.appendChild(gridBtn);
+                }
+            });
+        }
+
+        // 3x3のボタンの中に移動先マップ名をパッと出すための補助関数
+        async function fetchMapNameForGrid(id, elementId) {
+            const { data } = await supabaseClient.from('maps').select('map_name').eq('id', id).single();
+            const el = document.getElementById(elementId);
+            if (el && data) {
+                el.textContent = data.map_name;
+            } else if (el) {
+                el.textContent = `エリア ${id}`;
+            }
+        }
+
+        /* ==========================================
+           【処理3】下部エリア：NPCドリルダウン展開システム
+           ========================================== */
+        async function loadNpcDrilldown(mapId) {
+            const npcListContainer = document.getElementById('npc-list-container');
+            
+            // npcsテーブルから、今のマップ(map_id)にいるNPCを検索
+            const { data: npcs, error } = await supabaseClient
+                .from('npcs') 
+                .select('*')
+                .eq('map_id', mapId);
+
+            if (error) {
+                npcListContainer.innerHTML = `<li class="error-text">NPC読み込みエラー</li>`;
+                return;
+            }
+
+            if (!npcs || npcs.length === 0) {
+                npcListContainer.innerHTML = '<li>このエリアに配置NPCはいません。</li>';
+                return;
+            }
+
+            // 取得データをグローバル変数に退避
+            loadedNpcsData = npcs;
+            npcListContainer.innerHTML = '';
+
+            // 左側のリストにNPC名と肩書きを並べる
+            npcs.forEach(npc => {
+                const li = document.createElement('li');
+                // 肩書き（npc_job）があれば一緒に表示
+                const jobText = npc.npc_job ? `【${npc.npc_job}】 ` : '';
+                li.textContent = `${jobText}${npc.npc_name}`;
+                
+                // 🌟 クリックしたときに右側詳細を切り替える魔法の仕掛け
+                li.onclick = () => showNpcDetailPanel(npc.id, li);
+                
+                npcListContainer.appendChild(li);
+            });
+        }
+
+        // リストでNPCがクリックされたときに、右のパネルを書き換える関数
+        function showNpcDetailPanel(npcId, clickedLi) {
+            // 1. リストの全アイテムから一度「active」を消し、クリックした行だけに「active（ピンク枠）」を付与
+            document.querySelectorAll('.drilldown-list li').forEach(el => el.classList.remove('active'));
+            clickedLi.classList.add('active');
+
+            // 2. 退避していたデータから選ばれたNPCを特定
+            const npc = loadedNpcsData.find(n => n.id === npcId);
+            const detailPanel = document.getElementById('npc-detail-panel');
+
+            if (!npc) return;
+
+            // 3. 選択肢（option1〜option4、または自由テキスト）の組み立て
+            let optionsHtml = '';
+            
+            // パターンA: 以前スプレッドシートでoption1〜option4に綺麗にバラしたケースに対応
+            const hasOptionFields = npc.option1 || npc.option2 || npc.option3 || npc.option4;
+            
+            if (hasOptionFields) {
+                // 存在する選択肢だけをリストアップ
+                const optionsArray = [npc.option1, npc.option2, npc.option3, npc.option4].filter(opt => opt && opt !== 'NULL');
+                optionsArray.forEach(opt => {
+                    optionsHtml += `<div class="npc-option-item">🔹 ${opt}</div>`;
+                });
+            } 
+            // パターンB: npc_optionsという1つのテキスト欄にまとめて全角箇条書きしているケースに対応
+            else if (npc.npc_options && npc.npc_options !== 'NULL') {
+                optionsHtml = `<div style="white-space: pre-wrap; font-size:0.9em; line-height:1.7; color:#444;">${npc.npc_options}</div>`;
+            } 
+            // 選択肢が何も登録されていない場合
+            else {
+                optionsHtml = `<div class="placeholder-text" style="margin-top:20px;">特に案内や選択肢、ショップ機能はありません。</div>`;
+            }
+
+            // 4. 右側パネルの中身をドーンと書き換え！
+            detailPanel.innerHTML = `
+                <h3 class="npc-detail-title">${npc.npc_name}</h3>
+                <div style="font-size: 0.85em; color: #666; margin-bottom: 10px;">
+                    <strong>役割・職業：</strong> ${npc.npc_job || '一般市民'}
+                </div>
+                <div class="npc-options-box">
+                    <strong style="font-size: 0.9em; color: #333; display: block; margin-bottom: 8px;">会話・機能の選択肢</strong>
+                    ${optionsHtml}
+                </div>
+            `;
         }
     </script>
 </body>
