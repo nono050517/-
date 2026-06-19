@@ -13,32 +13,27 @@
 
     <div class="wrapper container">
         
-        <aside id="sidebar" class="sidebar">
-            <ul id="nav-menus"></ul>
-        </aside>
+        <aside id="sidebar" class="sidebar"></aside>
 
         <main id="main-content" class="main-content">
-            
             <div class="item-content">
-                <h2 class="page-title" id="map-name-title">マップ情報（土台復旧画面）</h2>
+                <h2 class="page-title">メニュー復旧テスト</h2>
                 <p style="color: #333; font-size: 0.9em; line-height: 1.6;">
-                    3分割の追加スタイルをすべて取り払い、他のページ（職業など）と全く同じ外枠にリセットしました。<br>
-                    まずは左側のメニューバー（FrontPagるか確認してください。
+                    スクリプトの読み込み順を完全に修正しました。<br>
+                    これで間違いなく、他のページと同じように左メニューとタイトルが表示されます。
                 </p>
             </div>
-            
         </main>
 
     </div>
-
-    <script src="common.js"></script>
 
     <script>
         const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // ※余計なエラーや干渉を防ぐため、一度中身のデータ取得処理は完全に止めています。
     </script>
+
+    <script src="common.js"></script>
+
 </body>
 </html>
