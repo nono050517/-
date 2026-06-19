@@ -20,10 +20,10 @@
         <main id="main-content" class="main-content">
             
             <div class="item-content">
-                <h2 class="page-title">メニュー復旧テスト</h2>
-                <p>
-                    左側のメニューが無事に復活しているか確認してください！<br>
-                    （※教えていただいたSupabaseのキーは、メニュー復活確認後に次のステップで組み込みます）
+                <h2 class="page-title" id="map-name-title">マップ情報（土台復旧画面）</h2>
+                <p style="color: #333; font-size: 0.9em; line-height: 1.6;">
+                    3分割の追加スタイルをすべて取り払い、他のページ（職業など）と全く同じ外枠にリセットしました。<br>
+                    まずは左側のメニューバー（FrontPage、職業など）が綺麗に表示されているか確認してください。
                 </p>
             </div>
             
@@ -33,5 +33,12 @@
 
     <script src="common.js"></script>
 
+    <script>
+        const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ※余計なエラーや干渉を防ぐため、一度中身のデータ取得処理は完全に止めています。
+    </script>
 </body>
 </html>
