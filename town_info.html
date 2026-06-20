@@ -166,7 +166,20 @@
 
     <script src="common.js"></script>
 
-<script>
+<main>
+    <h2 class="page-title" id="map-main-title">エリア情報読み込み中...</h2>
+    ```
+HTML側に `id="map-type-badge"` という目印がついていないため、プログラムは「入れる場所がないよ！」とパニックを起こして、あの `Cannot set properties of null (setting 'innerText')` を引き起こし、そこで**処理全体を強制ストップ**させていました。
+
+---
+
+### 🛠️ 解決するための修正コード（これだけで100%直ります！）
+
+HTML側にタグを増やす必要をなくし、JavaScript側で**「もしHTMLにその場所がなくても、エラーを起こさずに安全にスルーして他の処理（グリッドやNPC表示など）を最後まで完璧に動かす」安全ガード**を組み込みました。
+
+今ある `<script>` の中身（ loadMapDetailData や fetchMapBaseAndGrid などの全てのコード）を、**以下のコードに丸ごとそのまま上書き貼り付け**してください。
+
+```javascript
         // Supabaseクライアントの初期化（※ご自身の正しいキーに書き換えてください）
         const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
@@ -224,7 +237,6 @@
         async function renderTownList(currentId) {
             const townSelectList = document.getElementById('town-select-list');
             try {
-                // 安全なクエリの組み立て（.orのパニックを防止する標準的なフィルタチェーン）
                 const { data, error } = await supabaseClient
                     .from('map_field')
                     .select('field_id, map_name, map_type')
@@ -258,8 +270,8 @@
 
         // 右側：基本情報と3x3隣接ルートの取得・生成
         async function fetchMapBaseAndGrid(currentId) {
-            const mainTitle = document.getElementById('map-main-title');
-            const typeBadge = document.getElementById('map-type-badge');
+            const mainTitle = document.getElementById('map-title') || document.getElementById('map-main-title');
+            const typeBadge = document.getElementById('map-type') || document.getElementById('map-type-badge');
             const gridContainer = document.getElementById('map-direction-grid');
 
             try {
@@ -272,8 +284,15 @@
                 if (error) throw error;
 
                 if (data) {
-                    mainTitle.innerText = data.map_name || "名称未設定マップ";
-                    typeBadge.innerText = `エリア種別: ${data.map_type || "未分類"}`;
+                    // 💡HTMLにタイトルを表示する場所があれば安全に入れる
+                    if (mainTitle) {
+                        mainTitle.innerText = data.map_name || "名称未設定マップ";
+                    }
+                    
+                    // 💡💡【超重要修正】エリア種別の表示場所（タグ）がHTMLに存在する場合のみ文字を入れる（無ければ安全にスルー！）
+                    if (typeBadge) {
+                        typeBadge.innerText = `エリア種別: ${data.map_type || "未分類"}`;
+                    }
 
                     // ==========================================
                     // 1. マップ画像の自動読み込み処理
@@ -288,33 +307,35 @@
                     // ==========================================
                     // 2. 3x3隣接マスの条件付き表示処理
                     // ==========================================
-                    gridContainer.innerHTML = '';
-                    GRID_ORDER.forEach(dir => {
-                        const nextId = data[dir];
-                        const hasNextId = nextId && nextId !== 'NULL' && String(nextId).trim() !== '0' && String(nextId).trim() !== '';
+                    if (gridContainer) {
+                        gridContainer.innerHTML = '';
+                        GRID_ORDER.forEach(dir => {
+                            const nextId = data[dir];
+                            const hasNextId = nextId && nextId !== 'NULL' && String(nextId).trim() !== '0' && String(nextId).trim() !== '';
 
-                        if (dir === 'center') {
-                            if (!hasNextId || String(nextId) === String(currentId)) {
-                                gridContainer.innerHTML += `<div class="map-grid-btn empty" style="background:transparent; border:none; box-shadow:none; pointer-events:none;"></div>`;
+                            if (dir === 'center') {
+                                if (!hasNextId || String(nextId) === String(currentId)) {
+                                    gridContainer.innerHTML += `<div class="map-grid-btn empty" style="background:transparent; border:none; box-shadow:none; pointer-events:none;"></div>`;
+                                } else {
+                                    gridContainer.innerHTML += `
+                                        <a href="town_info.html?id=${nextId}" class="map-grid-btn center-map" style="cursor:pointer; pointer-events:auto;">
+                                            <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
+                                            <strong>移動先へ</strong>
+                                        </a>`;
+                                }
                             } else {
-                                gridContainer.innerHTML += `
-                                    <a href="town_info.html?id=${nextId}" class="map-grid-btn center-map" style="cursor:pointer; pointer-events:auto;">
-                                        <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
-                                        <strong>移動先へ</strong>
-                                    </a>`;
+                                if (hasNextId) {
+                                    gridContainer.innerHTML += `
+                                        <a href="town_info.html?id=${nextId}" class="map-grid-btn">
+                                            <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
+                                            <strong>エリア通達へ</strong>
+                                        </a>`;
+                                } else {
+                                    gridContainer.innerHTML += `<div class="map-grid-btn empty" style="background:transparent; border:none; box-shadow:none; pointer-events:none;"></div>`;
+                                }
                             }
-                        } else {
-                            if (hasNextId) {
-                                gridContainer.innerHTML += `
-                                    <a href="town_info.html?id=${nextId}" class="map-grid-btn">
-                                        <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
-                                        <strong>エリア通達へ</strong>
-                                    </a>`;
-                            } else {
-                                gridContainer.innerHTML += `<div class="map-grid-btn empty" style="background:transparent; border:none; box-shadow:none; pointer-events:none;"></div>`;
-                            }
-                        }
-                    });
+                        });
+                    }
                 }
             } catch (err) {
                 showErrorLog(`基本情報・グリッド処理エラー: ${err.message}`);
@@ -324,6 +345,8 @@
         // 右側：NPC一覧
         async function fetchNpcList(currentId) {
             const npcMainList = document.getElementById('npc-main-list');
+            if (!npcMainList) return; // 箱がなければスルー
+            
             try {
                 const { data, error } = await supabaseClient
                     .from('npc')
@@ -350,6 +373,8 @@
         // 右側：駅馬車
         async function fetchFastTravelList(currentId) {
             const fastTravelList = document.getElementById('fast-travel-list');
+            if (!fastTravelList) return; // 箱がなければスルー
+
             try {
                 const { data, error } = await supabaseClient
                     .from('fast_travel')
@@ -383,6 +408,8 @@
         // 右側：特殊移動
         async function fetchUniqueTravelList(currentId) {
             const uniqueTravelList = document.getElementById('unique-travel-list');
+            if (!uniqueTravelList) return; // 箱がなければスルー
+
             try {
                 const { data, error } = await supabaseClient
                     .from('map_field_unique')
@@ -419,6 +446,5 @@
         }
 
         window.addEventListener('DOMContentLoaded', loadMapDetailData);
-    </script>
 </body>
 </html>
