@@ -24,9 +24,13 @@
             overflow-y: auto;
         }
         
-        /* ★ タイトル下の余計な細い線を消して元の美しい太線1本に戻す修正 */
-        .container, main {
+        /* ★ タイトル下の余計な細い線をすべて消し、元の美しいピンクの太線1本に整える修正 */
+        .container, main, #sidebar-nav, .main-layout, .main-left-sidebar, .main-content-area {
             border-top: none !important;
+        }
+        header {
+            border-bottom: 5px solid #ffb6c1 !important; /* 綺麗なピンクの太線1本に固定 */
+            margin-bottom: 5px !important;
         }
         
         /* 今回追加したメインエリア内の2カラムレイアウト用CSS */
@@ -327,12 +331,11 @@
                 }
             } catch (e) {
                 console.error("街一覧生成/名前キャッシュ構築失敗:", e);
-                townListContainer.innerHTML = '<li class="no-data" style="class="no-data">リスト取得失敗</li>';
+                townListContainer.innerHTML = '<li class="no-data">リスト取得失敗</li>';
             }
 
             let mapData = null;
             try {
-                // ★元の鉄板接続（orを廃止）に戻しました
                 let res = await supabaseClient.from('maps').select('*').eq('field_id', numericId).limit(1);
 
                 if (res.error) {
@@ -399,7 +402,6 @@
 
             const npcMainList = document.getElementById('npc-main-list');
             try {
-                // ★元の鉄板接続（orを廃止）に戻しました
                 const npcRes = await supabaseClient.from('npc').select('*').eq('field_id', numericId);
                 
                 if (npcRes.error) {
@@ -436,7 +438,6 @@
 
             const fastTravelList = document.getElementById('fast-travel-list');
             try {
-                // ★元の鉄板接続（orを廃止）に戻しました
                 const fastRes = await supabaseClient.from('fast_travel').select('*').eq('field_id', numericId);
                 if (fastRes.error) {
                     showErrorLog(`fast_travelエラー: ${fastRes.error.message}`);
@@ -470,7 +471,6 @@
 
             const uniqueTravelList = document.getElementById('unique-travel-list');
             try {
-                // ★元の鉄板接続（orを廃止）に戻しました
                 const uniqueRes = await supabaseClient.from('map_field_unique').select('*').eq('field_id', numericId);
                 if (uniqueRes.error) {
                     showErrorLog(`map_field_uniqueエラー: ${uniqueRes.error.message}`);
