@@ -363,34 +363,87 @@
             }
         }
 
-        // 右側：駅馬車
+// 右側：駅馬車・定期船（セレクトボックス・仕分け対応版）
         async function fetchFastTravelList(currentId) {
             const fastTravelList = document.getElementById('fast-travel-list');
             try {
-                const { data, error } = await supabaseClient
+                // 1. 駅馬車データ（fast_travel）を取得
+                const { data: travelData, error: travelError } = await supabaseClient
                     .from('fast_travel')
                     .select('*')
                     .eq('field_id', currentId);
 
-                if (error) throw error;
+                if (travelError) throw travelError;
 
-                if (data && data.length > 0) {
-                    fastTravelList.innerHTML = '';
-                    data.forEach(row => {
-                        const dest = getSafeValue(row, 'destination_name') || "未知の目的地";
-                        const destId = getSafeValue(row, 'destination_id');
-                        const cost = getSafeValue(row, '費用') || getSafeValue(row, 'cost') || "0";
-                        const currency = getSafeValue(row, '特記') || "Guilder";
-
-                        fastTravelList.innerHTML += `
-                            <li>
-                                🐎 <a href="town_info.html?id=${destId}" class="travel-link">${dest}</a> 行き 
-                                <span class="badge-cost">費用: ${cost} ${currency}</span>
-                            </li>`;
-                    });
-                } else {
+                // データがない場合はメッセージを出して終了
+                if (!travelData || travelData.length === 0) {
                     fastTravelList.innerHTML = '<li class="no-data">このエリアにファストトラベル便はありません。</li>';
+                    return;
                 }
+
+                // 2. 移動先のマップ名とタイプを調べるため、マップ一覧（map_fieldなど実際のテーブル名に合わせてください）からも全データを取得
+                const { data: allMaps, error: mapsError } = await supabaseClient
+                    .from('map_field') // もしSupabaseのテーブル名が maps や map_list の場合はここを書き換えてください
+                    .select('id, map_name, map_type');
+
+                if (mapsError) throw mapsError;
+
+                // 3. セレクトボックスの土台を作成
+                let html = `
+                    <div class="travel-select-wrapper" style="margin: 10px 0;">
+                        <select id="map-travel-select" onchange="if(this.value) location.href=this.value;" style="padding: 8px; width: 100%; max-width: 320px; border-radius: 4px; border: 1px solid #ccc;">
+                            <option value="">-- 行き先を選択してください --</option>
+                `;
+
+                // 街（town）と戦闘地域（field）の選択肢を分ける配列
+                const townOptions = [];
+                const fieldOptions = [];
+
+                // 取得した駅馬車データを1件ずつ処理
+                travelData.forEach(row => {
+                    const destId = getSafeValue(row, 'destination_id');
+                    const cost = getSafeValue(row, '費用') || getSafeValue(row, 'cost') || "0";
+                    const currency = getSafeValue(row, '特記') || "Guilder";
+
+                    // マップ一覧から移動先ID（destination_id）が一致するものを探す
+                    const targetMap = allMaps ? allMaps.find(m => String(m.id) === String(destId)) : null;
+                    
+                    // データベースにあればその日本語名、なければ登録名（row.destination_name）や予備表記にする
+                    const mapName = targetMap ? targetMap.map_name : (getSafeValue(row, 'destination_name') || `エリア (ID: ${destId})`);
+                    const mapType = targetMap ? targetMap.map_type : 'field'; // 判別できない場合はデフォルトで戦闘地域に
+
+                    // 選択肢のHTMLを作成（費用と通貨のバッジ風テキストも一緒に入れます）
+                    const optionHtml = `<option value="town_info.html?id=${destId}">${mapName} (費用: ${cost} ${currency})</option>`;
+
+                    // town か field (dungeon等含む) かで仕分ける
+                    if (mapType === 'town') {
+                        townOptions.push(optionHtml);
+                    } else {
+                        fieldOptions.push(optionHtml);
+                    }
+                });
+
+                // 4. optgroupを使ってグループごとに流し込む
+                if (townOptions.length > 0) {
+                    html += `<optgroup label="🏙️ 街へ行く">`;
+                    html += townOptions.join('');
+                    html += `</optgroup>`;
+                }
+
+                if (fieldOptions.length > 0) {
+                    html += `<optgroup label="⚔️ 戦闘地域へ行く">`;
+                    html += fieldOptions.join('');
+                    html += `</optgroup>`;
+                }
+
+                html += `
+                        </select>
+                    </div>
+                `;
+
+                // 組み立てたセレクトボックスを画面に反映
+                fastTravelList.innerHTML = html;
+
             } catch (err) {
                 showErrorLog(`駅馬車データ取得エラー: ${err.message}`);
             }
