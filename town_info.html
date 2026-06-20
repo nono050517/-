@@ -6,23 +6,62 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 画面下の表示切れ・はみ出しを防ぐ修正CSS */
-        .wrapper {
-            min-height: 100vh;
+        /* 画面下の表示切れを防ぐ修正（※外枠のデザインを壊さないよう最低限にしました） */
+        .container, main {
+            height: auto !important;
+            overflow: visible !important;
+        }
+        
+        /* メインエリア内の2カラムレイアウト用CSS */
+        .main-layout {
             display: flex;
-            flex-direction: column;
+            gap: 25px;
         }
-        .container {
-            display: flex;
+        .main-left-sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            border-right: 2px dashed #ffb6c1;
+            padding-right: 20px;
+        }
+        .main-content-area {
             flex: 1;
-            overflow: visible;
+            min-width: 0;
         }
-        main {
-            flex: 1;
-            padding: 20px;
-            height: auto;
-            overflow-y: auto;
+        .main-left-sidebar h3 {
+            font-size: 1.1em;
+            color: #d02090;
+            border-bottom: 2px solid #d02090;
+            padding-bottom: 8px;
+            margin-top: 0;
+            margin-bottom: 15px;
         }
+        .town-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .town-list li {
+            margin-bottom: 8px;
+        }
+        .town-list a {
+            display: block;
+            padding: 8px 12px;
+            background: #fff0f5;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #d02090;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+        .town-list a:hover {
+            background: #fcedf2;
+        }
+        .town-list a.active {
+            background: #d02090;
+            color: #fff;
+        }
+
         .item-content {
             margin-bottom: 30px;
         }
@@ -131,40 +170,53 @@
             <nav id="sidebar-nav"></nav>
 
             <main>
-                <h2 class="page-title" id="map-main-title">エリア情報読み込み中...</h2>
-                <div class="item-content" id="map-type-badge" style="font-weight: bold; color: #777; margin-bottom: 15px;">
-                    エリア種別: --
-                </div>
+                <div class="main-layout">
+                    
+                    <aside class="main-left-sidebar">
+                        <h3>🏙️ 街一覧</h3>
+                        <ul class="town-list" id="town-list">
+                            <li class="no-data" style="font-size: 0.85em;">読み込み中...</li>
+                        </ul>
+                    </aside>
 
-                <div id="debug-error-zone" style="color: red; font-size: 0.85em; font-weight: bold; margin-bottom: 15px; padding: 10px; background: #fff5f5; border-radius: 4px; display: none;"></div>
+                    <div class="main-content-area">
+                        <h2 class="page-title" id="map-main-title">エリア情報読み込み中...</h2>
+                        <div class="item-content" id="map-type-badge" style="font-weight: bold; color: #777; margin-bottom: 15px;">
+                            エリア種別: --
+                        </div>
 
-                <h3 class="section-category">🗺️ 隣接マップ（徒歩移動ルート）</h3>
-                <div class="item-content">
-                    <p style="font-size: 0.85em; color: #555; margin-bottom: 10px;">ボタンをクリックすると、そのマップの詳細情報へ切り替わります。</p>
-                    <div class="map-grid-container" id="map-direction-grid">
-                        <div class="map-grid-btn empty">読み込み中...</div>
+                        <div id="debug-error-zone" style="color: red; font-size: 0.85em; font-weight: bold; margin-bottom: 15px; padding: 10px; background: #fff5f5; border-radius: 4px; display: none;"></div>
+
+                        <h3 class="section-category">🗺️ 隣接マップ（徒歩移動ルート）</h3>
+                        <div class="item-content">
+                            <p style="font-size: 0.85em; color: #555; margin-bottom: 10px;">ボタンをクリックすると、そのマップの詳細情報へ切り替わります。</p>
+                            <div class="map-grid-container" id="map-direction-grid">
+                                <div class="map-grid-btn empty">読み込み中...</div>
+                            </div>
+                        </div>
+
+                        <h3 class="section-category">👥 配置NPC一覧</h3>
+                        <div class="item-content">
+                            <ul class="travel-list npc-list" id="npc-main-list">
+                                <li class="no-data">読み込み中...</li>
+                            </ul>
+                        </div>
+
+                        <h3 class="section-category">🐴 駅馬車・定期船（Fast Travel）</h3>
+                        <div class="item-content">
+                            <ul class="travel-list" id="fast-travel-list">
+                                <li class="no-data">読み込み中...</li>
+                            </ul>
+                        </div>
+
+                        <h3 class="section-category">🗿 特殊オブジェクト・調べる移動</h3>
+                        <div class="item-content">
+                            <ul class="travel-list" id="unique-travel-list">
+                                <li class="no-data">読み込み中...</li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
 
-                <h3 class="section-category">👥 配置NPC一覧</h3>
-                <div class="item-content">
-                    <ul class="travel-list npc-list" id="npc-main-list">
-                        <li class="no-data">読み込み中...</li>
-                    </ul>
-                </div>
-
-                <h3 class="section-category">🐴 駅馬車・定期船（Fast Travel）</h3>
-                <div class="item-content">
-                    <ul class="travel-list" id="fast-travel-list">
-                        <li class="no-data">読み込み中...</li>
-                    </ul>
-                </div>
-
-                <h3 class="section-category">🗿 特殊オブジェクト・調べる移動</h3>
-                <div class="item-content">
-                    <ul class="travel-list" id="unique-travel-list">
-                        <li class="no-data">読み込み中...</li>
-                    </ul>
                 </div>
             </main>
         </div>
@@ -173,7 +225,6 @@
     <script src="common.js"></script>
 
     <script>
-        // ★Supabase接続情報
         const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
         
@@ -200,10 +251,9 @@
             'southwest', 'south', 'southeast'
         ];
 
-        // URLパラメータ（?id=〇〇）から現在のマップIDを読み取る（デフォルトは 1 ）
         function getCurrentMapId() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id') || '1'; 
+            return urlParams.get('id') || '41'; 
         }
 
         function getSafeValue(obj, key) {
@@ -223,33 +273,52 @@
             if (!supabaseClient) return;
 
             const currentId = getCurrentMapId();
-            const numericId = parseInt(currentId, 10) || 1;
+            const numericId = parseInt(currentId, 10) || 41;
             const nameResolver = {};
             
-            // --- ① 全マップの名前対応表（キャッシュ）の構築 ---
+            const townListContainer = document.getElementById('town-list');
+            let townsHtml = '';
+
             try {
-                const { data: allMaps } = await supabaseClient.from('map_field').select('*');
+                const { data: allMaps } = await supabaseClient.from('maps').select('*');
                 if (allMaps) {
                     allMaps.forEach(m => {
-                        const fid = m.field_id || getSafeValue(m, 'field_id');
+                        const fid = m.field_id || getSafeValue(m, 'field_id') || m.id || getSafeValue(m, 'id');
                         const mname = m.map_name || getSafeValue(m, 'map_name');
+                        const mtype = m.map_type || getSafeValue(m, 'map_type') || "";
+                        
                         if (fid) {
                             nameResolver[fid] = mname;
                             nameResolver[String(fid)] = mname;
                         }
+
+                        const mtypeStr = String(mtype).toLowerCase();
+                        if (mtypeStr.includes('town') || mtypeStr.includes('city') || 
+                            mtypeStr.includes('街') || mtypeStr.includes('村') || 
+                            mtypeStr.includes('都') || mtypeStr.includes('拠点')) {
+                            
+                            const isActive = (String(fid) === String(numericId)) ? 'class="active"' : '';
+                            townsHtml += `<li><a href="town_info.html?id=${fid}" ${isActive}>${mname}</a></li>`;
+                        }
                     });
+
+                    if (townsHtml !== '') {
+                        townListContainer.innerHTML = townsHtml;
+                    } else {
+                        townListContainer.innerHTML = '<li class="no-data" style="font-size:0.85em;">街データがありません。</li>';
+                    }
                 }
             } catch (e) {
-                console.error("名前キャッシュ構築失敗:", e);
+                console.error("街一覧生成/名前キャッシュ構築失敗:", e);
+                townListContainer.innerHTML = '<li class="no-data">リスト取得失敗</li>';
             }
 
-            // --- ② マップ基本データの取得 ---
             let mapData = null;
             try {
-                let res = await supabaseClient.from('map_field').select('*').eq('field_id', numericId).limit(1);
+                let res = await supabaseClient.from('maps').select('*').eq('field_id', numericId).limit(1);
 
                 if (res.error) {
-                    showErrorLog(`map_fieldエラー: ${res.error.message}`);
+                    showErrorLog(`mapsエラー: ${res.error.message}`);
                     document.getElementById('map-main-title').innerText = "マップ取得エラー";
                 } else if (res.data && res.data.length > 0) {
                     mapData = res.data[0];
@@ -260,7 +329,6 @@
                 showErrorLog(`マップテーブル通信障害: ${err.message}`);
             }
 
-            // --- ③ 隣接マップグリッドを描画（鉄壁の最終防御版） ---
             const gridContainer = document.getElementById('map-direction-grid');
             try {
                 if (mapData) {
@@ -281,14 +349,10 @@
                         } else {
                             const targetId = mapData[dir] || getSafeValue(mapData, dir);
                             
-                            // ★超・安全判定：データが存在し、かつ「0」ではなく、文字列にしたときにゴミじゃない場合のみ処理
                             if (targetId && targetId !== 0 && targetId !== '0') {
                                 const targetStr = String(targetId).trim();
                                 
-                                // 文字列が 'null' や空欄（''）ではないかを最終確認
                                 if (targetStr !== '' && targetStr.toLowerCase() !== 'null' && targetStr.toLowerCase() !== 'undefined') {
-                                    
-                                    // ここまで生き残った本物のデータだけをカンマで区切る
                                     const firstTargetId = targetStr.split(',')[0].trim();
                                     const targetName = nameResolver[firstTargetId] || `エリアID: ${firstTargetId}`;
                                     gridContainer.innerHTML += `
@@ -296,12 +360,10 @@
                                             <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
                                             <div>${targetName}</div>
                                         </a>`;
-                                    
-                                    return; // 正常にボタンを作れたらここで終了し、下の「ー」は作らない
+                                    return;
                                 }
                             }
                             
-                            // 上の厳しい審査に落ちたデータ（空っぽ、0、ゴミデータ）はすべて「ー」にする
                             gridContainer.innerHTML += `
                                 <div class="map-grid-btn empty">
                                     <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
@@ -317,7 +379,6 @@
                 gridContainer.innerHTML = '<div class="map-grid-btn empty">描画失敗</div>';
             }
 
-            // --- ④ npc（配置NPCデータ）の取得と反映 ---
             const npcMainList = document.getElementById('npc-main-list');
             try {
                 const npcRes = await supabaseClient.from('npc').select('*').eq('field_id', numericId);
@@ -354,7 +415,6 @@
                 npcMainList.innerHTML = `<li class="no-data" style="color:red;">⚠️ NPCシステム障害が発生しました。</li>`;
             }
 
-            // --- ⑤ fast_travel（駅馬車データ）の取得と反映 ---
             const fastTravelList = document.getElementById('fast-travel-list');
             try {
                 const fastRes = await supabaseClient.from('fast_travel').select('*').eq('field_id', numericId);
@@ -388,7 +448,6 @@
                 fastTravelList.innerHTML = `<li class="no-data" style="color:red;">⚠️ 駅馬車システム障害が発生しました。</li>`;
             }
 
-            // --- ⑥ map_field_unique（特殊オブジェクト移動）の取得と反映 ---
             const uniqueTravelList = document.getElementById('unique-travel-list');
             try {
                 const uniqueRes = await supabaseClient.from('map_field_unique').select('*').eq('field_id', numericId);
