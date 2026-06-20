@@ -248,7 +248,7 @@
                 // ※ここではデータベースに「area」カラムが存在すると仮定しています。
                 const { data, error } = await supabaseClient
                     .from('map_field')
-                    .select('field_id, map_name, map_type, area')
+                    .select('field_id, map_name, map_type, region')
                     .order('field_id', { ascending: true });
 
                 if (error) throw error;
@@ -258,7 +258,7 @@
                     const groupedMaps = {};
                     data.forEach(item => {
                         // 地方名（空の場合は「その他の地域」に分類）
-                        const areaName = item.area || "その他の地域";
+                        const areaName = item.region || "その他の地域";
                         if (!groupedMaps[areaName]) {
                             groupedMaps[areaName] = [];
                         }
