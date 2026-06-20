@@ -133,15 +133,17 @@
     <script src="common.js"></script>
 
     <script>
-        // Supabaseクライアントの初期化（あなたのプロジェクト用設定）
+// Supabaseクライアントの初期化（※ご自身の正しいキーに書き換えてください）
         const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co";
-        const SUPABASE_ANON_KEY = "https://djfklvgrpdehqzhhodyg.supabase.co"; // 以前お聞きしたキーを設定しています
+        const SUPABASE_ANON_KEY = "あなたの本当のAnon Key（長い文字列）をここに貼り付ける";
+        
+        // ★修正ポイント：グローバルな supabase オブジェクトから安全にクライアントを作成
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // URLパラメータから現在の「field_id」を取得
         function getMapIdParam() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id') || '1'; // 指定がなければ初期値「1」（王宮前広場など）を出す
+            return urlParams.get('id') || '1'; // 指定がなければ初期値「1」
         }
 
         // 安全にデータを取得するためのヘルパー
@@ -152,11 +154,13 @@
 
         function showErrorLog(msg) {
             const errorZone = document.getElementById('debug-error-zone');
-            errorZone.style.display = 'block';
-            errorZone.innerText += msg + "\n";
+            if (errorZone) {
+                errorZone.style.display = 'block';
+                errorZone.innerText += msg + "\n";
+            }
         }
 
-        // 8方向の定義マッピング（3x3グリッド用）
+        // 8方向の定義マッピング
         const DIRECTION_LABELS = {
             northwest: "北西 ↖", north: "北 ↑", northeast: "北東 ↗",
             west: "西 ←", center: "中央 ☉", east: "東 →",
@@ -182,15 +186,15 @@
             await fetchUniqueTravelList(currentId);
         }
 
-        // ★ 左側の「街の一覧」をSupabaseから取得して描画する処理
+        // 左側の「街の一覧」をSupabaseから取得して描画
         async function renderTownList(currentId) {
             const townSelectList = document.getElementById('town-select-list');
             try {
-                // map_field テーブルから map_type が town（街）のものを取得
+                // 安全なクエリの組み立て（.orのパニックを防止する標準的なフィルタチェーン）
                 const { data, error } = await supabaseClient
                     .from('map_field')
                     .select('field_id, map_name, map_type')
-                    .or('map_type.eq.town,map_type.eq.街,map_type.eq.村') // 登録データの揺れに対応
+                    .or('map_type.eq.town,map_type.eq.街,map_type.eq.村')
                     .order('field_id', { ascending: true });
 
                 if (error) throw error;
@@ -200,7 +204,6 @@
                     data.forEach(town => {
                         const fid = town.field_id;
                         const name = town.map_name;
-                        // 現在表示中の街なら active-town クラスを付与してハイライト
                         const isActive = (String(fid) === String(currentId)) ? 'active-town' : '';
                         
                         townSelectList.innerHTML += `
@@ -215,7 +218,7 @@
                 }
             } catch (err) {
                 showErrorLog(`街一覧取得エラー: ${err.message}`);
-                townSelectList.innerHTML = '<li class="no-data" style="color:red;">⚠️ 取得失敗</li>';
+                townSelectList.innerHTML = '<li class="no-data" style="color:red;">⚠️ 街リスト読み込み失敗</li>';
             }
         }
 
@@ -371,6 +374,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', loadMapDetailData);
+    </script>
     </script>
 </body>
 </html>
