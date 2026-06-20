@@ -364,6 +364,7 @@
         }
 
 // 右側：駅馬車・定期船（field_idカラム修正版）
+        // 右側：駅馬車・定期船（通常一覧・仕分け対応版）
         async function fetchFastTravelList(currentId) {
             const fastTravelList = document.getElementById('fast-travel-list');
             try {
@@ -380,67 +381,74 @@
                     return;
                 }
 
-                // 2. マップ一覧から「field_id」を含めて全取得
+                // 2. マップ名を引き当てるための全マップデータを取得
                 const { data: allMaps, error: mapsError } = await supabaseClient
                     .from('map_field') 
-                    .select('field_id, map_name, map_type'); // idからfield_idに直しました！
+                    .select('field_id, map_name, map_type');
 
                 if (mapsError) throw mapsError;
 
-                // 3. セレクトボックスの土台を作成
-                let html = `
-                    <div class="travel-select-wrapper" style="margin: 10px 0;">
-                        <select id="map-travel-select" onchange="if(this.value) location.href=this.value;" style="padding: 8px; width: 100%; max-width: 320px; border-radius: 4px; border: 1px solid #ccc;">
-                            <option value="">-- 行き先を選択してください --</option>
-                `;
+                // 街用と戦闘地域用のリスト（liタグ）を入れる配列
+                const townItems = [];
+                const fieldItems = [];
 
-                const townOptions = [];
-                const fieldOptions = [];
-
+                // 3. データを1件ずつチェックしてHTMLを組み立てる
                 travelData.forEach(row => {
-                    const destId = getSafeValue(row, 'destination_id');
+                    const destId = getSafeValue(row, 'field_id_1');
                     const cost = getSafeValue(row, '費用') || getSafeValue(row, 'cost') || "0";
                     const currency = getSafeValue(row, '特記') || "Guilder";
+                    const selectGroup = getSafeValue(row, 'select');
 
-                    // マップ一覧から移動先ID（destination_id）が、マスターのfield_idと一致するものを探す
-                    const targetMap = allMaps ? allMaps.find(m => String(m.field_id) === String(destId)) : null; // m.idからm.field_idに直しました！
-                    
-                    const mapName = targetMap ? targetMap.map_name : (getSafeValue(row, 'destination_name') || `エリア (ID: ${destId})`);
-                    const mapType = targetMap ? targetMap.map_type : 'field';
+                    // マップ一覧から日本語名を探す
+                    const targetMap = allMaps ? allMaps.find(m => String(m.field_id) === String(destId)) : null;
+                    const mapName = targetMap ? targetMap.map_name : (getSafeValue(row, 'map_name') || `エリア (ID: ${destId})`);
 
-                    const optionHtml = `<option value="town_info.html?id=${destId}">${mapName} (費用: ${cost} ${currency})</option>`;
+                    // 通常の一覧用 <li> タグ（費用バッジ付き）
+                    const liHtml = `
+                        <li style="margin-bottom: 6px; list-style: none;">
+                            🐎 <a href="town_info.html?id=${destId}" class="travel-link" style="font-weight: bold; text-decoration: none;">${mapName}</a> 行き 
+                            <span class="badge-cost" style="font-size: 0.85em; background: #eee; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">費用: ${cost} ${currency}</span>
+                        </li>
+                    `;
 
-                    if (mapType === 'town') {
-                        townOptions.push(optionHtml);
+                    // CSVの「select」カラムの内容で振り分け
+                    if (selectGroup === '街へ行く' || selectGroup === 'town') {
+                        townItems.push(liHtml);
                     } else {
-                        fieldOptions.push(optionHtml);
+                        fieldItems.push(liHtml);
                     }
                 });
 
-                if (townOptions.length > 0) {
-                    html += `<optgroup label="🏙️ 街へ行く">`;
-                    html += townOptions.join('');
-                    html += `</optgroup>`;
+                // 4. カテゴリ見出しを付けて、スッキリした一覧HTMLを組み立てる
+                let finalHtml = `<div class="travel-list-wrapper" style="padding-left: 0;">`;
+
+                if (townItems.length > 0) {
+                    finalHtml += `
+                        <div class="travel-group" style="margin-bottom: 15px;">
+                            <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 0.95em;">🏙️ 【街へ行く】</h4>
+                            <ul style="padding-left: 10px; margin: 0;">${townItems.join('')}</ul>
+                        </div>
+                    `;
                 }
 
-                if (fieldOptions.length > 0) {
-                    html += `<optgroup label="⚔️ 戦闘地域へ行く">`;
-                    html += fieldOptions.join('');
-                    html += `</optgroup>`;
+                if (fieldItems.length > 0) {
+                    finalHtml += `
+                        <div class="travel-group">
+                            <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 0.95em;">⚔️ 【戦闘地域へ行く】</h4>
+                            <ul style="padding-left: 10px; margin: 0;">${fieldItems.join('')}</ul>
+                        </div>
+                    `;
                 }
 
-                html += `
-                        </select>
-                    </div>
-                `;
+                finalHtml += `</div>`;
 
-                fastTravelList.innerHTML = html;
+                // 画面の元の枠に流し込む
+                fastTravelList.innerHTML = finalHtml;
 
             } catch (err) {
                 showErrorLog(`駅馬車データ取得エラー: ${err.message}`);
             }
         }
-
         // 右側：特殊移動
         async function fetchUniqueTravelList(currentId) {
             const uniqueTravelList = document.getElementById('unique-travel-list');
