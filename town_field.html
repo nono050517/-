@@ -290,7 +290,7 @@
                             
                             listItemsHtml += `
                                 <li class="town-li">
-                                    <a href="town_info.html?id=${fid}" class="town-link ${isActive}">
+                                    <a href="town_field.html?id=${fid}" class="town-link ${isActive}">
                                         ${icon} ${name}
                                     </a>
                                 </li>`;
@@ -368,7 +368,7 @@
                                 gridContainer.innerHTML += `<div class="map-grid-btn empty" style="background:transparent; border:none; box-shadow:none; pointer-events:none;"></div>`;
                             } else {
                                 gridContainer.innerHTML += `
-                                    <a href="town_info.html?id=${nextId}" class="map-grid-btn center-map" style="cursor:pointer; pointer-events:auto;">
+                                    <a href="town_field.html?id=${nextId}" class="map-grid-btn center-map" style="cursor:pointer; pointer-events:auto;">
                                         <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
                                         <strong>${targetName}</strong>
                                     </a>`;
@@ -376,7 +376,7 @@
                         } else {
                             if (hasNextId) {
                                 gridContainer.innerHTML += `
-                                    <a href="town_info.html?id=${nextId}" class="map-grid-btn">
+                                    <a href="town_field.html?id=${nextId}" class="map-grid-btn">
                                         <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
                                         <strong>${targetName}</strong>
                                     </a>`;
@@ -461,7 +461,7 @@
 
                     const liHtml = `
                         <li style="margin-bottom: 6px; list-style: none;">
-                            🐎 <a href="town_info.html?id=${destId}" class="travel-link" style="font-weight: bold; text-decoration: none;">${mapName}</a> 行き ${costBadge}
+                            🐎 <a href="town_field.html?id=${destId}" class="travel-link" style="font-weight: bold; text-decoration: none;">${mapName}</a> 行き ${costBadge}
                         </li>
                     `;
 
@@ -523,7 +523,7 @@
                         uniqueTravelList.innerHTML += `
                             <li>
                                 🗿 エリア内の<strong>【${target}】</strong>を調べる ➡️ 
-                                <a href="town_info.html?id=${nextFieldId}" class="travel-link">${nextField}</a> へ移動
+                                <a href="town_field.html?id=${nextFieldId}" class="travel-link">${nextField}</a> へ移動
                                 ${conditionHtml}${memoHtml}
                             </li>`;
                     });
