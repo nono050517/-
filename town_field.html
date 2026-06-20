@@ -14,15 +14,17 @@
             margin-top: 15px;
         }
 
-        /* 左側：街一覧のサイドエリア */
+        /* 左側：地方別アコーディオンサイドエリア */
         .town-list-sidebar {
-            width: 220px;
-            min-width: 220px;
+            width: 250px;
+            min-width: 250px;
             background: #fff;
             border: 1px solid #ddd;
             border-radius: 6px;
             padding: 10px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         .town-list-title {
@@ -34,23 +36,58 @@
             color: #333;
         }
 
+        /* アコーディオン（details/summary）のスタイリング */
+        .area-accordion {
+            margin-bottom: 8px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .area-summary {
+            background: #fdf6f6;
+            padding: 8px 10px;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #444;
+            cursor: pointer;
+            outline: none;
+            list-style: none; /* デフォルトの矢印を消す（ブラウザ対応用） */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .area-summary::-webkit-details-marker {
+            display: none; /* Safari用の矢印消去 */
+        }
+        .area-summary::after {
+            content: '▼';
+            font-size: 0.8em;
+            color: #aaa;
+            transition: transform 0.2s;
+        }
+        .area-accordion[open] .area-summary::after {
+            content: '▲';
+        }
+
         .town-ul {
             list-style: none;
-            padding: 0;
+            padding: 5px 0;
             margin: 0;
+            background: #fff;
+            border-top: 1px solid #eee;
         }
 
         .town-li {
-            margin-bottom: 5px;
+            margin-bottom: 2px;
         }
 
         .town-link {
             display: block;
-            padding: 8px 10px;
-            color: #444;
+            padding: 6px 15px;
+            color: #555;
             text-decoration: none;
-            font-size: 0.88em;
-            border-radius: 4px;
+            font-size: 0.85em;
             transition: background 0.2s;
         }
 
@@ -59,7 +96,7 @@
             color: #007bff;
         }
 
-        /* 現在開いている街のハイライト */
+        /* 現在開いているエリアのハイライト */
         .town-link.active-town {
             background: #fff0f5;
             color: #d02090;
@@ -93,23 +130,10 @@
             }
 
             .town-list-sidebar {
-                max-height: 180px; 
+                max-height: 250px; 
                 overflow-y: auto;
                 border: 1px solid #ccc;
                 padding: 10px;
-            }
-
-            .filter-sidebar {
-                display: flex !important;
-                flex-direction: row !important;
-                overflow-x: auto;
-                white-space: nowrap;
-                gap: 8px;
-                padding: 5px 0;
-            }
-            
-            .filter-sidebar button {
-                flex: 0 0 auto;
             }
         }
     </style>
@@ -125,10 +149,10 @@
                 <div class="drilldown-container">
                     
                     <aside class="town-list-sidebar">
-                        <div class="town-list-title">🗺️ 街・拠点一覧</div>
-                        <ul class="town-ul" id="town-select-list">
-                            <li class="no-data">読み込み中...</li>
-                        </ul>
+                        <div class="town-list-title">🗺️ 地方別エリア一覧</div>
+                        <div id="area-accordion-zone">
+                            <div class="no-data">読み込み中...</div>
+                        </div>
                     </aside>
 
                     <section class="drilldown-main-content" id="drilldown-detail-zone">
@@ -206,8 +230,8 @@
         async function loadMapDetailData() {
             const currentId = getMapIdParam();
             
-            // 1. 街一覧（左側サイドバー）の生成
-            await renderTownList(currentId);
+            // 1. 地方別メニュー（左側サイドバー）の生成
+            await renderAreaAccordion(currentId);
 
             // 2. マップ詳細データの読み込み（右側コンテンツ）
             await fetchMapBaseAndGrid(currentId);
@@ -216,38 +240,78 @@
             await fetchUniqueTravelList(currentId);
         }
 
-        // 左側の「街の一覧」を取得して描画
-        async function renderTownList(currentId) {
-            const townSelectList = document.getElementById('town-select-list');
+        // 左側：地方ごとにまとめたアコーディオンメニューの生成
+        async function renderAreaAccordion(currentId) {
+            const accordionZone = document.getElementById('area-accordion-zone');
             try {
+                // map_field から全エリアデータを取得（地方名「area」または「region」カラムを想定。無ければ map_type で代替）
+                // ※ここではデータベースに「area」カラムが存在すると仮定しています。
                 const { data, error } = await supabaseClient
                     .from('map_field')
-                    .select('field_id, map_name, map_type')
-                    .or('map_type.eq.town,map_type.eq.街,map_type.eq.村')
+                    .select('field_id, map_name, map_type, area')
                     .order('field_id', { ascending: true });
 
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    townSelectList.innerHTML = '';
-                    data.forEach(town => {
-                        const fid = town.field_id;
-                        const name = town.map_name;
-                        const isActive = (String(fid) === String(currentId)) ? 'active-town' : '';
+                    // 1. データを地方（area）ごとにグループ化する
+                    const groupedMaps = {};
+                    data.forEach(item => {
+                        // 地方名（空の場合は「その他の地域」に分類）
+                        const areaName = item.area || "その他の地域";
+                        if (!groupedMaps[areaName]) {
+                            groupedMaps[areaName] = [];
+                        }
+                        groupedMaps[areaName].push(item);
+                    });
+
+                    accordionZone.innerHTML = '';
+
+                    // 2. 地方ごとのアコーディオンHTMLを組み立て
+                    Object.keys(groupedMaps).forEach(areaName => {
+                        const mapsInArea = groupedMaps[areaName];
                         
-                        townSelectList.innerHTML += `
-                            <li class="town-li">
-                                <a href="town_info.html?id=${fid}" class="town-link ${isActive}">
-                                    🏙️ ${name}
-                                </a>
-                            </li>`;
+                        // この地方の中に、現在表示中のマップが含まれているかチェック
+                        const hasActiveMap = mapsInArea.some(m => String(m.field_id) === String(currentId));
+                        // 含まれている場合は最初からアコーディオンを開く(open)
+                        const openAttr = hasActiveMap ? 'open' : '';
+
+                        let listItemsHtml = '';
+                        mapsInArea.forEach(map => {
+                            const fid = map.field_id;
+                            const name = map.map_name;
+                            const type = map.map_type || '';
+                            
+                            // 街・村系かフィールド系かでアイコンを切り替え
+                            const isTown = ['town', '街', '村'].includes(type.toLowerCase());
+                            const icon = isTown ? '🏙️' : '⚔️';
+
+                            const isActive = (String(fid) === String(currentId)) ? 'active-town' : '';
+                            
+                            listItemsHtml += `
+                                <li class="town-li">
+                                    <a href="town_info.html?id=${fid}" class="town-link ${isActive}">
+                                        ${icon} ${name}
+                                    </a>
+                                </li>`;
+                        });
+
+                        // アコーディオン（details）構造を追加
+                        accordionZone.innerHTML += `
+                            <details class="area-accordion" ${openAttr}>
+                                <summary class="area-summary">📂 ${areaName}</summary>
+                                <ul class="town-ul">
+                                    ${listItemsHtml}
+                                </ul>
+                            </details>
+                        `;
                     });
                 } else {
-                    townSelectList.innerHTML = '<li class="no-data">街のデータがありません。</li>';
+                    accordionZone.innerHTML = '<div class="no-data">エリアデータがありません。</div>';
                 }
             } catch (err) {
-                showErrorLog(`街一覧取得エラー: ${err.message}`);
-                townSelectList.innerHTML = '<li class="no-data" style="color:red;">⚠️ 街リスト読み込み失敗</li>';
+                showErrorLog(`エリア一覧取得エラー: ${err.message}`);
+                accordionZone.innerHTML = '<div class="no-data" style="color:red;">⚠️ エリアリスト読み込み失敗</div>';
             }
         }
 
@@ -257,7 +321,6 @@
             const gridContainer = document.getElementById('map-direction-grid');
 
             try {
-                // 現在のマップデータを取得
                 const { data: currentMap, error: mapError } = await supabaseClient
                     .from('map_field')
                     .select('*')
@@ -269,7 +332,6 @@
                 if (currentMap) {
                     mainTitle.innerText = currentMap.map_name || "名称未設定マップ";
 
-                    // マップ画像の自動読み込み
                     const mapImageElement = document.getElementById('map-main-image');
                     if (mapImageElement) {
                         mapImageElement.src = `img_map/${currentId}.png`;
@@ -277,12 +339,10 @@
                         mapImageElement.style.display = 'block';
                     }
 
-                    // 隣接するIDの一覧を抽出（空欄や0、NULLを除外）
                     const neighborIds = GRID_ORDER
                         .map(dir => currentMap[dir])
                         .filter(id => id && id !== 'NULL' && String(id).trim() !== '0' && String(id).trim() !== '');
 
-                    // 隣接マップのIDから「実際のエリア名」を一括取得する
                     let nameMap = {};
                     if (neighborIds.length > 0) {
                         const { data: namesData, error: namesError } = await supabaseClient
@@ -297,12 +357,10 @@
                         }
                     }
 
-                    // グリッドの描画処理
                     gridContainer.innerHTML = '';
                     GRID_ORDER.forEach(dir => {
                         const nextId = currentMap[dir];
                         const hasNextId = nextId && nextId !== 'NULL' && String(nextId).trim() !== '0' && String(nextId).trim() !== '';
-                        // 取得した名前があればそれを使い、なければフォールバック
                         const targetName = nameMap[String(nextId)] || "次のエリア";
 
                         if (dir === 'center') {
@@ -317,7 +375,6 @@
                             }
                         } else {
                             if (hasNextId) {
-                                // 「エリア通達へ (ID: XX)」を排除し、純粋なエリア名のみを表示
                                 gridContainer.innerHTML += `
                                     <a href="town_info.html?id=${nextId}" class="map-grid-btn">
                                         <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
@@ -363,11 +420,10 @@
             }
         }
 
-// 右側：駅馬車・定期船（無料ルートの費用非表示版）
+        // 右側：駅馬車・定期船
         async function fetchFastTravelList(currentId) {
             const fastTravelList = document.getElementById('fast-travel-list');
             try {
-                // 1. 駅馬車データを取得
                 const { data: travelData, error: travelError } = await supabaseClient
                     .from('fast_travel')
                     .select('*')
@@ -380,7 +436,6 @@
                     return;
                 }
 
-                // 2. 全マップデータを取得
                 const { data: allMaps, error: mapsError } = await supabaseClient
                     .from('map_field') 
                     .select('field_id, map_name, map_type');
@@ -390,24 +445,20 @@
                 const townItems = [];
                 const fieldItems = [];
 
-                // 3. データを1件ずつ処理
                 travelData.forEach(row => {
                     const destId = getSafeValue(row, 'field_id_1');
                     const cost = getSafeValue(row, '費用') || getSafeValue(row, 'cost') || "0";
                     const currency = getSafeValue(row, '特記') || "Guilder";
                     const selectGroup = getSafeValue(row, 'select');
 
-                    // マップ名を引き当てる
                     const targetMap = allMaps ? allMaps.find(m => String(m.field_id) === String(destId)) : null;
                     const mapName = targetMap ? targetMap.map_name : (getSafeValue(row, 'map_name') || `エリア (ID: ${destId})`);
 
-                    // 【今回の修正】費用が0、空欄、NULLのいずれかの場合はバッジを表示しない
                     let costBadge = '';
                     if (cost !== '0' && cost !== 0 && cost !== '' && cost !== 'NULL') {
                         costBadge = `<span class="badge-cost" style="font-size: 0.85em; background: #eee; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">費用: ${cost} ${currency}</span>`;
                     }
 
-                    // <li> タグを組み立て（費用バッジ部分を変数にしました）
                     const liHtml = `
                         <li style="margin-bottom: 6px; list-style: none;">
                             🐎 <a href="town_info.html?id=${destId}" class="travel-link" style="font-weight: bold; text-decoration: none;">${mapName}</a> 行き ${costBadge}
@@ -421,9 +472,7 @@
                     }
                 });
 
-                // 4. HTML全体の組み立て
                 let finalHtml = `<div class="travel-list-wrapper" style="padding-left: 0;">`;
-
                 if (townItems.length > 0) {
                     finalHtml += `
                         <div class="travel-group" style="margin-bottom: 15px;">
@@ -432,7 +481,6 @@
                         </div>
                     `;
                 }
-
                 if (fieldItems.length > 0) {
                     finalHtml += `
                         <div class="travel-group">
@@ -441,7 +489,6 @@
                         </div>
                     `;
                 }
-
                 finalHtml += `</div>`;
                 fastTravelList.innerHTML = finalHtml;
 
@@ -449,6 +496,7 @@
                 showErrorLog(`駅馬車データ取得エラー: ${err.message}`);
             }
         }
+
         // 右側：特殊移動
         async function fetchUniqueTravelList(currentId) {
             const uniqueTravelList = document.getElementById('unique-travel-list');
