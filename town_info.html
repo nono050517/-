@@ -311,13 +311,10 @@ GRID_ORDER.forEach(dir => {
             gridContainer.innerHTML += `<div class="map-grid-btn empty" style="background:transparent; border:none; box-shadow:none; pointer-events:none;"></div>`;
         } else {
             // 違う街のIDなら移動ボタンとして出す
-            // ★街一覧などのデータ（おそらくallMapsやtownListなど）から、移動先IDと一致するmap_nameを探します。見つからなければ「移動先へ」
-            const targetMapName = (typeof allMaps !== 'undefined' && allMaps.find(m => String(m.id || m.field_id) === String(nextId))?.map_name) || "移動先へ";
-            
             gridContainer.innerHTML += `
                 <a href="town_info.html?id=${nextId}" class="map-grid-btn center-map" style="cursor:pointer; pointer-events:auto;">
                     <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
-                    <strong>${targetMapName}</strong>
+                    <strong>移動先へ</strong>
                 </a>`;
         }
     } else {
@@ -325,16 +322,11 @@ GRID_ORDER.forEach(dir => {
         // 【その他の方位（東西南北など）のルール】データがないなら「表示しない（空マス）」
         // ------------------------------------------
         if (hasNextId) {
-            // ★街一覧などのデータから、移動先IDと一致するmap_name（日本語名）を自動で探して取得します。
-            // もし変数名がallMapsでなく、CSVから読み込んだ全データが入っている配列がある場合はそちらを当てはめます。
-            // 見つからなかった場合の予備として「次のエリアへ」にします。
-            const targetMapName = (typeof allMaps !== 'undefined' && allMaps.find(m => String(m.id || m.field_id) === String(nextId))?.map_name) || "次のエリアへ";
-
-            // 隣接マップがある場合だけボタンをきれいに表示（ID表記を削除！）
+            // 隣接マップがある場合だけボタンをきれいに表示
             gridContainer.innerHTML += `
                 <a href="town_info.html?id=${nextId}" class="map-grid-btn">
                     <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
-                    <strong>${targetMapName}</strong>
+                    <strong>エリア通達へ</strong>
                 </a>`;
         } else {
             // 隣接データがない（空欄・NULL・0）なら「表示させない（透明の空マスにする）」
