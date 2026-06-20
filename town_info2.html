@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>エリア詳細 - エリシア・アーカイブス</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <nav id="sidebar-nav"></nav>
+            <main>
+                <h2 class="page-title" id="map-main-title">エリア情報読み込み中...</h2>
+                <div class="item-content" id="map-type-badge" style="font-weight: bold; color: #777; margin-bottom: 15px;">
+                    エリア種別: --
+                </div>
+
+                <div id="debug-error-zone" style="color: red; font-size: 0.85em; font-weight: bold; margin-bottom: 15px; padding: 10px; background: #fff5f5; border-radius: 4px; display: none;"></div>
+
+                <h3 class="section-category">🗺️ 隣接マップ（徒歩移動ルート）</h3>
+                <div class="item-content">
+                    <p style="font-size: 0.85em; color: #555; margin-bottom: 10px;">ボタンをクリックすると、そのマップの詳細情報へ切り替わります。</p>
+                    <div class="map-grid-container" id="map-direction-grid">
+                        <div class="map-grid-btn empty">読み込み中...</div>
+                    </div>
+                </div>
+
+                <h3 class="section-category">👥 配置NPC一覧</h3>
+                <div class="item-content">
+                    <ul class="travel-list npc-list" id="npc-main-list">
+                        <li class="no-data">読み込み中...</li>
+                    </ul>
+                </div>
+
+                <h3 class="section-category">🐴 駅馬車・定期船（Fast Travel）</h3>
+                <div class="item-content">
+                    <ul class="travel-list" id="fast-travel-list">
+                        <li class="no-data">読み込み中...</li>
+                    </ul>
+                </div>
+
+                <h3 class="section-category">🗿 特殊オブジェクト・調べる移動</h3>
+                <div class="item-content">
+                    <ul class="travel-list" id="unique-travel-list">
+                        <li class="no-data">読み込み中...</li>
+                    </ul>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+
+    <script>
+        // ★Supabase接続情報
+        const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
+        
+        let supabaseClient;
+        try {
+            if (typeof supabase !== 'undefined' && supabase.createClient) {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            } else {
+                showErrorLog("Supabaseライブラリの読み込みに失敗しています。");
+            }
+        } catch(e) {
+            showErrorLog("Supabase初期化エラー: " + e.message);
+        }
+
+        const DIRECTION_LABELS = {
+            northwest: "北西 ↖", north: "北 ↑", northeast: "北東 ↗",
+            west: "西 ←",       center: "現在地 ☉", east: "東 →",
+            southwest: "南西 ↙", south: "南 ↓", southeast: "南東 ↘"
+        };
+
+        const GRID_LAYOUT = [
+            'northwest', 'north', 'northeast',
+            'west',      'center', 'east',
+            'southwest', 'south', 'southeast'
+        ];
+
+        // URLパラメータ（?id=〇〇）から現在のマップIDを読み取る（デフォルトは 1 ）
+        function getCurrentMapId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id') || '1'; 
+        }
+
+        function getSafeValue(obj, key) {
+            if (!obj) return null;
+            if (obj[key] !== undefined && obj[key] !== null) return obj[key];
+            const realKey = Object.keys(obj).find(k => k.toLowerCase() === key.toLowerCase());
+            return realKey ? obj[realKey] : null;
+        }
+
+        function showErrorLog(message) {
+            const errZone = document.getElementById('debug-error-zone');
+            errZone.style.display = 'block';
+            errZone.innerHTML += `⚠️ ${message}<br>`;
+        }
+
+        async function loadMapDetailData() {
+            if (!supabaseClient) return;
+
+            const currentId = getCurrentMapId();
+            const numericId = parseInt(currentId, 10) || 1;
+            const nameResolver = {};
+            
+            // --- ① 全マップの名前対応表（キャッシュ）の構築 ---
+            try {
+                const { data: allMaps } = await supabaseClient.from('map_field').select('*');
+                if (allMaps) {
+                    allMaps.forEach(m => {
+                        const fid = m.field_id || getSafeValue(m, 'field_id');
+                        const mname = m.map_name || getSafeValue(m, 'map_name');
+                        if (fid) {
+                            nameResolver[fid] = mname;
+                            nameResolver[String(fid)] = mname;
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("名前キャッシュ構築失敗:", e);
+            }
+
+            // --- ② マップ基本データの取得 ---
+            let mapData = null;
+            try {
+                let res = await supabaseClient.from('map_field').select('*').eq('field_id', numericId).limit(1);
+
+                if (res.error) {
+                    showErrorLog(`map_fieldエラー: ${res.error.message}`);
+                    document.getElementById('map-main-title').innerText = "マップ取得エラー";
+                } else if (res.data && res.data.length > 0) {
+                    mapData = res.data[0];
+                } else {
+                    document.getElementById('map-main-title').innerText = `マップID ${numericId} が見つかりません`;
+                }
+            } catch (err) {
+                showErrorLog(`マップテーブル通信障害: ${err.message}`);
+            }
+
+            // --- ③ 隣接マップグリッドを描画（鉄壁の最終防御版） ---
+            const gridContainer = document.getElementById('map-direction-grid');
+            try {
+                if (mapData) {
+                    const mapName = mapData.map_name || getSafeValue(mapData, 'map_name') || "未知のエリア";
+                    const mapType = mapData.map_type || getSafeValue(mapData, 'map_type') || "UNKNOWN";
+
+                    document.getElementById('map-main-title').innerText = `マップ詳細：${mapName}`;
+                    document.getElementById('map-type-badge').innerText = `エリア種別: ${mapType.toUpperCase()}`;
+
+                    gridContainer.innerHTML = '';
+                    GRID_LAYOUT.forEach(dir => {
+                        if (dir === 'center') {
+                            gridContainer.innerHTML += `
+                                <div class="map-grid-btn center-map">
+                                    <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
+                                    <div>${mapName}</div>
+                                </div>`;
+                        } else {
+                            const targetId = mapData[dir] || getSafeValue(mapData, dir);
+                            
+                            // ★超・安全判定：データが存在し、かつ「0」ではなく、文字列にしたときにゴミじゃない場合のみ処理
+                            if (targetId && targetId !== 0 && targetId !== '0') {
+                                const targetStr = String(targetId).trim();
+                                
+                                // 文字列が 'null' や空欄（''）ではないかを最終確認
+                                if (targetStr !== '' && targetStr.toLowerCase() !== 'null' && targetStr.toLowerCase() !== 'undefined') {
+                                    
+                                    // ここまで生き残った本物のデータだけをカンマで区切る
+                                    const firstTargetId = targetStr.split(',')[0].trim();
+                                    const targetName = nameResolver[firstTargetId] || `エリアID: ${firstTargetId}`;
+                                    gridContainer.innerHTML += `
+                                        <a href="town_info.html?id=${firstTargetId}" class="map-grid-btn">
+                                            <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
+                                            <div>${targetName}</div>
+                                        </a>`;
+                                    
+                                    return; // 正常にボタンを作れたらここで終了し、下の「ー」は作らない
+                                }
+                            }
+                            
+                            // 上の厳しい審査に落ちたデータ（空っぽ、0、ゴミデータ）はすべて「ー」にする
+                            gridContainer.innerHTML += `
+                                <div class="map-grid-btn empty">
+                                    <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
+                                    <div>ー</div>
+                                </div>`;
+                        }
+                    });
+                } else {
+                    gridContainer.innerHTML = '<div class="map-grid-btn empty">データなし</div>';
+                }
+            } catch (err) {
+                showErrorLog(`マップグリッド描画中に問題発生: ${err.message}`);
+                gridContainer.innerHTML = '<div class="map-grid-btn empty">描画失敗</div>';
+            }
+
+            // --- ④ npc（配置NPCデータ）の取得と反映 ---
+            const npcMainList = document.getElementById('npc-main-list');
+            try {
+                const npcRes = await supabaseClient.from('npc').select('*').eq('field_id', numericId);
+                
+                if (npcRes.error) {
+                    showErrorLog(`npcテーブルエラー: ${npcRes.error.message}`);
+                    npcMainList.innerHTML = `<li class="no-data" style="color:red;">⚠️ NPCデータの取得失敗</li>`;
+                } else if (npcRes.data && npcRes.data.length > 0) {
+                    npcMainList.innerHTML = '';
+                    npcRes.data.forEach(row => {
+                        const name = row.npc_name || getSafeValue(row, 'npc_name') || "街の住人";
+                        const jobVal = row.npc_job || getSafeValue(row, 'npc_job');
+                        const job = jobVal ? `【${jobVal}】` : '';
+                        
+                        const options = [
+                            row.option1 || getSafeValue(row, 'option1'), 
+                            row.option2 || getSafeValue(row, 'option2'), 
+                            row.option3 || getSafeValue(row, 'option3'), 
+                            row.option4 || getSafeValue(row, 'option4')
+                        ].filter(Boolean).join(' / ');
+                        const optHtml = options ? `<br><span style="color:#666; font-size:0.85em;">🗣️ 機能: ${options}</span>` : '';
+
+                        npcMainList.innerHTML += `
+                            <li>
+                                <strong>${name}</strong> ${job}
+                                ${optHtml}
+                            </li>`;
+                    });
+                } else {
+                    npcMainList.innerHTML = '<li class="no-data">このエリアに配置されているNPCはいません。</li>';
+                }
+            } catch (err) {
+                showErrorLog(`NPC処理エラー: ${err.message}`);
+                npcMainList.innerHTML = `<li class="no-data" style="color:red;">⚠️ NPCシステム障害が発生しました。</li>`;
+            }
+
+            // --- ⑤ fast_travel（駅馬車データ）の取得と反映 ---
+            const fastTravelList = document.getElementById('fast-travel-list');
+            try {
+                const fastRes = await supabaseClient.from('fast_travel').select('*').eq('field_id', numericId);
+                if (fastRes.error) {
+                    showErrorLog(`fast_travelエラー: ${fastRes.error.message}`);
+                    fastTravelList.innerHTML = `<li class="no-data" style="color:red;">⚠️ 駅馬車データの取得失敗</li>`;
+                } else if (fastRes.data && fastRes.data.length > 0) {
+                    fastTravelList.innerHTML = '';
+                    fastRes.data.forEach(row => {
+                        const target = getSafeValue(row, 'target') || "案内人";
+                        const select = getSafeValue(row, 'select') || "移動する";
+                        
+                        const keys = Object.keys(row);
+                        const destIdKey = keys.find(k => k.toLowerCase().includes('field_id') && k !== 'field_id') || 'field_id';
+                        const destId = row[destIdKey] || row['next_field_id'] || row['destination_id'];
+                        const destName = nameResolver[destId] || "未知のエリア";
+
+                        if(destId) {
+                            fastTravelList.innerHTML += `
+                                <li>
+                                    <strong>【${target}】</strong>に話しかけて<strong>「${select}」</strong>を選択 ➡️ 
+                                    <a href="town_info.html?id=${destId}" class="travel-link">${destName}</a> へ移動
+                                </li>`;
+                        }
+                    });
+                } else {
+                    fastTravelList.innerHTML = '<li class="no-data">このエリアに利用可能な駅馬車・定期船はありません。</li>';
+                }
+            } catch (err) {
+                showErrorLog(`駅馬車処理エラー: ${err.message}`);
+                fastTravelList.innerHTML = `<li class="no-data" style="color:red;">⚠️ 駅馬車システム障害が発生しました。</li>`;
+            }
+
+            // --- ⑥ map_field_unique（特殊オブジェクト移動）の取得と反映 ---
+            const uniqueTravelList = document.getElementById('unique-travel-list');
+            try {
+                const uniqueRes = await supabaseClient.from('map_field_unique').select('*').eq('field_id', numericId);
+                if (uniqueRes.error) {
+                    showErrorLog(`map_field_uniqueエラー: ${uniqueRes.error.message}`);
+                    uniqueTravelList.innerHTML = `<li class="no-data" style="color:red;">⚠️ 特殊移動データの取得失敗</li>`;
+                } else if (uniqueRes.data && uniqueRes.data.length > 0) {
+                    uniqueTravelList.innerHTML = '';
+                    uniqueRes.data.forEach(row => {
+                        const target = getSafeValue(row, 'target') || "オブジェクト";
+                        const nextField = getSafeValue(row, 'next_field') || "次のエリア";
+                        const nextFieldId = getSafeValue(row, 'next_field_id');
+                        const condition = getSafeValue(row, '条件') || getSafeValue(row, 'conditions');
+                        const memo = getSafeValue(row, '備考') || getSafeValue(row, 'memo');
+
+                        const conditionHtml = condition ? `<span class="badge-condition">条件: ${condition}</span>` : '';
+                        const memoHtml = memo ? ` <span style="color:#666; font-size:0.9em;">(${memo})</span>` : '';
+
+                        uniqueTravelList.innerHTML += `
+                            <li>
+                                🗿 エリア内の<strong>【${target}】</strong>を調べる ➡️ 
+                                <a href="town_info.html?id=${nextFieldId}" class="travel-link">${nextField}</a> へ移動
+                                ${conditionHtml}${memoHtml}
+                            </li>`;
+                    });
+                } else {
+                    uniqueTravelList.innerHTML = '<li class="no-data">このエリアに特殊オブジェクトによる移動ルートはありません。</li>';
+                }
+            } catch (err) {
+                showErrorLog(`特殊移動処理エラー: ${err.message}`);
+                uniqueTravelList.innerHTML = `<li class="no-data" style="color:red;">⚠️ 特殊移動システム障害が発生しました。</li>`;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadMapDetailData);
+    </script>
+</body>
+</html>
