@@ -77,6 +77,45 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             min-height: 400px;
         }
+        /* 画面の横幅が768px以下（スマホなど）の時に適用する設定 */
+@media (max-width: 768px) {
+  
+  /* 1. 横並び(flex)だった枠組みを、強制的に縦並び(column)に変える */
+  .wiki-wrapper { /* もし親要素のクラス名が違う場合はそこに合わせてね */
+    flex-direction: column !important;
+  }
+
+  /* 2. 左メニュー・中央詳細・右フィルターの横幅をすべて100%にする */
+  .town-list-sidebar,
+  .map-detail-main,
+  .filter-sidebar {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 20px; /* 各ブロックの間に少し隙間をあける */
+  }
+
+  /* 3. 街一覧リストが縦に長くなりすぎないようにスクロール化 */
+  .town-list-sidebar {
+    max-height: 180px; 
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+  }
+
+  /* 4. フィルターボタン（NPC、駅馬車、商人など）を横並びにしてスライドできるようにする */
+  .filter-sidebar {
+    display: flex !important;
+    flex-direction: row !important; /* 横並び */
+    overflow-x: auto; /* 横スクロールできるようにする */
+    white-space: nowrap;
+    gap: 8px;
+    padding: 5px 0;
+  }
+  
+  .filter-sidebar button {
+    flex: 0 0 auto; /* ボタンが潰れないようにする */
+  }
+}
     </style>
 </head>
 <body>
