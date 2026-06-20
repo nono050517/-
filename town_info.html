@@ -34,6 +34,13 @@
                     </aside>
 
                     <div class="map-detail-main" style="flex-grow: 1;">
+                        
+                        <div id="map-basic-info" style="margin-bottom: 15px;"></div>
+
+                        <h2 class="section-category">隣接マップ移動</h2>
+                        <div class="map-grid-container" id="map-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 450px; margin: 15px 0;">
+                            </div>
+
                         <div id="map-detail-content">
                             </div>
                     </div>
@@ -43,28 +50,40 @@
     </div>
 
     <script>
-        // ！！注意：ご自身のSupabaseのURLとキーに書き換えてください！！
+        // !!注意：ご自身のSupabaseのURLとキーに書き換えてください!!
         const SUPABASE_URL = 'あなたのSupabaseのURL';
         const SUPABASE_KEY = 'あなたのSupabaseのAnonキー';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // URLから現在のマップIDを取得（?id=〇〇）
         function getMapIdParam() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id') || '1'; // 指定がない場合はID:1を出す
+            return urlParams.get('id') || '1'; 
         }
 
         const currentMapId = getMapIdParam();
+
+        // 8方向の定義マッピング
+        const DIRECTION_LABELS = {
+            northwest: "北西 ↖", north: "北 ↑", northeast: "北東 ↗",
+            west: "西 ←",      center: "中央 ☉", east: "東 →",
+            southwest: "南西 ↙", south: "南 ↓", southeast: "南東 ↘"
+        };
+        
+        const GRID_ORDER = [
+            'northwest', 'north', 'northeast',
+            'west', 'center', 'east',
+            'southwest', 'south', 'southeast'
+        ];
 
         document.addEventListener('DOMContentLoaded', async () => {
             await renderTownList();
             await loadMapDetail();
         });
 
-        // 1. 左側に「街一覧」を自動で並べる処理
+        // 1. 左側に「街一覧」を並べる処理
         async function renderTownList() {
             const { data, error } = await supabase
-                .from('map_field') // ※テーブル名が違う場合は直してください
+                .from('map_field') 
                 .select('field_id, map_name, map_type')
                 .eq('map_type', 'town')
                 .order('field_id', { ascending: true });
@@ -81,8 +100,6 @@
             if (data && data.length > 0) {
                 data.forEach(town => {
                     const li = document.createElement('li');
-                    
-                    // 現在開いている街はクリックできないように太字で強調する
                     if (town.field_id == currentMapId) {
                         li.innerHTML = `<span style="font-weight: bold; color: #d02090; border-left: 3px solid #d02090; padding-left: 5px;">${town.map_name}</span>`;
                     } else {
@@ -95,10 +112,10 @@
             }
         }
 
-        // 2. 右側に「街の詳細」を出す処理
+        // 2. 右側に「街の詳細」と「3x3移動ボタン」を出す処理
         async function loadMapDetail() {
             const { data: mapData, error: mapError } = await supabase
-                .from('map_field') // ※テーブル名が違う場合は直してください
+                .from('map_field') 
                 .select('*')
                 .eq('field_id', currentMapId)
                 .single();
@@ -109,24 +126,55 @@
                 return;
             }
 
-            // タイトルとSEOタグを自動で書き換え
+            // タイトルとSEOタグ自動書き換え
             document.title = `${mapData.map_name} - エリシア・アーカイブス`;
             document.getElementById('map-page-title').textContent = mapData.map_name;
+            
             const metaDescription = document.querySelector('meta[name="description"]');
             if (metaDescription) {
                 metaDescription.setAttribute('content', `エリシアオンラインのマップ「${mapData.map_name}」の詳細情報ページです。`);
             }
 
-            // 右側に表示する内容（まずはシンプルに名前と種別だけ出します）
-            const detailContainer = document.getElementById('map-detail-content');
-            let html = `
-                <div style="margin-bottom: 20px;">
-                    <span style="background: #eee; color: #333; padding: 4px 10px; font-size: 0.85em; border: 1px solid #ccc; border-radius: 4px;">種別：${mapData.map_type}</span>
-                </div>
-                <p>ここは「${mapData.map_name}」の詳細データが表示されるエリアです。</p>
+            // 種別情報の描画
+            document.getElementById('map-basic-info').innerHTML = `
+                <span style="background: #eee; color: #333; padding: 4px 10px; font-size: 0.85em; border: 1px solid #ccc; border-radius: 4px;">種別：${mapData.map_type}</span>
             `;
-            
-            detailContainer.innerHTML = html;
+
+            // 3x3移動グリッドの自動組み立て（データを維持して綺麗にボタン化します！）
+            const gridContainer = document.getElementById('map-grid');
+            gridContainer.innerHTML = '';
+
+            GRID_ORDER.forEach(dir => {
+                const btn = document.createElement('div');
+                
+                if (dir === 'center') {
+                    // 真ん中は現在地
+                    btn.className = 'map-grid-btn center-map';
+                    btn.style = 'background: #fff0f5; border: 1px solid #ffb6c1; color: #d02090; padding: 10px; text-align: center; font-size: 0.85em; font-weight: bold; border-radius: 4px;';
+                    btn.innerHTML = `<div style="font-size:0.75em; color:#666;">現在地</div>${mapData.map_name}`;
+                } else {
+                    // 周りの8方向の判定
+                    const destId = mapData[dir]; // テーブルのカラム（northなど）の数字を取得
+                    
+                    if (destId && destId !== 'NULL') {
+                        // 隣にマップがある場合（クリックで移動可能）
+                        btn.className = 'map-grid-btn';
+                        btn.style = 'background: #f9f9f9; border: 1px solid #ccc; padding: 10px; text-align: center; font-size: 0.85em; font-weight: bold; border-radius: 4px; cursor: pointer;';
+                        btn.innerHTML = `<a href="town_info.html?id=${destId}" style="text-decoration: none; color: #0066cc;"><div style="font-size:0.75em; color:#666;">${DIRECTION_LABELS[dir]}</div>ID: ${destId}へ</a>`;
+                    } else {
+                        // 隣にマップがない場合（グレーアウト）
+                        btn.className = 'map-grid-btn empty';
+                        btn.style = 'background: #eee; border: 1px solid #ddd; color: #aaa; padding: 10px; text-align: center; font-size: 0.85em; border-radius: 4px;';
+                        btn.innerHTML = `<div style="font-size:0.75em; color:#999;">${DIRECTION_LABELS[dir]}</div>-`;
+                    }
+                }
+                gridContainer.appendChild(btn);
+            });
+
+            // その他のテキスト内容
+            document.getElementById('map-detail-content').innerHTML = `
+                <p style="margin-top:20px; color:#555;">※NPC一覧や施設データは、ここにSupabaseから自動で追加されるようになります。</p>
+            `;
         }
     </script>
 </body>
