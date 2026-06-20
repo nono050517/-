@@ -327,12 +327,13 @@
                 }
             } catch (e) {
                 console.error("街一覧生成/名前キャッシュ構築失敗:", e);
-                townListContainer.innerHTML = '<li class="no-data" style="color:red;">リスト取得失敗</li>';
+                townListContainer.innerHTML = '<li class="no-data" style="class="no-data">リスト取得失敗</li>';
             }
 
             let mapData = null;
             try {
-                let res = await supabaseClient.from('maps').select('*').or(`field_id.eq.${numericId},id.eq.${numericId}`).limit(1);
+                // ★元の鉄板接続（orを廃止）に戻しました
+                let res = await supabaseClient.from('maps').select('*').eq('field_id', numericId).limit(1);
 
                 if (res.error) {
                     showErrorLog(`mapsエラー: ${res.error.message}`);
@@ -398,7 +399,8 @@
 
             const npcMainList = document.getElementById('npc-main-list');
             try {
-                const npcRes = await supabaseClient.from('npc').select('*').or(`field_id.eq.${numericId},map_id.eq.${numericId}`);
+                // ★元の鉄板接続（orを廃止）に戻しました
+                const npcRes = await supabaseClient.from('npc').select('*').eq('field_id', numericId);
                 
                 if (npcRes.error) {
                     showErrorLog(`npcテーブルエラー: ${npcRes.error.message}`);
@@ -434,7 +436,8 @@
 
             const fastTravelList = document.getElementById('fast-travel-list');
             try {
-                const fastRes = await supabaseClient.from('fast_travel').select('*').or(`field_id.eq.${numericId},map_id.eq.${numericId}`);
+                // ★元の鉄板接続（orを廃止）に戻しました
+                const fastRes = await supabaseClient.from('fast_travel').select('*').eq('field_id', numericId);
                 if (fastRes.error) {
                     showErrorLog(`fast_travelエラー: ${fastRes.error.message}`);
                     fastTravelList.innerHTML = `<li class="no-data" style="color:red;">⚠️ 駅馬車データの取得失敗</li>`;
@@ -447,7 +450,7 @@
                         const keys = Object.keys(row);
                         const destIdKey = keys.find(k => k.toLowerCase().includes('field_id') && k !== 'field_id') || 'field_id';
                         const destId = row[destIdKey] || row['next_field_id'] || row['destination_id'];
-                        const destName = nameResolver[destId] || "未知 chimneys";
+                        const destName = nameResolver[destId] || "未知のエリア";
 
                         if(destId) {
                             fastTravelList.innerHTML += `
@@ -467,7 +470,8 @@
 
             const uniqueTravelList = document.getElementById('unique-travel-list');
             try {
-                const uniqueRes = await supabaseClient.from('map_field_unique').select('*').or(`field_id.eq.${numericId},map_id.eq.${numericId}`);
+                // ★元の鉄板接続（orを廃止）に戻しました
+                const uniqueRes = await supabaseClient.from('map_field_unique').select('*').eq('field_id', numericId);
                 if (uniqueRes.error) {
                     showErrorLog(`map_field_uniqueエラー: ${uniqueRes.error.message}`);
                     uniqueTravelList.innerHTML = `<li class="no-data" style="color:red;">⚠️ 特殊移動データの取得失敗</li>`;
