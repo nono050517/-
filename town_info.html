@@ -144,7 +144,7 @@
 
                         <h3 class="section-category">🗺️ 隣接マップ（徒歩移動ルート）</h3>
                         <div class="item-content">
-                            <p style="font-size: 0.85em; color: #555; margin-bottom: 10px;">ボタンをクリックすると、そのマップの詳細情報へ切り替わります。</p>
+                            <img id="map-main-image" src="" alt="マップ画像" style="max-width:100%; display:none;">
                             <div class="map-grid-container" id="map-direction-grid"></div>
                         </div>
 
@@ -199,6 +199,8 @@
             }
         }
 
+
+        
         // 8方向の定義マッピング
         const DIRECTION_LABELS = {
             northwest: "北西 ↖", north: "北 ↑", northeast: "北東 ↗",
@@ -261,7 +263,7 @@
             }
         }
 
-        // 右側：基本情報と3x3隣接ルートの取得・生成
+// 右側：基本情報と3x3隣接ルートの取得・生成
         async function fetchMapBaseAndGrid(currentId) {
             const mainTitle = document.getElementById('map-main-title');
             const typeBadge = document.getElementById('map-type-badge');
@@ -280,17 +282,48 @@
                     mainTitle.innerText = data.map_name || "名称未設定マップ";
                     typeBadge.innerText = `エリア種別: ${data.map_type || "未分類"}`;
 
+                    // ==========================================
+                    // 1. マップ画像の自動読み込み処理
+                    // ==========================================
+                    const mapImageElement = document.getElementById('map-main-image');
+                    if (mapImageElement) {
+                        // img_map/1.png のようなパスを自動でセットして表示
+                        mapImageElement.src = `img_map/${currentId}.png`;
+                        mapImageElement.alt = `${data.map_name}のマップ画像`;
+                        mapImageElement.style.display = 'block';
+                    }
+
+                    // ==========================================
+                    // 2. 3x3隣接マスの条件付き表示処理
+                    // ==========================================
                     gridContainer.innerHTML = '';
                     GRID_ORDER.forEach(dir => {
+                        // データベースに登録されている隣接マップのID（文字列の'NULL'や空欄、0を安全に弾く）
+                        const nextId = data[dir];
+                        const hasNextId = nextId && nextId !== 'NULL' && String(nextId).trim() !== '0' && String(nextId).trim() !== '';
+
                         if (dir === 'center') {
-                            gridContainer.innerHTML += `
-                                <div class="map-grid-btn center-map">
-                                    <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
-                                    <strong>${data.map_name}</strong>
-                                </div>`;
+                            // ------------------------------------------
+                            // 【中央マスのルール】現在地と同じなら「表示しない（空マス）」、違うならボタン
+                            // ------------------------------------------
+                            if (!hasNextId || String(nextId) === String(currentId)) {
+                                // 読み込んでる街と同じID、または空なら非表示（透明の空欄枠）
+                                gridContainer.innerHTML += `<div class="map-grid-btn empty" style="background:transparent; border:none; box-shadow:none; pointer-events:none;"></div>`;
+                            } else {
+                                // 違う街のIDなら移動ボタンとして出す
+                                gridContainer.innerHTML += `
+                                    <a href="town_info.html?id=${nextId}" class="map-grid-btn center-map" style="cursor:pointer; pointer-events:auto;">
+                                        <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
+                                        <strong>移動先へ</strong>
+                                        <span style="font-size:0.75em; color:#888;">(ID: ${nextId})</span>
+                                    </a>`;
+                            }
                         } else {
-                            const nextId = data[dir];
-                            if (nextId && nextId !== 'NULL') {
+                            // ------------------------------------------
+                            // 【その他の方位（東西南北など）のルール】データがないなら「表示しない（空マス）」
+                            // ------------------------------------------
+                            if (hasNextId) {
+                                // 隣接マップがある場合だけボタンをきれいに表示
                                 gridContainer.innerHTML += `
                                     <a href="town_info.html?id=${nextId}" class="map-grid-btn">
                                         <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
@@ -298,11 +331,8 @@
                                         <span style="font-size:0.75em; color:#888;">(ID: ${nextId})</span>
                                     </a>`;
                             } else {
-                                gridContainer.innerHTML += `
-                                    <div class="map-grid-btn empty">
-                                        <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
-                                        <span style="color:#aaa;">移動不可</span>
-                                    </div>`;
+                                // 隣接データがない（空欄・NULL・0）なら「表示させない（透明の空マスにする）」
+                                gridContainer.innerHTML += `<div class="map-grid-btn empty" style="background:transparent; border:none; box-shadow:none; pointer-events:none;"></div>`;
                             }
                         }
                     });
@@ -314,7 +344,6 @@
                 showErrorLog(`基本情報・グリッド処理エラー: ${err.message}`);
             }
         }
-
         // 右側：NPC一覧
         async function fetchNpcList(currentId) {
             const npcMainList = document.getElementById('npc-main-list');
