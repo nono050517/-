@@ -67,8 +67,6 @@
         .monster-card.cat-boss { background-color: #fff0f5; border-color: #ffb6c1; }
         .monster-card.cat-hboss { background-color: #ffe4e1; border-color: #ff69b4; }
         .monster-card.cat-eld { background-color: #f8f0ff; border-color: #dda0dd; }
-        .monster-card.cat-ore { background-color: #fdf5e6; border-color: #d2b48c; }
-        .monster-card.cat-plant { background-color: #f0fff0; border-color: #98fb98; }
 
         /* 横並びカラムの幅比率 */
         .mob-col-name { width: 25%; font-weight: bold; color: #d02090; font-size: 1.05em; display: flex; align-items: center; gap: 5px; }
@@ -108,6 +106,10 @@
                             <input type="text" id="filter-map" placeholder="街道、荒野 など">
                         </div>
                         <div class="filter-item">
+                            <label>種族</label>
+                            <input type="text" id="filter-type" placeholder="動物種族、人種族 など">
+                        </div>
+                        <div class="filter-item">
                             <label>カテゴリー</label>
                             <select id="filter-category">
                                 <option value="">すべて</option>
@@ -115,9 +117,7 @@
                                 <option value="eld">エリート (eld)</option>
                                 <option value="boss">ボス (boss)</option>
                                 <option value="hboss">Hボス (hboss)</option>
-                                <option value="鉱石">鉱石</option>
-                                <option value="植物">植物</option>
-                            </select>
+                                </select>
                         </div>
                         <div class="filter-item">
                             <label>属性</label>
@@ -208,16 +208,23 @@
         function applyFilters() {
             const nameQuery = document.getElementById('filter-name').value.toLowerCase().trim();
             const mapQuery = document.getElementById('filter-map').value.toLowerCase().trim(); 
+            const typeQuery = document.getElementById('filter-type').value.toLowerCase().trim(); // 追加項目
             const catQuery = document.getElementById('filter-category').value.toLowerCase();
             const elemQuery = document.getElementById('filter-element').value;
             const dropQuery = document.getElementById('filter-drop').value.toLowerCase().trim();
 
             const filteredData = allMonstersData.filter(mob => {
-                const mobName = (getSafeValue(mob, 'mob_name') || '').toLowerCase();
-                const mapName = (getSafeValue(mob, 'map_name') || '').toLowerCase();
                 let category = (getSafeValue(mob, 'category') || 'mob').toLowerCase();
                 if (category === 'モンスター') category = 'mob';
-                
+
+                // ✨ 【重要】「鉱石」と「植物」は無条件で完全に弾く
+                if (category === '鉱石' || category === '植物') {
+                    return false;
+                }
+
+                const mobName = (getSafeValue(mob, 'mob_name') || '').toLowerCase();
+                const mapName = (getSafeValue(mob, 'map_name') || '').toLowerCase();
+                const mobType = (getSafeValue(mob, 'mob_type') || '').toLowerCase(); // 種族カラム
                 const element = getSafeValue(mob, 'element') || '';
 
                 // ドロップアイテム検索判定
@@ -237,10 +244,11 @@
                 // 全ての条件が一致しているか判定
                 const matchName = mobName.includes(nameQuery);
                 const matchMap  = mapName.includes(mapQuery); 
+                const matchType = mobType.includes(typeQuery); // 種族判定
                 const matchCat  = catQuery === '' || category === catQuery;
                 const matchElem = elemQuery === '' || element === elemQuery;
 
-                return matchName && matchMap && matchCat && matchElem && hasDrop;
+                return matchName && matchMap && matchType && matchCat && matchElem && hasDrop;
             });
 
             renderMonstersList(filteredData);
@@ -250,6 +258,7 @@
         function resetFilters() {
             document.getElementById('filter-name').value = '';
             document.getElementById('filter-map').value = '';
+            document.getElementById('filter-type').value = ''; // リセット追加
             document.getElementById('filter-category').value = '';
             document.getElementById('filter-element').value = '';
             document.getElementById('filter-drop').value = '';
@@ -261,6 +270,7 @@
             const listContainer = document.getElementById('monster-main-list');
             const countLabel = document.getElementById('monster-result-count');
             
+            // 鉱石・植物を除外した結果の純粋な件数を表示
             countLabel.innerText = `📄 該当モンスター: ${monsters.length} 件`;
             listContainer.innerHTML = '';
 
@@ -275,6 +285,7 @@
                 const lv = getSafeValue(mob, 'lv') || "?";
                 const element = getSafeValue(mob, 'element') || "無";
                 const category = getSafeValue(mob, 'category') || "mob";
+                const mobType = getSafeValue(mob, 'mob_type') || "不明";
                 const currentMapName = getSafeValue(mob, 'map_name') || "";
                 
                 let catClass = '';
@@ -282,8 +293,6 @@
                 if (checkCat === 'boss') catClass = 'cat-boss';
                 else if (checkCat === 'hboss') catClass = 'cat-hboss';
                 else if (checkCat === 'eld') catClass = 'cat-eld'; 
-                else if (checkCat === '鉱石') catClass = 'cat-ore';
-                else if (checkCat === '植物') catClass = 'cat-plant';
 
                 let drops = [];
                 for (let i = 1; i <= 18; i++) {
@@ -304,7 +313,6 @@
                     ? `<ul class="drop-list">` + drops.map(d => `<li class="drop-item ${d.isSphere ? 'sphere' : ''}">${d.name}</li>`).join('') + `</ul>`
                     : `<span style="font-size: 0.8em; color: #999;">ドロップなし</span>`;
 
-                // リンクは完全に削除し、マップ名をただのテキストとして表示
                 const mapNameText = currentMapName 
                     ? `<div style="margin-top: 2px; font-size: 0.9em; color: #777;">生息地: ${currentMapName}</div>` 
                     : '';
@@ -315,7 +323,8 @@
                             🦇 <span>${name}</span> <span class="mob-lv">(Lv.${lv})</span>
                         </div>
                         <div class="mob-col-info">
-                            属性: ${element} / 種別: ${category}
+                            種族: ${mobType} / 属性: ${element}<br>
+                            種別: ${category}
                             ${mapNameText}
                         </div>
                         <div class="mob-col-drops">
