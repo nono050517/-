@@ -22,52 +22,65 @@
         }
 
         /* =========================================
-           🔍 1行にギュッと収めたフィルターエリア
+           🔍 幅を最適化した1行フィルターエリア
         ========================================= */
         .filter-container {
             background: #fdfdfd;
             border: 1px solid #eee;
             border-radius: 6px;
-            padding: 10px;
+            padding: 10px 15px;
             margin-bottom: 20px;
             display: flex;
             flex-wrap: nowrap; /* 1行に強制 */
-            gap: 8px;          /* 間隔を狭める */
+            gap: 10px;         /* 間隔を少し詰める */
             align-items: flex-end;
-            overflow-x: auto;  /* 万が一画面が狭い時は横スクロール */
+            overflow-x: auto;  /* 画面が狭い時は横スクロール */
         }
 
         .filter-item {
             display: flex;
             flex-direction: column;
-            gap: 3px;
-            font-size: 0.85em; /* 文字を少し小さく */
+            gap: 4px;
+            font-size: 0.85em; /* ラベルの文字を少し小さく */
             color: #444;
             font-weight: bold;
-            flex-grow: 1;
         }
 
-        /* 入力欄の幅をスリムに調整 */
+        /* 入力欄の基本スタイル */
         .filter-item input, .filter-item select {
             padding: 5px 8px;
             border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 0.9em;
-            width: 100%;
             box-sizing: border-box;
-            min-width: 100px; /* 必要最低限の幅 */
         }
-        
-        /* テキスト入力欄は少しだけ広めに確保 */
+
+        /* ▼ ご要望に合わせた各項目の幅調整 ▼ */
+        /* 種族と属性は選択肢の文字数が少ないので半分くらいに縮小 */
+        #filter-type, #filter-element {
+            width: 80px; 
+        }
+
+        /* それ以外（テキストや地域）は2割ほど狭く（120px〜130px程度） */
         #filter-name, #filter-map, #filter-drop {
-            min-width: 120px;
+            width: 130px;
+        }
+        #filter-category, #filter-region {
+            width: 120px;
+        }
+
+        /* ボタンエリア */
+        .filter-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 1px; /* 下揃えの微調整 */
         }
 
         .btn-search {
             background: #d02090;
             color: #fff;
             border: none;
-            padding: 6px 12px;
+            padding: 6px 15px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
@@ -80,7 +93,7 @@
             background: #aaa;
             color: #fff;
             border: none;
-            padding: 6px 12px;
+            padding: 6px 15px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
@@ -124,7 +137,7 @@
         .drop-item.sphere { background: #fff0f5; border-color: #ffb6c1; color: #d02090; font-weight: bold; }
 
         @media (max-width: 1024px) {
-            .filter-container { flex-wrap: wrap; } /* 画面が狭すぎるタブレット以下は折り返す */
+            .filter-container { flex-wrap: wrap; }
         }
         @media (max-width: 768px) {
             .monster-card { flex-direction: column; align-items: flex-start; gap: 8px; padding: 10px; }
@@ -192,7 +205,7 @@
                             <label>ドロップアイテム</label>
                             <input type="text" id="filter-drop" placeholder="アイテム名">
                         </div>
-                        <div style="display: flex; gap: 5px; margin-bottom: 2px;">
+                        <div class="filter-buttons">
                             <button class="btn-search" onclick="applyFilters()">抽出</button>
                             <button class="btn-reset" onclick="resetFilters()">リセット</button>
                         </div>
@@ -218,7 +231,7 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let finalizedMonstersData = [];
-        let mapMasterCache = {}; // マップ名からregionを引くためのキャッシュオブジェクト
+        let mapMasterCache = {}; 
 
         function getSafeValue(row, key) {
             if (!row) return null;
@@ -235,11 +248,11 @@
 
         // 初期化
         window.addEventListener('DOMContentLoaded', async () => {
-            await loadMapMasterData(); // ✨ 1. 先にマップデータを読み込んでキャッシュ化
-            await fetchAndProcessMonsters(); // 2. モンスターデータを読み込んで名寄せ
+            await loadMapMasterData(); 
+            await fetchAndProcessMonsters(); 
         });
 
-        // ✨ map_fieldテーブルからマップ名と地域(region)の対応表を作ってキャッシュする処理
+        // map_fieldテーブルからマップ名と地域(region)の対応表を作ってキャッシュする処理
         async function loadMapMasterData() {
             try {
                 const { data, error } = await supabaseClient
@@ -253,7 +266,6 @@
                         const mName = getSafeValue(row, 'map_name');
                         const rName = getSafeValue(row, 'region');
                         if (mName && mName.trim() !== '') {
-                            // マップ名（全小文字スペース詰め対応）をキーにして地域名を保存
                             mapMasterCache[mName.trim().toLowerCase()] = rName ? rName.trim() : "";
                         }
                     });
@@ -275,13 +287,12 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    // 1. 鉱石・植物を除外し、合体キーでグループ化
                     finalizedMonstersData = groupAndMergeMonsters(data);
 
-                    // 2. 選択肢（地域・種族）の自動生成
+                    // ✨ ここでセレクトボックスを生成！
                     buildDynamicSelectOptions(finalizedMonstersData);
 
-                    // 3. 一覧を描画
+                    // リストを描画
                     renderMonstersList(finalizedMonstersData); 
                 } else {
                     document.getElementById('monster-main-list').innerHTML = '<div class="no-data">モンスターデータがありません。</div>';
@@ -292,7 +303,7 @@
             }
         }
 
-        // モンスターの名前とレベルが同じだったら生息地・ドロップを1つにまとめるロジック
+        // 名寄せ（グループ化）ロジック
         function groupAndMergeMonsters(rawData) {
             const groups = {};
 
@@ -312,7 +323,7 @@
                         mob_type: getSafeValue(mob, 'mob_type') || "不明",
                         category: category === 'モンスター' ? 'mob' : category,
                         map_names: [], 
-                        regions: [],   // ✨ map_fieldから引いた地域を溜める配列
+                        regions: [],   
                         drops: new Set() 
                     };
                 }
@@ -322,7 +333,7 @@
                 if (mapName && !groups[uniqueKey].map_names.includes(mapName)) {
                     groups[uniqueKey].map_names.push(mapName);
 
-                    // ✨ 【修正の肝】マップ名を使って、map_fieldキャッシュからregion（地域名）を裏引きする
+                    // マップ名を使って、map_fieldキャッシュからregion（地域名）を裏引きする
                     const cleanMapKey = mapName.trim().toLowerCase();
                     const matchedRegion = mapMasterCache[cleanMapKey];
                     if (matchedRegion && matchedRegion !== "" && !groups[uniqueKey].regions.includes(matchedRegion)) {
@@ -330,7 +341,7 @@
                     }
                 }
 
-                // ドロップアイテム1〜18の統合
+                // ドロップアイテムの統合
                 for (let i = 1; i <= 18; i++) {
                     const dropName = getSafeValue(mob, `drop${i}`);
                     if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && dropName.trim() !== '') {
@@ -349,25 +360,25 @@
             return Object.values(groups);
         }
 
-        // 地域と種族のセレクトボックスを動的に組み立てる関数
+        // ✨ 地域と種族のセレクトボックスを動的に組み立てる関数
         function buildDynamicSelectOptions(monsters) {
             const regionSet = new Set();
             const typeSet = new Set();
 
             monsters.forEach(mob => {
-                // map_fieldから正しく紐付いたregions配列から選択肢を回収
                 mob.regions.forEach(r => regionSet.add(r));
-                if (mob.mob_type) typeSet.add(mob.mob_type);
+                if (mob.mob_type && mob.mob_type !== '不明') typeSet.add(mob.mob_type);
             });
 
-            // 地域のセレクトボックスに反映
             const regionSelect = document.getElementById('filter-region');
+            // すでにある「すべて」以外の選択肢を一度クリア（二重追加防止）
+            regionSelect.innerHTML = '<option value="">すべて</option>'; 
             Array.from(regionSet).sort().forEach(r => {
                 if(r) regionSelect.innerHTML += `<option value="${r}">${r}</option>`;
             });
 
-            // 種族のセレクトボックスに反映
             const typeSelect = document.getElementById('filter-type');
+            typeSelect.innerHTML = '<option value="">すべて</option>';
             Array.from(typeSet).sort().forEach(t => {
                 if(t) typeSelect.innerHTML += `<option value="${t}">${t}</option>`;
             });
@@ -387,10 +398,7 @@
                 const matchName = mob.mob_name.toLowerCase().includes(nameQuery);
                 const matchMap = mapQuery === '' || mob.map_names.some(m => m.toLowerCase().includes(mapQuery));
                 const matchCat = catQuery === '' || mob.category === catQuery;
-                
-                // 地域検索（紐付いた地域リストの中に選択した地域があるか判定）
                 const matchRegion = regionQuery === '' || mob.regions.includes(regionQuery);
-                
                 const matchType = typeQuery === '' || mob.mob_type === typeQuery;
                 const matchElem = elemQuery === '' || mob.element === elemQuery;
 
