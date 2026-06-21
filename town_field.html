@@ -23,7 +23,7 @@
             border-radius: 6px;
             padding: 10px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            max-height: 80vh;
+            max-height: 200vh;
             overflow-y: auto;
         }
 
@@ -120,10 +120,14 @@
             border-radius: 4px;
             padding: 10px;
             margin-bottom: 10px;
-            background: #fafafa; /* mobのデフォルト色 */
+            background: #fafafa; /* mobのデフォルト色（そのまま） */
         }
 
-        /* ★ 新機能：カテゴリーごとの色分けCSS */
+        /* ★ カテゴリーごとの色分けCSS（eld追加版） */
+        .monster-card.cat-eld {
+            background-color: #f8f4ff; /* 薄い紫（エルダー・強敵感） */
+            border-color: #d8bfd8;
+        }
         .monster-card.cat-boss {
             background-color: #fff0f5; /* うすいピンク */
             border-color: #ffb6c1;
@@ -133,11 +137,11 @@
             border-color: #ff69b4;
         }
         .monster-card.cat-ore {
-            background-color: #fdf5e6; /* うすい茶色（ベージュ系） */
+            background-color: #fdf5e6; /* 薄い茶色 */
             border-color: #d2b48c;
         }
         .monster-card.cat-plant {
-            background-color: #f0fff0; /* うすい緑 */
+            background-color: #f0fff0; /* 薄い緑 */
             border-color: #98fb98;
         }
 
@@ -150,9 +154,15 @@
             padding-bottom: 3px;
         }
         
-        /* 濃い色の枠（hbossなど）の時は下線も目立たせる微調整 */
-        .monster-card.cat-hboss .monster-name {
+        /* 濃い色の枠の時は下線も目立たせる微調整 */
+        .monster-card.cat-eld .monster-name {
+            border-bottom: 1px solid #d8bfd8;
+        }
+        .monster-card.cat-boss .monster-name {
             border-bottom: 1px solid #ffb6c1;
+        }
+        .monster-card.cat-hboss .monster-name {
+            border-bottom: 1px solid #ff69b4;
         }
 
         .monster-info {
@@ -510,21 +520,21 @@
                 monsterSection.style.display = 'block';
                 monsterMainList.innerHTML = '';
 
-                // ★ 新機能 1：カテゴリーごとの並べ替えルール（順番定義）
+                // ★ カテゴリーごとの並べ替えルール（eld を追加）
                 const categoryOrder = {
                     'mob': 1,
                     'モンスター': 1, // DB内で「モンスター」となっているデータ用
-                    'boss': 2,
-                    'hboss': 3,
-                    '鉱石': 4,
-                    '植物': 5
+                    'eld': 2,      // 追加: エルダー/エリート
+                    'boss': 3,     // 順番が1つずつ後ろにずれます
+                    'hboss': 4,
+                    '鉱石': 5,
+                    '植物': 6
                 };
 
-                // ★ データ取得後に並べ替え（ソート）を実行！
+                // 並べ替え（ソート）を実行
                 data.sort((a, b) => {
                     const catA = (getSafeValue(a, 'category') || 'mob').toLowerCase();
                     const catB = (getSafeValue(b, 'category') || 'mob').toLowerCase();
-                    // 未定義のカテゴリーは後ろ（99）へ回す
                     const orderA = categoryOrder[catA] || 99;
                     const orderB = categoryOrder[catB] || 99;
                     return orderA - orderB;
@@ -537,15 +547,16 @@
                     const mobType = getSafeValue(mob, 'mob_type') || "?";
                     const category = getSafeValue(mob, 'category') || "mob";
                     
-                    // ★ 新機能 2：カテゴリーに応じた色分け（クラス名）の判定
+                    // ★ カテゴリーに応じた色分け（eld 追加版）
                     let catClass = '';
                     const checkCat = category.toLowerCase();
                     
-                    if (checkCat === 'boss') catClass = 'cat-boss';
+                    if (checkCat === 'eld') catClass = 'cat-eld';
+                    else if (checkCat === 'boss') catClass = 'cat-boss';
                     else if (checkCat === 'hboss') catClass = 'cat-hboss';
                     else if (checkCat === '鉱石') catClass = 'cat-ore';
                     else if (checkCat === '植物') catClass = 'cat-plant';
-                    // 'mob' の場合は catClass を空にしてデフォルト色にする
+                    // 'mob' や 'モンスター' の場合は catClass を空にしてデフォルト色にする
 
                     // ドロップの処理（スフィア増殖含む）
                     let drops = [];
@@ -598,120 +609,3 @@
                 const { data: travelData, error: travelError } = await supabaseClient
                     .from('fast_travel')
                     .select('*')
-                    .eq('field_id', currentId);
-
-                if (travelError) throw travelError;
-
-                if (!travelData || travelData.length === 0) {
-                    fastTravelSection.style.display = 'none';
-                    return;
-                }
-
-                fastTravelSection.style.display = 'block';
-                const { data: allMaps, error: mapsError } = await supabaseClient
-                    .from('map_field') 
-                    .select('field_id, map_name, map_type');
-
-                if (mapsError) throw mapsError;
-
-                const townItems = [];
-                const fieldItems = [];
-
-                travelData.forEach(row => {
-                    const destId = getSafeValue(row, 'field_id_1');
-                    const cost = getSafeValue(row, '費用') || getSafeValue(row, 'cost') || "0";
-                    const currency = getSafeValue(row, '特記') || "Guilder";
-                    const selectGroup = getSafeValue(row, 'select');
-
-                    const targetMap = allMaps ? allMaps.find(m => String(m.field_id) === String(destId)) : null;
-                    const mapName = targetMap ? targetMap.map_name : (getSafeValue(row, 'map_name') || `エリア (ID: ${destId})`);
-
-                    let costBadge = '';
-                    if (cost !== '0' && cost !== 0 && cost !== '' && cost !== 'NULL') {
-                        costBadge = `<span class="badge-cost" style="font-size: 0.85em; background: #eee; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">費用: ${cost} ${currency}</span>`;
-                    }
-
-                    const liHtml = `
-                        <li style="margin-bottom: 6px; list-style: none;">
-                            🐎 <a href="town_field.html?id=${destId}" class="travel-link" style="font-weight: bold; text-decoration: none;">${mapName}</a> 行き ${costBadge}
-                        </li>
-                    `;
-
-                    if (selectGroup === '街へ行く' || selectGroup === 'town') {
-                        townItems.push(liHtml);
-                    } else {
-                        fieldItems.push(liHtml);
-                    }
-                });
-
-                let finalHtml = `<div class="travel-list-wrapper" style="padding-left: 0;">`;
-                if (townItems.length > 0) {
-                    finalHtml += `
-                        <div class="travel-group" style="margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 0.95em;">🏙️ 【街へ行く】</h4>
-                            <ul style="padding-left: 10px; margin: 0;">${townItems.join('')}</ul>
-                        </div>
-                    `;
-                }
-                if (fieldItems.length > 0) {
-                    finalHtml += `
-                        <div class="travel-group">
-                            <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 0.95em;">⚔️ 【戦闘地域へ行く】</h4>
-                            <ul style="padding-left: 10px; margin: 0;">${fieldItems.join('')}</ul>
-                        </div>
-                    `;
-                }
-                finalHtml += `</div>`;
-                fastTravelList.innerHTML = finalHtml;
-
-            } catch (err) {
-                showErrorLog(`駅馬車データ取得エラー: ${err.message}`);
-                fastTravelSection.style.display = 'none';
-            }
-        }
-
-        // 🗿 特殊移動
-        async function fetchUniqueTravelList(currentId) {
-            const uniqueTravelSection = document.getElementById('unique-travel-section');
-            const uniqueTravelList = document.getElementById('unique-travel-list');
-            try {
-                const { data, error } = await supabaseClient
-                    .from('map_field_unique')
-                    .select('*')
-                    .eq('field_id', currentId);
-
-                if (error) throw error;
-
-                if (data && data.length > 0) {
-                    uniqueTravelSection.style.display = 'block';
-                    uniqueTravelList.innerHTML = '';
-                    data.forEach(row => {
-                        const target = getSafeValue(row, 'target_name') || "オブジェクト";
-                        const nextField = getSafeValue(row, 'next_field') || "次のエリア";
-                        const nextFieldId = getSafeValue(row, 'next_field_id');
-                        const condition = getSafeValue(row, '条件') || getSafeValue(row, 'conditions');
-                        const memo = getSafeValue(row, '備考') || getSafeValue(row, 'memo');
-
-                        const conditionHtml = condition ? `<span class="badge-condition">条件: ${condition}</span>` : '';
-                        const memoHtml = memo ? ` <span style="color:#666; font-size:0.9em;">(${memo})</span>` : '';
-
-                        uniqueTravelList.innerHTML += `
-                            <li>
-                                🗿 エリア内の<strong>【${target}】</strong>を調べる ➡️ 
-                                <a href="town_field.html?id=${nextFieldId}" class="travel-link">${nextField}</a> へ移動
-                                ${conditionHtml}${memoHtml}
-                            </li>`;
-                    });
-                } else {
-                    uniqueTravelSection.style.display = 'none';
-                }
-            } catch (err) {
-                showErrorLog(`特殊移動処理エラー: ${err.message}`);
-                uniqueTravelSection.style.display = 'none';
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', loadMapDetailData);
-    </script>
-</body>
-</html>
