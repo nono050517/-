@@ -102,7 +102,7 @@
                             <input type="text" id="filter-name" placeholder="敵の名前">
                         </div>
                         <div class="filter-item">
-                            <label>出現エリア（マップ名）</label>
+                            <label>出現エリア</label>
                             <input type="text" id="filter-map" placeholder="街道、荒野 など">
                         </div>
                         <div class="filter-item">
@@ -117,7 +117,7 @@
                                 <option value="eld">エリート (eld)</option>
                                 <option value="boss">ボス (boss)</option>
                                 <option value="hboss">Hボス (hboss)</option>
-                                </select>
+                            </select>
                         </div>
                         <div class="filter-item">
                             <label>属性</label>
@@ -181,7 +181,7 @@
             await fetchAllMonsters();   
         }
 
-        // 全モンスター取得
+        // ✨全モンスター取得（ここで「鉱石」と「植物」を完全に捨てる）
         async function fetchAllMonsters() {
             try {
                 const { data, error } = await supabaseClient
@@ -193,8 +193,13 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    allMonstersData = data;
-                    renderMonstersList(allMonstersData); 
+                    // 取得したデータの中から、鉱石と植物を除外したものだけを保持する
+                    allMonstersData = data.filter(mob => {
+                        const category = (getSafeValue(mob, 'category') || '').toLowerCase();
+                        return category !== '鉱石' && category !== '植物';
+                    });
+                    
+                    renderMonstersList(allMonstersData); // 除外済みのデータを画面に出す
                 } else {
                     document.getElementById('monster-main-list').innerHTML = '<div class="no-data">モンスターデータがありません。</div>';
                     document.getElementById('monster-result-count').innerText = '';
@@ -208,7 +213,7 @@
         function applyFilters() {
             const nameQuery = document.getElementById('filter-name').value.toLowerCase().trim();
             const mapQuery = document.getElementById('filter-map').value.toLowerCase().trim(); 
-            const typeQuery = document.getElementById('filter-type').value.toLowerCase().trim(); // 追加項目
+            const typeQuery = document.getElementById('filter-type').value.toLowerCase().trim(); 
             const catQuery = document.getElementById('filter-category').value.toLowerCase();
             const elemQuery = document.getElementById('filter-element').value;
             const dropQuery = document.getElementById('filter-drop').value.toLowerCase().trim();
@@ -217,14 +222,9 @@
                 let category = (getSafeValue(mob, 'category') || 'mob').toLowerCase();
                 if (category === 'モンスター') category = 'mob';
 
-                // ✨ 【重要】「鉱石」と「植物」は無条件で完全に弾く
-                if (category === '鉱石' || category === '植物') {
-                    return false;
-                }
-
                 const mobName = (getSafeValue(mob, 'mob_name') || '').toLowerCase();
                 const mapName = (getSafeValue(mob, 'map_name') || '').toLowerCase();
-                const mobType = (getSafeValue(mob, 'mob_type') || '').toLowerCase(); // 種族カラム
+                const mobType = (getSafeValue(mob, 'mob_type') || '').toLowerCase(); 
                 const element = getSafeValue(mob, 'element') || '';
 
                 // ドロップアイテム検索判定
@@ -244,7 +244,7 @@
                 // 全ての条件が一致しているか判定
                 const matchName = mobName.includes(nameQuery);
                 const matchMap  = mapName.includes(mapQuery); 
-                const matchType = mobType.includes(typeQuery); // 種族判定
+                const matchType = mobType.includes(typeQuery); 
                 const matchCat  = catQuery === '' || category === catQuery;
                 const matchElem = elemQuery === '' || element === elemQuery;
 
@@ -258,10 +258,11 @@
         function resetFilters() {
             document.getElementById('filter-name').value = '';
             document.getElementById('filter-map').value = '';
-            document.getElementById('filter-type').value = ''; // リセット追加
+            document.getElementById('filter-type').value = ''; 
             document.getElementById('filter-category').value = '';
             document.getElementById('filter-element').value = '';
             document.getElementById('filter-drop').value = '';
+            // リセットしても、もともと鉱石・植物が除外されたallMonstersDataが表示される
             renderMonstersList(allMonstersData);
         }
 
@@ -270,7 +271,6 @@
             const listContainer = document.getElementById('monster-main-list');
             const countLabel = document.getElementById('monster-result-count');
             
-            // 鉱石・植物を除外した結果の純粋な件数を表示
             countLabel.innerText = `📄 該当モンスター: ${monsters.length} 件`;
             listContainer.innerHTML = '';
 
