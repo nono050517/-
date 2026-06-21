@@ -23,7 +23,7 @@
             border-radius: 6px;
             padding: 10px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            max-height: 100vh;
+            max-height: 200vh;
             overflow-y: auto;
         }
 
@@ -120,8 +120,27 @@
             border-radius: 4px;
             padding: 10px;
             margin-bottom: 10px;
-            background: #fafafa;
+            background: #fafafa; /* mobのデフォルト色 */
         }
+
+        /* ★ 新機能：カテゴリーごとの色分けCSS */
+        .monster-card.cat-boss {
+            background-color: #fff0f5; /* うすいピンク */
+            border-color: #ffb6c1;
+        }
+        .monster-card.cat-hboss {
+            background-color: #ffe4e1; /* 少し濃いピンク */
+            border-color: #ff69b4;
+        }
+        .monster-card.cat-ore {
+            background-color: #fdf5e6; /* うすい茶色（ベージュ系） */
+            border-color: #d2b48c;
+        }
+        .monster-card.cat-plant {
+            background-color: #f0fff0; /* うすい緑 */
+            border-color: #98fb98;
+        }
+
         .monster-name {
             font-weight: bold;
             color: #d02090;
@@ -130,6 +149,12 @@
             border-bottom: 1px solid #ddd;
             padding-bottom: 3px;
         }
+        
+        /* 濃い色の枠（hbossなど）の時は下線も目立たせる微調整 */
+        .monster-card.cat-hboss .monster-name {
+            border-bottom: 1px solid #ffb6c1;
+        }
+
         .monster-info {
             font-size: 0.85em;
             color: #555;
@@ -285,13 +310,10 @@
         async function loadMapDetailData() {
             const currentId = getMapIdParam();
             
-            // 1. 地方別メニューの生成
             await renderAreaAccordion(currentId);
-
-            // 2. マップ詳細データの読み込み
             await fetchMapBaseAndGrid(currentId);
             await fetchNpcList(currentId);
-            await fetchMonsterList(currentId); // ★追加: モンスター情報の取得
+            await fetchMonsterList(currentId);
             await fetchFastTravelList(currentId);
             await fetchUniqueTravelList(currentId);
         }
@@ -438,7 +460,7 @@
             }
         }
 
-        // 👥 NPC一覧（データがなければセクションごと非表示）
+        // 👥 NPC一覧
         async function fetchNpcList(currentId) {
             const npcSection = document.getElementById('npc-section');
             const npcMainList = document.getElementById('npc-main-list');
@@ -459,7 +481,7 @@
                         npcMainList.innerHTML += `<li>👤 <strong>${name}</strong> 【${job}】</li>`;
                     });
                 } else {
-                    npcSection.style.display = 'none'; // データがなければ隠す
+                    npcSection.style.display = 'none';
                 }
             } catch (err) {
                 showErrorLog(`NPC一覧取得エラー: ${err.message}`);
@@ -467,7 +489,7 @@
             }
         }
 
-        // ⚔️ 新機能！ モンスター＆ドロップ一覧（スフィア自動化 ＆ 無ければ非表示）
+        // ⚔️ 出現モンスター（カテゴリー並べ替え ＆ 色分け機能）
         async function fetchMonsterList(currentId) {
             const monsterSection = document.getElementById('monster-section');
             const monsterMainList = document.getElementById('monster-main-list');
@@ -480,7 +502,6 @@
 
                 if (error) throw error;
 
-                // 街など、モンスターが1匹もいない場合は枠ごと消滅
                 if (!data || data.length === 0) {
                     monsterSection.style.display = 'none';
                     return;
@@ -489,18 +510,48 @@
                 monsterSection.style.display = 'block';
                 monsterMainList.innerHTML = '';
 
+                // ★ 新機能 1：カテゴリーごとの並べ替えルール（順番定義）
+                const categoryOrder = {
+                    'mob': 1,
+                    'モンスター': 1, // DB内で「モンスター」となっているデータ用
+                    'boss': 2,
+                    'hboss': 3,
+                    '鉱石': 4,
+                    '植物': 5
+                };
+
+                // ★ データ取得後に並べ替え（ソート）を実行！
+                data.sort((a, b) => {
+                    const catA = (getSafeValue(a, 'category') || 'mob').toLowerCase();
+                    const catB = (getSafeValue(b, 'category') || 'mob').toLowerCase();
+                    // 未定義のカテゴリーは後ろ（99）へ回す
+                    const orderA = categoryOrder[catA] || 99;
+                    const orderB = categoryOrder[catB] || 99;
+                    return orderA - orderB;
+                });
+
                 data.forEach(mob => {
                     const name = getSafeValue(mob, 'mob_name') || "不明なモンスター";
                     const lv = getSafeValue(mob, 'lv') || "?";
                     const element = getSafeValue(mob, 'element') || "無";
                     const mobType = getSafeValue(mob, 'mob_type') || "?";
+                    const category = getSafeValue(mob, 'category') || "mob";
                     
-                    // drop1 〜 drop18 までをスキャン
+                    // ★ 新機能 2：カテゴリーに応じた色分け（クラス名）の判定
+                    let catClass = '';
+                    const checkCat = category.toLowerCase();
+                    
+                    if (checkCat === 'boss') catClass = 'cat-boss';
+                    else if (checkCat === 'hboss') catClass = 'cat-hboss';
+                    else if (checkCat === '鉱石') catClass = 'cat-ore';
+                    else if (checkCat === '植物') catClass = 'cat-plant';
+                    // 'mob' の場合は catClass を空にしてデフォルト色にする
+
+                    // ドロップの処理（スフィア増殖含む）
                     let drops = [];
                     for (let i = 1; i <= 18; i++) {
                         const dropName = getSafeValue(mob, `drop${i}`);
                         if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && dropName.trim() !== '') {
-                            // 💡神機能：スフィアの4段階自動生成
                             if (dropName.includes('スフィア')) {
                                 drops.push({ name: `${dropName}(ノーマル)`, isSphere: true });
                                 drops.push({ name: `${dropName}(ユニーク)`, isSphere: true });
@@ -521,10 +572,11 @@
                         dropsHtml = `<span style="font-size: 0.8em; color: #999;">ドロップ情報なし</span>`;
                     }
 
+                    // catClass を付与して色分けする
                     monsterMainList.innerHTML += `
-                        <div class="monster-card">
+                        <div class="monster-card ${catClass}">
                             <div class="monster-name">🦇 ${name} <span style="font-size: 0.8em; color: #666; font-weight: normal;">(Lv.${lv})</span></div>
-                            <div class="monster-info">属性: ${element} / 種族: ${mobType}</div>
+                            <div class="monster-info">属性: ${element} / 種族: ${mobType} / 種別: ${category}</div>
                             <div class="monster-drops">
                                 <div style="font-size: 0.85em; font-weight: bold; margin-bottom: 3px; color: #444;">🎁 ドロップアイテム</div>
                                 ${dropsHtml}
@@ -538,7 +590,7 @@
             }
         }
 
-        // 🐴 駅馬車・定期船（データがなければセクションごと非表示）
+        // 🐴 駅馬車・定期船
         async function fetchFastTravelList(currentId) {
             const fastTravelSection = document.getElementById('fast-travel-section');
             const fastTravelList = document.getElementById('fast-travel-list');
@@ -551,7 +603,7 @@
                 if (travelError) throw travelError;
 
                 if (!travelData || travelData.length === 0) {
-                    fastTravelSection.style.display = 'none'; // データがなければ隠す
+                    fastTravelSection.style.display = 'none';
                     return;
                 }
 
@@ -618,7 +670,7 @@
             }
         }
 
-        // 🗿 特殊移動（データがなければセクションごと非表示）
+        // 🗿 特殊移動
         async function fetchUniqueTravelList(currentId) {
             const uniqueTravelSection = document.getElementById('unique-travel-section');
             const uniqueTravelList = document.getElementById('unique-travel-list');
@@ -651,7 +703,7 @@
                             </li>`;
                     });
                 } else {
-                    uniqueTravelSection.style.display = 'none'; // データがなければ隠す
+                    uniqueTravelSection.style.display = 'none';
                 }
             } catch (err) {
                 showErrorLog(`特殊移動処理エラー: ${err.message}`);
