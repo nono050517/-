@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* =========================================
-           基本レイアウト（元ページから引き継ぎ）
+           基本レイアウト
         ========================================= */
         .drilldown-container {
             display: flex;
@@ -16,13 +16,14 @@
             margin-top: 15px;
         }
 
+        /* 左側：マップ検索サイドバー */
         .town-list-sidebar {
-            width: 200px;
-            min-width: 200px;
+            width: 220px;
+            min-width: 220px;
             background: #fff;
             border: 1px solid #ddd;
             border-radius: 6px;
-            padding: 10px;
+            padding: 15px 10px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             max-height: 80vh;
             overflow-y: auto;
@@ -37,14 +38,14 @@
             color: #333;
         }
 
-        .area-accordion { margin-bottom: 8px; border: 1px solid #eee; border-radius: 4px; overflow: hidden; }
-        .area-summary { background: #fdf6f6; padding: 8px 10px; font-size: 0.9em; font-weight: bold; color: #444; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .area-summary::-webkit-details-marker { display: none; }
-        .area-summary::after { content: '▼'; font-size: 0.8em; color: #aaa; }
-        .area-accordion[open] .area-summary::after { content: '▲'; }
-        .town-ul { list-style: none; padding: 5px 0; margin: 0; background: #fff; border-top: 1px solid #eee; }
-        .town-li { margin-bottom: 2px; }
-        .town-link { display: block; padding: 6px 15px; color: #555; text-decoration: none; font-size: 0.85em; transition: background 0.2s; }
+        .search-box { display: flex; gap: 5px; margin-bottom: 15px; }
+        .search-box input { flex-grow: 1; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em; width: 100%; box-sizing: border-box; }
+        .search-box button { padding: 6px 10px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; font-weight: bold; }
+        .search-box button:hover { background: #0056b3; }
+
+        .town-ul { list-style: none; padding: 0; margin: 0; }
+        .town-li { margin-bottom: 2px; border-bottom: 1px dashed #eee; }
+        .town-link { display: block; padding: 8px 5px; color: #555; text-decoration: none; font-size: 0.85em; transition: background 0.2s; }
         .town-link:hover { background: #f5f5f5; color: #007bff; }
 
         .drilldown-main-content {
@@ -58,9 +59,8 @@
         }
 
         /* =========================================
-           モンスター一覧用の新規スタイル
+           モンスター一覧用のフィルタースタイル
         ========================================= */
-        /* 検索フィルターの枠 */
         .filter-container {
             background: #fdfdfd;
             border: 1px solid #eee;
@@ -73,70 +73,61 @@
             align-items: flex-end;
         }
 
-        .filter-item {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            font-size: 0.9em;
-            color: #444;
-            font-weight: bold;
-        }
+        .filter-item { display: flex; flex-direction: column; gap: 5px; font-size: 0.9em; color: #444; font-weight: bold; }
+        .filter-item input, .filter-item select { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.95em; }
 
-        .filter-item input, .filter-item select {
-            padding: 6px 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 0.95em;
-        }
-
-        .btn-search {
-            background: #d02090;
-            color: #fff;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .btn-search { background: #d02090; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-search:hover { background: #b01a7a; }
-        
-        .btn-reset {
-            background: #aaa;
-            color: #fff;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .btn-reset { background: #aaa; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-reset:hover { background: #888; }
 
-        /* モンスターのカードを並べるグリッド */
-        .monster-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
+        /* =========================================
+           横長（縦幅狭め）のモンスターカードレイアウト
+        ========================================= */
+        .monster-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* カード同士の縦の隙間 */
         }
 
-        /* 元のモンスターカードスタイル */
-        .monster-card { border: 1px solid #eee; border-radius: 4px; padding: 10px; background: #fafafa; }
+        .monster-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 15px; /* 縦幅を狭く調整 */
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+
+        /* 色分け */
         .monster-card.cat-boss { background-color: #fff0f5; border-color: #ffb6c1; }
         .monster-card.cat-hboss { background-color: #ffe4e1; border-color: #ff69b4; }
+        .monster-card.cat-eld { background-color: #f8f0ff; border-color: #dda0dd; }
         .monster-card.cat-ore { background-color: #fdf5e6; border-color: #d2b48c; }
         .monster-card.cat-plant { background-color: #f0fff0; border-color: #98fb98; }
 
-        .monster-name { font-weight: bold; color: #d02090; font-size: 1.1em; margin-bottom: 5px; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
-        .monster-card.cat-hboss .monster-name { border-bottom: 1px solid #ffb6c1; }
-        .monster-info { font-size: 0.85em; color: #555; margin-bottom: 8px; }
+        /* 横並びの列（カラム）の幅設定 */
+        .mob-col-name { width: 25%; font-weight: bold; color: #d02090; font-size: 1.05em; display: flex; align-items: center; gap: 5px; }
+        .mob-lv { font-size: 0.75em; color: #666; font-weight: normal; }
+        .mob-col-info { width: 25%; font-size: 0.85em; color: #555; line-height: 1.4; border-left: 1px dashed #ccc; padding-left: 10px; }
+        .mob-col-drops { width: 50%; border-left: 1px dashed #ccc; padding-left: 10px; }
         
-        .drop-list { display: flex; flex-wrap: wrap; gap: 5px; list-style: none; padding: 0; margin: 0; }
-        .drop-item { background: #fff; border: 1px solid #ccc; border-radius: 3px; padding: 2px 6px; font-size: 0.8em; color: #333; }
+        .drop-list { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; padding: 0; margin: 0; }
+        .drop-item { background: #fff; border: 1px solid #ccc; border-radius: 3px; padding: 2px 6px; font-size: 0.75em; color: #333; }
         .drop-item.sphere { background: #fff0f5; border-color: #ffb6c1; color: #d02090; font-weight: bold; }
 
+        .location-link { font-size: 0.9em; color: #007bff; text-decoration: none; display: inline-block; margin-top: 3px; }
+        .location-link:hover { text-decoration: underline; }
+
+        /* スマホ向けの時は縦並びに戻す */
         @media (max-width: 768px) {
             .drilldown-container { flex-direction: column; }
             .town-list-sidebar, .drilldown-main-content { width: 100% !important; max-width: 100% !important; }
-            .town-list-sidebar { max-height: 250px; }
+            
+            .monster-card { flex-direction: column; align-items: flex-start; gap: 8px; padding: 10px; }
+            .mob-col-name, .mob-col-info, .mob-col-drops { width: 100%; border-left: none; padding-left: 0; }
+            .mob-col-info { border-bottom: 1px dashed #ccc; padding-bottom: 8px; }
         }
     </style>
 </head>
@@ -149,10 +140,14 @@
                 <div class="drilldown-container">
                     
                     <aside class="town-list-sidebar">
-                        <div class="town-list-title">🗺️ 地方別エリア一覧</div>
-                        <div id="area-accordion-zone">
-                            <div class="no-data">読み込み中...</div>
+                        <div class="town-list-title">🗺️ エリア検索</div>
+                        <div class="search-box">
+                            <input type="text" id="map-search-input" placeholder="マップ名を入力..." onkeydown="if(event.key==='Enter') searchMap()">
+                            <button onclick="searchMap()">検索</button>
                         </div>
+                        <ul id="map-search-results" class="town-ul">
+                            <li style="color: #888; font-size: 0.85em; text-align: center; padding: 15px 0;">検索するとここに<br>マップへのリンクが出ます</li>
+                        </ul>
                     </aside>
 
                     <section class="drilldown-main-content">
@@ -169,7 +164,8 @@
                                 <label>カテゴリー</label>
                                 <select id="filter-category">
                                     <option value="">すべて</option>
-                                    <option value="mob">通常 (mob/モンスター)</option>
+                                    <option value="mob">通常 (mob)</option>
+                                    <option value="eld">エリート (eld)</option>
                                     <option value="boss">ボス (boss)</option>
                                     <option value="hboss">Hボス (hboss)</option>
                                     <option value="鉱石">鉱石</option>
@@ -194,7 +190,7 @@
                                 <input type="text" id="filter-drop" placeholder="ドロップ名で検索">
                             </div>
                             <div class="filter-item" style="flex-direction: row; gap: 10px;">
-                                <button class="btn-search" onclick="applyFilters()">検索・抽出</button>
+                                <button class="btn-search" onclick="applyFilters()">検索</button>
                                 <button class="btn-reset" onclick="resetFilters()">リセット</button>
                             </div>
                         </div>
@@ -203,7 +199,7 @@
                             <div id="monster-result-count" style="margin-bottom: 10px; font-weight: bold; color: #555;">
                                 読み込み中...
                             </div>
-                            <div id="monster-main-list" class="monster-grid">
+                            <div id="monster-main-list" class="monster-list-container">
                                 </div>
                         </div>
 
@@ -220,8 +216,8 @@
         const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 取得した全モンスターデータを保持する配列
         let allMonstersData = [];
+        let allMapsData = []; // マップ検索用のデータ保持
 
         function getSafeValue(row, key) {
             if (!row) return null;
@@ -238,64 +234,64 @@
 
         // 初期化処理
         async function initDatabase() {
-            await renderAreaAccordion(); // 左のエリアメニュー描画
-            await fetchAllMonsters();    // モンスターデータ全取得
+            await fetchAllMaps();       // マップデータ全取得（左の検索用）
+            await fetchAllMonsters();   // モンスターデータ全取得
         }
 
-        // 左メニューの描画（元ページの処理を流用）
-        async function renderAreaAccordion() {
-            const accordionZone = document.getElementById('area-accordion-zone');
+        // ==========================================
+        // 左メニュー：マップ検索機能
+        // ==========================================
+        async function fetchAllMaps() {
             try {
                 const { data, error } = await supabaseClient
                     .from('map_field')
-                    .select('field_id, map_name, map_type, region')
-                    .order('field_id', { ascending: true });
+                    .select('field_id, map_name, map_type');
 
                 if (error) throw error;
-
-                if (data && data.length > 0) {
-                    const groupedMaps = {};
-                    data.forEach(item => {
-                        const areaName = item.region || "その他の地域";
-                        if (!groupedMaps[areaName]) groupedMaps[areaName] = [];
-                        groupedMaps[areaName].push(item);
-                    });
-
-                    accordionZone.innerHTML = '';
-                    Object.keys(groupedMaps).forEach(areaName => {
-                        const mapsInArea = groupedMaps[areaName];
-                        let listItemsHtml = '';
-                        mapsInArea.forEach(map => {
-                            const fid = map.field_id;
-                            const isTown = ['town', '街', '村'].includes((map.map_type || '').toLowerCase());
-                            const icon = isTown ? '🏙️' : '⚔️';
-                            listItemsHtml += `
-                                <li class="town-li">
-                                    <a href="town_field.html?id=${fid}" class="town-link">${icon} ${map.map_name}</a>
-                                </li>`;
-                        });
-
-                        accordionZone.innerHTML += `
-                            <details class="area-accordion">
-                                <summary class="area-summary">📂 ${areaName}</summary>
-                                <ul class="town-ul">${listItemsHtml}</ul>
-                            </details>
-                        `;
-                    });
-                }
+                if (data) allMapsData = data;
             } catch (err) {
-                showErrorLog(`エリア一覧取得エラー: ${err.message}`);
+                showErrorLog(`マップデータ取得エラー: ${err.message}`);
             }
         }
 
-        // データベースから全モンスターを取得
+        function searchMap() {
+            const query = document.getElementById('map-search-input').value.toLowerCase().trim();
+            const resultZone = document.getElementById('map-search-results');
+            
+            if (!query) {
+                resultZone.innerHTML = '<li style="color: #888; font-size: 0.85em; text-align: center; padding: 15px 0;">文字を入力して検索してください</li>';
+                return;
+            }
+
+            const filtered = allMapsData.filter(m => (m.map_name || '').toLowerCase().includes(query));
+            
+            if (filtered.length === 0) {
+                resultZone.innerHTML = '<li style="color: #888; font-size: 0.85em; text-align: center; padding: 15px 0;">該当するマップが見つかりません</li>';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(map => {
+                const isTown = ['town', '街', '村'].includes((map.map_type || '').toLowerCase());
+                const icon = isTown ? '🏙️' : '⚔️';
+                html += `
+                    <li class="town-li">
+                        <a href="town_field.html?id=${map.field_id}" class="town-link">${icon} ${map.map_name}</a>
+                    </li>`;
+            });
+            resultZone.innerHTML = html;
+        }
+
+
+        // ==========================================
+        // 右メイン：モンスター一覧機能
+        // ==========================================
         async function fetchAllMonsters() {
             try {
-                // 上限を設けて取得（データが多い場合はlimitを増やすか、ページネーションが必要です）
                 const { data, error } = await supabaseClient
                     .from('mob_info')
                     .select('*')
-                    .order('lv', { ascending: true }) // レベル順で取得
+                    .order('lv', { ascending: true })
                     .limit(2000); 
 
                 if (error) throw error;
@@ -312,7 +308,6 @@
             }
         }
 
-        // 絞り込み処理
         function applyFilters() {
             const nameQuery = document.getElementById('filter-name').value.toLowerCase();
             const catQuery = document.getElementById('filter-category').value.toLowerCase();
@@ -322,12 +317,10 @@
             const filteredData = allMonstersData.filter(mob => {
                 const mobName = (getSafeValue(mob, 'mob_name') || '').toLowerCase();
                 let category = (getSafeValue(mob, 'category') || 'mob').toLowerCase();
-                // 表記ゆれ対応（データベース上の「モンスター」もmob扱いにする場合）
                 if (category === 'モンスター') category = 'mob';
                 
                 const element = getSafeValue(mob, 'element') || '';
 
-                // ドロップアイテムの検索
                 let hasDrop = false;
                 if (dropQuery === '') {
                     hasDrop = true;
@@ -341,17 +334,15 @@
                     }
                 }
 
-                const matchName = mobName.includes(nameQuery);
-                const matchCat = catQuery === '' || category === catQuery;
-                const matchElem = elemQuery === '' || element === elemQuery;
-
-                return matchName && matchCat && matchElem && hasDrop;
+                return mobName.includes(nameQuery) &&
+                       (catQuery === '' || category === catQuery) &&
+                       (elemQuery === '' || element === elemQuery) &&
+                       hasDrop;
             });
 
             renderMonstersList(filteredData);
         }
 
-        // フィルターをリセット
         function resetFilters() {
             document.getElementById('filter-name').value = '';
             document.getElementById('filter-category').value = '';
@@ -360,7 +351,6 @@
             renderMonstersList(allMonstersData);
         }
 
-        // モンスターリストを描画する関数（元ページのカード生成ロジックを活用）
         function renderMonstersList(monsters) {
             const listContainer = document.getElementById('monster-main-list');
             const countLabel = document.getElementById('monster-result-count');
@@ -369,7 +359,7 @@
             listContainer.innerHTML = '';
 
             if (monsters.length === 0) {
-                listContainer.innerHTML = '<div style="grid-column: 1 / -1; color: #777;">該当するモンスターが見つかりませんでした。</div>';
+                listContainer.innerHTML = '<div style="color: #777; text-align: center; padding: 20px;">該当するモンスターが見つかりませんでした。</div>';
                 return;
             }
 
@@ -378,7 +368,6 @@
                 const name = getSafeValue(mob, 'mob_name') || "不明なモンスター";
                 const lv = getSafeValue(mob, 'lv') || "?";
                 const element = getSafeValue(mob, 'element') || "無";
-                const mobType = getSafeValue(mob, 'mob_type') || "?";
                 const category = getSafeValue(mob, 'category') || "mob";
                 const fieldId = getSafeValue(mob, 'field_id') || "";
                 
@@ -386,6 +375,7 @@
                 const checkCat = category.toLowerCase();
                 if (checkCat === 'boss') catClass = 'cat-boss';
                 else if (checkCat === 'hboss') catClass = 'cat-hboss';
+                else if (checkCat === 'eld') catClass = 'cat-eld'; // eld（エリート用）
                 else if (checkCat === '鉱石') catClass = 'cat-ore';
                 else if (checkCat === '植物') catClass = 'cat-plant';
 
@@ -394,10 +384,10 @@
                     const dropName = getSafeValue(mob, `drop${i}`);
                     if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && dropName.trim() !== '') {
                         if (dropName.includes('スフィア')) {
-                            drops.push({ name: `${dropName}(ノーマル)`, isSphere: true });
-                            drops.push({ name: `${dropName}(ユニーク)`, isSphere: true });
-                            drops.push({ name: `${dropName}(ノーブル)`, isSphere: true });
-                            drops.push({ name: `${dropName}(ヒロイック)`, isSphere: true });
+                            drops.push({ name: `${dropName}(N)`, isSphere: true });
+                            drops.push({ name: `${dropName}(U)`, isSphere: true });
+                            drops.push({ name: `${dropName}(Nobl)`, isSphere: true });
+                            drops.push({ name: `${dropName}(H)`, isSphere: true });
                         } else {
                             drops.push({ name: dropName, isSphere: false });
                         }
@@ -406,22 +396,24 @@
 
                 let dropsHtml = drops.length > 0 
                     ? `<ul class="drop-list">` + drops.map(d => `<li class="drop-item ${d.isSphere ? 'sphere' : ''}">${d.name}</li>`).join('') + `</ul>`
-                    : `<span style="font-size: 0.8em; color: #999;">ドロップ情報なし</span>`;
+                    : `<span style="font-size: 0.8em; color: #999;">ドロップなし</span>`;
 
-                // 生息地へのリンクを追加（field_idがある場合）
+                // リンク
                 const locationLink = fieldId 
-                    ? `<a href="town_field.html?id=${fieldId}" style="font-size: 0.85em; color: #007bff; text-decoration: none;">➡️ 生息マップへ</a>` 
+                    ? `<a href="town_field.html?id=${fieldId}" class="location-link">➡️ 生息マップへ</a>` 
                     : '';
 
+                // 新しい1行（1カラム）のレイアウト
                 htmlString += `
                     <div class="monster-card ${catClass}">
-                        <div class="monster-name">🦇 ${name} <span style="font-size: 0.8em; color: #666; font-weight: normal;">(Lv.${lv})</span></div>
-                        <div class="monster-info">
-                            属性: ${element} / 種族: ${mobType} / 種別: ${category} <br>
+                        <div class="mob-col-name">
+                            🦇 <span>${name}</span> <span class="mob-lv">(Lv.${lv})</span>
+                        </div>
+                        <div class="mob-col-info">
+                            属性: ${element} / 種別: ${category} <br>
                             ${locationLink}
                         </div>
-                        <div class="monster-drops">
-                            <div style="font-size: 0.85em; font-weight: bold; margin-bottom: 3px; color: #444;">🎁 ドロップアイテム</div>
+                        <div class="mob-col-drops">
                             ${dropsHtml}
                         </div>
                     </div>
@@ -430,7 +422,6 @@
             listContainer.innerHTML = htmlString;
         }
 
-        // 画面読み込み時に実行
         window.addEventListener('DOMContentLoaded', initDatabase);
     </script>
 </body>
