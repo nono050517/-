@@ -22,17 +22,17 @@
         }
 
         /* =========================================
-           🔍 幅を最適化した1行フィルターエリア
+           🔍 全部の幅を半分にした極細フィルターエリア
         ========================================= */
         .filter-container {
             background: #fdfdfd;
             border: 1px solid #eee;
             border-radius: 6px;
-            padding: 10px 15px;
+            padding: 10px 12px;
             margin-bottom: 20px;
             display: flex;
             flex-wrap: nowrap; /* 1行に強制 */
-            gap: 10px;         /* 間隔を少し詰める */
+            gap: 6px;          /* 間隔もさらに狭く */
             align-items: flex-end;
             overflow-x: auto;  /* 画面が狭い時は横スクロール */
         }
@@ -40,66 +40,51 @@
         .filter-item {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            font-size: 0.85em; /* ラベルの文字を少し小さく */
+            gap: 3px;
+            font-size: 0.8em; /* ラベルの文字を極小に */
             color: #444;
             font-weight: bold;
         }
 
-        /* 入力欄の基本スタイル */
+        /* 入力欄の基本スタイル（パディングも削ってスリムに） */
         .filter-item input, .filter-item select {
-            padding: 5px 8px;
+            padding: 4px 6px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            font-size: 0.9em;
+            font-size: 0.85em;
             box-sizing: border-box;
         }
 
-        /* ▼ ご要望に合わせた各項目の幅調整 ▼ */
-        /* 種族と属性は選択肢の文字数が少ないので半分くらいに縮小 */
-        #filter-type, #filter-element {
-            width: 80px; 
-        }
-
-        /* それ以外（テキストや地域）は2割ほど狭く（120px〜130px程度） */
+        /* ▼ 完全に半分の幅（極細）に指定 ▼ */
         #filter-name, #filter-map, #filter-drop {
-            width: 130px;
+            width: 80px; /* テキスト系も一気に短く */
         }
         #filter-category, #filter-region {
-            width: 120px;
+            width: 70px; /* セレクトボックス系 */
+        }
+        #filter-type, #filter-element {
+            width: 60px; /* さらに短いもの */
         }
 
-        /* ボタンエリア */
+        /* ボタンエリアもキュッと小さく */
         .filter-buttons {
             display: flex;
-            gap: 5px;
-            margin-bottom: 1px; /* 下揃えの微調整 */
+            gap: 4px;
+            margin-bottom: 1px;
         }
 
-        .btn-search {
-            background: #d02090;
-            color: #fff;
-            border: none;
-            padding: 6px 15px;
+        .btn-search, .btn-reset {
+            padding: 4px 10px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 0.9em;
+            font-size: 0.85em;
             white-space: nowrap;
+            border: none;
         }
+        .btn-search { background: #d02090; color: #fff; }
         .btn-search:hover { background: #b01a7a; }
-
-        .btn-reset {
-            background: #aaa;
-            color: #fff;
-            border: none;
-            padding: 6px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.9em;
-            white-space: nowrap;
-        }
+        .btn-reset { background: #aaa; color: #fff; }
         .btn-reset:hover { background: #888; }
 
         /* =========================================
@@ -159,15 +144,15 @@
                     
                     <div class="filter-container">
                         <div class="filter-item">
-                            <label>モンスター名</label>
+                            <label>名前</label>
                             <input type="text" id="filter-name" placeholder="敵の名前">
                         </div>
                         <div class="filter-item">
-                            <label>出現エリア</label>
+                            <label>エリア</label>
                             <input type="text" id="filter-map" placeholder="地名">
                         </div>
                         <div class="filter-item">
-                            <label>カテゴリー</label>
+                            <label>カテゴリ</label>
                             <select id="filter-category">
                                 <option value="">すべて</option>
                                 <option value="mob">通常 (mob)</option>
@@ -202,8 +187,8 @@
                             </select>
                         </div>
                         <div class="filter-item">
-                            <label>ドロップアイテム</label>
-                            <input type="text" id="filter-drop" placeholder="アイテム名">
+                            <label>ドロップ</label>
+                            <input type="text" id="filter-drop" placeholder="アイテム">
                         </div>
                         <div class="filter-buttons">
                             <button class="btn-search" onclick="applyFilters()">抽出</button>
@@ -288,11 +273,7 @@
 
                 if (data && data.length > 0) {
                     finalizedMonstersData = groupAndMergeMonsters(data);
-
-                    // ✨ ここでセレクトボックスを生成！
                     buildDynamicSelectOptions(finalizedMonstersData);
-
-                    // リストを描画
                     renderMonstersList(finalizedMonstersData); 
                 } else {
                     document.getElementById('monster-main-list').innerHTML = '<div class="no-data">モンスターデータがありません。</div>';
@@ -328,12 +309,10 @@
                     };
                 }
 
-                // 生息地マッピング
                 const mapName = getSafeValue(mob, 'map_name');
                 if (mapName && !groups[uniqueKey].map_names.includes(mapName)) {
                     groups[uniqueKey].map_names.push(mapName);
 
-                    // マップ名を使って、map_fieldキャッシュからregion（地域名）を裏引きする
                     const cleanMapKey = mapName.trim().toLowerCase();
                     const matchedRegion = mapMasterCache[cleanMapKey];
                     if (matchedRegion && matchedRegion !== "" && !groups[uniqueKey].regions.includes(matchedRegion)) {
@@ -341,7 +320,6 @@
                     }
                 }
 
-                // ドロップアイテムの統合
                 for (let i = 1; i <= 18; i++) {
                     const dropName = getSafeValue(mob, `drop${i}`);
                     if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && dropName.trim() !== '') {
@@ -360,7 +338,7 @@
             return Object.values(groups);
         }
 
-        // ✨ 地域と種族のセレクトボックスを動的に組み立てる関数
+        // 地域と種族のセレクトボックスを動的に組み立てる関数
         function buildDynamicSelectOptions(monsters) {
             const regionSet = new Set();
             const typeSet = new Set();
@@ -371,7 +349,6 @@
             });
 
             const regionSelect = document.getElementById('filter-region');
-            // すでにある「すべて」以外の選択肢を一度クリア（二重追加防止）
             regionSelect.innerHTML = '<option value="">すべて</option>'; 
             Array.from(regionSet).sort().forEach(r => {
                 if(r) regionSelect.innerHTML += `<option value="${r}">${r}</option>`;
