@@ -23,20 +23,20 @@
             border-radius: 6px;
             padding: 10px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            max-height: 300vh;
+            max-height: 200vh;
             overflow-y: auto;
         }
 
         .town-list-title {
             font-size: 0.95em;
             font-weight: bold;
-            border-bottom: 2px solid #ffb6c1; /* サイトイメージに合わせたピンク線 */
+            border-bottom: 2px solid #ffb6c1;
             padding-bottom: 5px;
             margin-bottom: 10px;
             color: #333;
         }
 
-        /* アコーディオン（details/summary）のスタイリング */
+        /* アコーディオンのスタイリング */
         .area-accordion {
             margin-bottom: 8px;
             border: 1px solid #eee;
@@ -52,13 +52,13 @@
             color: #444;
             cursor: pointer;
             outline: none;
-            list-style: none; /* デフォルトの矢印を消す（ブラウザ対応用） */
+            list-style: none;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         .area-summary::-webkit-details-marker {
-            display: none; /* Safari用の矢印消去 */
+            display: none;
         }
         .area-summary::after {
             content: '▼';
@@ -96,7 +96,6 @@
             color: #007bff;
         }
 
-        /* 現在開いているエリアのハイライト */
         .town-link.active-town {
             background: #fff0f5;
             color: #d02090;
@@ -115,20 +114,63 @@
             min-height: 400px;
         }
 
-        /* 画面の横幅が768px以下（スマホなど）の時に適用する設定 */
+        /* ⚔️ 出現モンスター用の追加スタイル */
+        .monster-card {
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #fafafa;
+        }
+        .monster-name {
+            font-weight: bold;
+            color: #d02090;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 3px;
+        }
+        .monster-info {
+            font-size: 0.85em;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        .drop-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .drop-item {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 0.8em;
+            color: #333;
+        }
+        .drop-item.sphere {
+            background: #fff0f5;
+            border-color: #ffb6c1;
+            color: #d02090;
+            font-weight: bold;
+        }
+
         @media (max-width: 768px) {
             .wiki-wrapper { 
                 flex-direction: column !important;
             }
-
+            .drilldown-container {
+                flex-direction: column;
+            }
             .town-list-sidebar,
-            .map-detail-main,
-            .filter-sidebar {
+            .drilldown-main-content {
                 width: 100% !important;
                 max-width: 100% !important;
                 margin-bottom: 20px;
             }
-
             .town-list-sidebar {
                 max-height: 250px; 
                 overflow-y: auto;
@@ -144,8 +186,6 @@
             <nav id="sidebar-nav"></nav>
             
             <main>
-                
-
                 <div class="drilldown-container">
                     
                     <aside class="town-list-sidebar">
@@ -157,27 +197,45 @@
 
                     <section class="drilldown-main-content" id="drilldown-detail-zone">
                         <div id="debug-error-zone" style="color: red; font-size: 0.85em; font-weight: bold; margin-bottom: 15px; padding: 10px; background: #fff5f5; border-radius: 4px; display: none;"></div>
+                        
                         <h2 class="page-title" id="map-main-title">エリア情報読み込み中...</h2>
-                        <h3 class="section-category">🗺️ 隣接マップ（徒歩移動ルート）</h3>
-                        <div class="item-content">
-                            <img id="map-main-image" src="" alt="マップ画像" style="max-width:100%; display:none; margin-bottom: 15px;">
-                            <div class="map-grid-container" id="map-direction-grid"></div>
+                        
+                        <div id="grid-section">
+                            <h3 class="section-category">🗺️ 隣接マップ（徒歩移動ルート）</h3>
+                            <div class="item-content">
+                                <img id="map-main-image" src="" alt="マップ画像" style="max-width:100%; display:none; margin-bottom: 15px;">
+                                <div class="map-grid-container" id="map-direction-grid"></div>
+                            </div>
                         </div>
 
-                        <h3 class="section-category">👥 配置NPC一覧</h3>
-                        <div class="item-content">
-                            <ul class="travel-list" id="npc-main-list"></ul>
+                        <div id="npc-section" style="display: none;">
+                            <h3 class="section-category">👥 配置NPC一覧</h3>
+                            <div class="item-content">
+                                <ul class="travel-list" id="npc-main-list"></ul>
+                            </div>
                         </div>
 
-                        <h3 class="section-category">🐴 駅馬車・定期船 (Fast Travel)</h3>
-                        <div class="item-content">
-                            <ul class="travel-list" id="fast-travel-list"></ul>
+                        <div id="monster-section" style="display: none;">
+                            <h3 class="section-category">⚔️ 出現モンスター</h3>
+                            <div class="item-content">
+                                <div id="monster-main-list"></div>
+                            </div>
                         </div>
 
-                        <h3 class="section-category">🗿 特殊オブジェクト・調べる移動</h3>
-                        <div class="item-content">
-                            <ul class="travel-list" id="unique-travel-list"></ul>
+                        <div id="fast-travel-section" style="display: none;">
+                            <h3 class="section-category">🐴 駅馬車・定期船 (Fast Travel)</h3>
+                            <div class="item-content">
+                                <ul class="travel-list" id="fast-travel-list"></ul>
+                            </div>
                         </div>
+
+                        <div id="unique-travel-section" style="display: none;">
+                            <h3 class="section-category">🗿 特殊オブジェクト・調べる移動</h3>
+                            <div class="item-content">
+                                <ul class="travel-list" id="unique-travel-list"></ul>
+                            </div>
+                        </div>
+
                     </section>
 
                 </div>
@@ -194,13 +252,11 @@
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // URLパラメータから現在の「field_id」を取得
         function getMapIdParam() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('id') || '1';
         }
 
-        // 安全にデータを取得するためのヘルパー
         function getSafeValue(row, key) {
             if (!row) return null;
             return row[key] !== undefined ? row[key] : null;
@@ -214,7 +270,6 @@
             }
         }
 
-        // 8方向の定義マッピング
         const DIRECTION_LABELS = {
             northwest: "北西 ↖", north: "北 ↑", northeast: "北東 ↗",
             west: "西 ←", center: "中央 ☉", east: "東 →",
@@ -230,22 +285,21 @@
         async function loadMapDetailData() {
             const currentId = getMapIdParam();
             
-            // 1. 地方別メニュー（左側サイドバー）の生成
+            // 1. 地方別メニューの生成
             await renderAreaAccordion(currentId);
 
-            // 2. マップ詳細データの読み込み（右側コンテンツ）
+            // 2. マップ詳細データの読み込み
             await fetchMapBaseAndGrid(currentId);
             await fetchNpcList(currentId);
+            await fetchMonsterList(currentId); // ★追加: モンスター情報の取得
             await fetchFastTravelList(currentId);
             await fetchUniqueTravelList(currentId);
         }
 
-        // 左側：地方ごとにまとめたアコーディオンメニューの生成
+        // 地方ごとにまとめたアコーディオンメニュー
         async function renderAreaAccordion(currentId) {
             const accordionZone = document.getElementById('area-accordion-zone');
             try {
-                // map_field から全エリアデータを取得（地方名「area」または「region」カラムを想定。無ければ map_type で代替）
-                // ※ここではデータベースに「area」カラムが存在すると仮定しています。
                 const { data, error } = await supabaseClient
                     .from('map_field')
                     .select('field_id, map_name, map_type, region')
@@ -254,10 +308,8 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    // 1. データを地方（area）ごとにグループ化する
                     const groupedMaps = {};
                     data.forEach(item => {
-                        // 地方名（空の場合は「その他の地域」に分類）
                         const areaName = item.region || "その他の地域";
                         if (!groupedMaps[areaName]) {
                             groupedMaps[areaName] = [];
@@ -267,13 +319,9 @@
 
                     accordionZone.innerHTML = '';
 
-                    // 2. 地方ごとのアコーディオンHTMLを組み立て
                     Object.keys(groupedMaps).forEach(areaName => {
                         const mapsInArea = groupedMaps[areaName];
-                        
-                        // この地方の中に、現在表示中のマップが含まれているかチェック
                         const hasActiveMap = mapsInArea.some(m => String(m.field_id) === String(currentId));
-                        // 含まれている場合は最初からアコーディオンを開く(open)
                         const openAttr = hasActiveMap ? 'open' : '';
 
                         let listItemsHtml = '';
@@ -281,11 +329,8 @@
                             const fid = map.field_id;
                             const name = map.map_name;
                             const type = map.map_type || '';
-                            
-                            // 街・村系かフィールド系かでアイコンを切り替え
                             const isTown = ['town', '街', '村'].includes(type.toLowerCase());
                             const icon = isTown ? '🏙️' : '⚔️';
-
                             const isActive = (String(fid) === String(currentId)) ? 'active-town' : '';
                             
                             listItemsHtml += `
@@ -296,7 +341,6 @@
                                 </li>`;
                         });
 
-                        // アコーディオン（details）構造を追加
                         accordionZone.innerHTML += `
                             <details class="area-accordion" ${openAttr}>
                                 <summary class="area-summary">📂 ${areaName}</summary>
@@ -315,7 +359,7 @@
             }
         }
 
-        // 右側：基本情報と3x3隣接ルートの取得・生成
+        // 基本情報と3x3隣接ルート
         async function fetchMapBaseAndGrid(currentId) {
             const mainTitle = document.getElementById('map-main-title');
             const gridContainer = document.getElementById('map-direction-grid');
@@ -394,8 +438,9 @@
             }
         }
 
-        // 右側：NPC一覧
+        // 👥 NPC一覧（データがなければセクションごと非表示）
         async function fetchNpcList(currentId) {
+            const npcSection = document.getElementById('npc-section');
             const npcMainList = document.getElementById('npc-main-list');
             try {
                 const { data, error } = await supabaseClient
@@ -406,6 +451,7 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
+                    npcSection.style.display = 'block';
                     npcMainList.innerHTML = '';
                     data.forEach(row => {
                         const name = getSafeValue(row, 'npc_name') || "名無しのNPC";
@@ -413,15 +459,88 @@
                         npcMainList.innerHTML += `<li>👤 <strong>${name}</strong> 【${job}】</li>`;
                     });
                 } else {
-                    npcMainList.innerHTML = '<li class="no-data">このエリアに配置NPCはいません。</li>';
+                    npcSection.style.display = 'none'; // データがなければ隠す
                 }
             } catch (err) {
                 showErrorLog(`NPC一覧取得エラー: ${err.message}`);
+                npcSection.style.display = 'none';
             }
         }
 
-        // 右側：駅馬車・定期船
+        // ⚔️ 新機能！ モンスター＆ドロップ一覧（スフィア自動化 ＆ 無ければ非表示）
+        async function fetchMonsterList(currentId) {
+            const monsterSection = document.getElementById('monster-section');
+            const monsterMainList = document.getElementById('monster-main-list');
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('mob_info')
+                    .select('*')
+                    .eq('field_id', currentId);
+
+                if (error) throw error;
+
+                // 街など、モンスターが1匹もいない場合は枠ごと消滅
+                if (!data || data.length === 0) {
+                    monsterSection.style.display = 'none';
+                    return;
+                }
+
+                monsterSection.style.display = 'block';
+                monsterMainList.innerHTML = '';
+
+                data.forEach(mob => {
+                    const name = getSafeValue(mob, 'mob_name') || "不明なモンスター";
+                    const lv = getSafeValue(mob, 'lv') || "?";
+                    const element = getSafeValue(mob, 'element') || "無";
+                    const mobType = getSafeValue(mob, 'mob_type') || "?";
+                    
+                    // drop1 〜 drop18 までをスキャン
+                    let drops = [];
+                    for (let i = 1; i <= 18; i++) {
+                        const dropName = getSafeValue(mob, `drop${i}`);
+                        if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && dropName.trim() !== '') {
+                            // 💡神機能：スフィアの4段階自動生成
+                            if (dropName.includes('スフィア')) {
+                                drops.push({ name: `${dropName}(ノーマル)`, isSphere: true });
+                                drops.push({ name: `${dropName}(ユニーク)`, isSphere: true });
+                                drops.push({ name: `${dropName}(ノーブル)`, isSphere: true });
+                                drops.push({ name: `${dropName}(ヒロイック)`, isSphere: true });
+                            } else {
+                                drops.push({ name: dropName, isSphere: false });
+                            }
+                        }
+                    }
+
+                    let dropsHtml = '';
+                    if (drops.length > 0) {
+                        dropsHtml = `<ul class="drop-list">` + 
+                            drops.map(d => `<li class="drop-item ${d.isSphere ? 'sphere' : ''}">${d.name}</li>`).join('') + 
+                            `</ul>`;
+                    } else {
+                        dropsHtml = `<span style="font-size: 0.8em; color: #999;">ドロップ情報なし</span>`;
+                    }
+
+                    monsterMainList.innerHTML += `
+                        <div class="monster-card">
+                            <div class="monster-name">🦇 ${name} <span style="font-size: 0.8em; color: #666; font-weight: normal;">(Lv.${lv})</span></div>
+                            <div class="monster-info">属性: ${element} / 種族: ${mobType}</div>
+                            <div class="monster-drops">
+                                <div style="font-size: 0.85em; font-weight: bold; margin-bottom: 3px; color: #444;">🎁 ドロップアイテム</div>
+                                ${dropsHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                showErrorLog(`モンスター一覧取得エラー: ${err.message}`);
+                monsterSection.style.display = 'none';
+            }
+        }
+
+        // 🐴 駅馬車・定期船（データがなければセクションごと非表示）
         async function fetchFastTravelList(currentId) {
+            const fastTravelSection = document.getElementById('fast-travel-section');
             const fastTravelList = document.getElementById('fast-travel-list');
             try {
                 const { data: travelData, error: travelError } = await supabaseClient
@@ -432,10 +551,11 @@
                 if (travelError) throw travelError;
 
                 if (!travelData || travelData.length === 0) {
-                    fastTravelList.innerHTML = '<li class="no-data">このエリアにファストトラベル便はありません。</li>';
+                    fastTravelSection.style.display = 'none'; // データがなければ隠す
                     return;
                 }
 
+                fastTravelSection.style.display = 'block';
                 const { data: allMaps, error: mapsError } = await supabaseClient
                     .from('map_field') 
                     .select('field_id, map_name, map_type');
@@ -494,11 +614,13 @@
 
             } catch (err) {
                 showErrorLog(`駅馬車データ取得エラー: ${err.message}`);
+                fastTravelSection.style.display = 'none';
             }
         }
 
-        // 右側：特殊移動
+        // 🗿 特殊移動（データがなければセクションごと非表示）
         async function fetchUniqueTravelList(currentId) {
+            const uniqueTravelSection = document.getElementById('unique-travel-section');
             const uniqueTravelList = document.getElementById('unique-travel-list');
             try {
                 const { data, error } = await supabaseClient
@@ -509,6 +631,7 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
+                    uniqueTravelSection.style.display = 'block';
                     uniqueTravelList.innerHTML = '';
                     data.forEach(row => {
                         const target = getSafeValue(row, 'target_name') || "オブジェクト";
@@ -528,10 +651,11 @@
                             </li>`;
                     });
                 } else {
-                    uniqueTravelList.innerHTML = '<li class="no-data">このエリアに特殊移動ルートはありません。</li>';
+                    uniqueTravelSection.style.display = 'none'; // データがなければ隠す
                 }
             } catch (err) {
                 showErrorLog(`特殊移動処理エラー: ${err.message}`);
+                uniqueTravelSection.style.display = 'none';
             }
         }
 
