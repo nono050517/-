@@ -320,14 +320,14 @@
                     }
                 }
 
-                for (let i = 1; i <= 18; i++) {
+for (let i = 1; i <= 18; i++) {
                     const dropName = getSafeValue(mob, `drop${i}`);
                     if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && dropName.trim() !== '') {
-                        if (dropName.includes('スフィア')) {
-                            groups[uniqueKey].drops.add(`${dropName}(N)`);
-                            groups[uniqueKey].drops.add(`${dropName}(U)`);
-                            groups[uniqueKey].drops.add(`${dropName}(Nobl)`);
-                            groups[uniqueKey].drops.add(`${dropName}(H)`);
+                        if (dropName.includes('スフィア') && !dropName.includes('スフィア箱')) {
+                            groups[uniqueKey].drops.add(`${dropName}(ノーマル)`);
+                            groups[uniqueKey].drops.add(`${dropName}(ユニーク)`);
+                            groups[uniqueKey].drops.add(`${dropName}(ノーブル)`);
+                            groups[uniqueKey].drops.add(`${dropName}(ヒロイック)`);
                         } else {
                             groups[uniqueKey].drops.add(dropName);
                         }
