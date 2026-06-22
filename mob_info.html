@@ -59,7 +59,7 @@
         #filter-name, #filter-map, #filter-drop {
             width: 80px; /* テキスト系も一気に短く */
         }
-        #filter-category, #filter-region {
+        #filter-category, #filter-region, #filter-sort {
             width: 70px; /* セレクトボックス系 */
         }
         #filter-type, #filter-element {
@@ -190,6 +190,13 @@
                             <label>ドロップ</label>
                             <input type="text" id="filter-drop" placeholder="アイテム">
                         </div>
+                        <div class="filter-item">
+                            <label>並び順</label>
+                            <select id="filter-sort">
+                                <option value="level">レベル順</option>
+                                <option value="name">あいうえお順</option>
+                            </select>
+                        </div>
                         <div class="filter-buttons">
                             <button class="btn-search" onclick="applyFilters()">抽出</button>
                             <button class="btn-reset" onclick="resetFilters()">リセット</button>
@@ -266,7 +273,6 @@
                 const { data, error } = await supabaseClient
                     .from('mob_info')
                     .select('*')
-                    .order('lv', { ascending: true })
                     .limit(2000); 
 
                 if (error) throw error;
@@ -274,7 +280,9 @@
                 if (data && data.length > 0) {
                     finalizedMonstersData = groupAndMergeMonsters(data);
                     buildDynamicSelectOptions(finalizedMonstersData);
-                    renderMonstersList(finalizedMonstersData); 
+                    
+                    // 初期表示時も並び順（デフォルト：レベル順）を適用して描画
+                    applyFilters();
                 } else {
                     document.getElementById('monster-main-list').innerHTML = '<div class="no-data">モンスターデータがありません。</div>';
                     document.getElementById('monster-result-count').innerText = '';
@@ -293,13 +301,13 @@
                 if (category === '鉱石' || category === '植物') return;
 
                 const name = getSafeValue(mob, 'mob_name') || "不明なモンスター";
-                const lv = getSafeValue(mob, 'lv') || "?";
+                const lv = getSafeValue(mob, 'lv') || 0; // ソート用に数値扱いしやすいように
                 const uniqueKey = `${name}_${lv}`;
 
                 if (!groups[uniqueKey]) {
                     groups[uniqueKey] = {
                         mob_name: name,
-                        lv: lv,
+                        lv: Number(lv), // 確実に数値化
                         element: getSafeValue(mob, 'element') || "無",
                         mob_type: getSafeValue(mob, 'mob_type') || "不明",
                         category: category === 'モンスター' ? 'mob' : category,
@@ -320,14 +328,14 @@
                     }
                 }
 
-for (let i = 1; i <= 18; i++) {
+                for (let i = 1; i <= 18; i++) {
                     const dropName = getSafeValue(mob, `drop${i}`);
                     if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && dropName.trim() !== '') {
                         if (dropName.includes('スフィア') && !dropName.includes('スフィア箱')) {
-                            groups[uniqueKey].drops.add(`${dropName}(ノーマル)`);
-                            groups[uniqueKey].drops.add(`${dropName}(ユニーク)`);
-                            groups[uniqueKey].drops.add(`${dropName}(ノーブル)`);
-                            groups[uniqueKey].drops.add(`${dropName}(ヒロイック)`);
+                            groups[uniqueKey].drops.add(`${dropName}(N)`);
+                            groups[uniqueKey].drops.add(`${dropName}(U)`);
+                            groups[uniqueKey].drops.add(`${dropName}(Nobl)`);
+                            groups[uniqueKey].drops.add(`${dropName}(H)`);
                         } else {
                             groups[uniqueKey].drops.add(dropName);
                         }
@@ -361,7 +369,7 @@ for (let i = 1; i <= 18; i++) {
             });
         }
 
-        // 絞り込みフィルター処理
+        // 絞り込み ＋ ✨ ソート処理
         function applyFilters() {
             const nameQuery = document.getElementById('filter-name').value.toLowerCase().trim();
             const mapQuery = document.getElementById('filter-map').value.toLowerCase().trim(); 
@@ -370,8 +378,12 @@ for (let i = 1; i <= 18; i++) {
             const typeQuery = document.getElementById('filter-type').value;
             const elemQuery = document.getElementById('filter-element').value;
             const dropQuery = document.getElementById('filter-drop').value.toLowerCase().trim();
+            
+            // ✨ 並び順の取得
+            const sortType = document.getElementById('filter-sort').value;
 
-            const filteredData = finalizedMonstersData.filter(mob => {
+            // 1. まずはフィルターで絞り込み
+            let filteredData = finalizedMonstersData.filter(mob => {
                 const matchName = mob.mob_name.toLowerCase().includes(nameQuery);
                 const matchMap = mapQuery === '' || mob.map_names.some(m => m.toLowerCase().includes(mapQuery));
                 const matchCat = catQuery === '' || mob.category === catQuery;
@@ -394,6 +406,15 @@ for (let i = 1; i <= 18; i++) {
                 return matchName && matchMap && matchCat && matchRegion && matchType && matchElem && matchDrop;
             });
 
+            // ✨ 2. 絞り込んだ結果をソート
+            if (sortType === 'level') {
+                // レベル順（数値で比較）
+                filteredData.sort((a, b) => a.lv - b.lv);
+            } else if (sortType === 'name') {
+                // 名前順（日本語のあいうえお順で比較）
+                filteredData.sort((a, b) => a.mob_name.localeCompare(b.mob_name, 'ja'));
+            }
+
             renderMonstersList(filteredData);
         }
 
@@ -406,7 +427,8 @@ for (let i = 1; i <= 18; i++) {
             document.getElementById('filter-type').value = '';
             document.getElementById('filter-element').value = '';
             document.getElementById('filter-drop').value = '';
-            renderMonstersList(finalizedMonstersData);
+            document.getElementById('filter-sort').value = 'level'; // ソートもリセット
+            applyFilters();
         }
 
         // リスト描画
