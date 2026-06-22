@@ -321,23 +321,18 @@
                 }
 
                 for (let i = 1; i <= 18; i++) {
-    const dropName = getSafeValue(mob, `drop${i}`);
-    if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && String(dropName).trim() !== '') {
-        const dNameStr = String(dropName);
-        
-        // ▼ ここを修正しました！（スフィアを含み、かつスフィア箱ではない場合）
-        if (dNameStr.includes('スフィア') && !dNameStr.includes('スフィア箱')) {
-            drops.push({ name: `${dNameStr}(ノーマル)`, isSphere: true });
-            drops.push({ name: `${dNameStr}(ユニーク)`, isSphere: true });
-            drops.push({ name: `${dNameStr}(ノーブル)`, isSphere: true });
-            drops.push({ name: `${dNameStr}(ヒロイック)`, isSphere: true });
-        } else {
-            // スフィア箱や普通のアイテムはそのまま1つだけ表示
-            drops.push({ name: dNameStr, isSphere: false });
-        }
-    }
-
-                    
+                    const dropName = getSafeValue(mob, `drop${i}`);
+                    if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && dropName.trim() !== '') {
+                        if (dropName.includes('スフィア')) {
+                            groups[uniqueKey].drops.add(`${dropName}(N)`);
+                            groups[uniqueKey].drops.add(`${dropName}(U)`);
+                            groups[uniqueKey].drops.add(`${dropName}(Nobl)`);
+                            groups[uniqueKey].drops.add(`${dropName}(H)`);
+                        } else {
+                            groups[uniqueKey].drops.add(dropName);
+                        }
+                    }
+                }
             });
 
             return Object.values(groups);
