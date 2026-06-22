@@ -145,11 +145,13 @@
                     <div class="filter-container">
                         <div class="filter-item">
                             <label>名前</label>
-                            <input type="text" id="filter-name" placeholder="敵の名前">
+                            <input type="text" id="filter-name" placeholder="敵の名前" list="name-list">
+                            <datalist id="name-list"></datalist>
                         </div>
                         <div class="filter-item">
                             <label>エリア</label>
-                            <input type="text" id="filter-map" placeholder="地名">
+                            <input type="text" id="filter-map" placeholder="地名" list="map-list">
+                            <datalist id="map-list"></datalist>
                         </div>
                         <div class="filter-item">
                             <label>カテゴリ</label>
@@ -188,7 +190,8 @@
                         </div>
                         <div class="filter-item">
                             <label>ドロップ</label>
-                            <input type="text" id="filter-drop" placeholder="アイテム">
+                            <input type="text" id="filter-drop" placeholder="アイテム" list="drop-list">
+                            <datalist id="drop-list"></datalist>
                         </div>
                         <div class="filter-item">
                             <label>並び順</label>
@@ -279,9 +282,12 @@
 
                 if (data && data.length > 0) {
                     finalizedMonstersData = groupAndMergeMonsters(data);
-                    buildDynamicSelectOptions(finalizedMonstersData);
                     
-                    // 初期表示時も並び順（デフォルト：レベル順）を適用して描画
+                    // セレクトボックスの生成に加えて、予測変換リストも生成！
+                    buildDynamicSelectOptions(finalizedMonstersData);
+                    buildDatalists(finalizedMonstersData);
+                    
+                    // 初期表示
                     applyFilters();
                 } else {
                     document.getElementById('monster-main-list').innerHTML = '<div class="no-data">モンスターデータがありません。</div>';
@@ -301,13 +307,13 @@
                 if (category === '鉱石' || category === '植物') return;
 
                 const name = getSafeValue(mob, 'mob_name') || "不明なモンスター";
-                const lv = getSafeValue(mob, 'lv') || 0; // ソート用に数値扱いしやすいように
+                const lv = getSafeValue(mob, 'lv') || 0; 
                 const uniqueKey = `${name}_${lv}`;
 
                 if (!groups[uniqueKey]) {
                     groups[uniqueKey] = {
                         mob_name: name,
-                        lv: Number(lv), // 確実に数値化
+                        lv: Number(lv), 
                         element: getSafeValue(mob, 'element') || "無",
                         mob_type: getSafeValue(mob, 'mob_type') || "不明",
                         category: category === 'モンスター' ? 'mob' : category,
@@ -332,10 +338,10 @@
                     const dropName = getSafeValue(mob, `drop${i}`);
                     if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && dropName.trim() !== '') {
                         if (dropName.includes('スフィア') && !dropName.includes('スフィア箱')) {
-                            groups[uniqueKey].drops.add(`${dropName}(N)`);
-                            groups[uniqueKey].drops.add(`${dropName}(U)`);
-                            groups[uniqueKey].drops.add(`${dropName}(Nobl)`);
-                            groups[uniqueKey].drops.add(`${dropName}(H)`);
+                            groups[uniqueKey].drops.add(`${dropName}(ノーマル)`);
+                            groups[uniqueKey].drops.add(`${dropName}(ユニーク)`);
+                            groups[uniqueKey].drops.add(`${dropName}(ノーブル)`);
+                            groups[uniqueKey].drops.add(`${dropName}(ヒロイック)`);
                         } else {
                             groups[uniqueKey].drops.add(dropName);
                         }
@@ -369,7 +375,44 @@
             });
         }
 
-        // 絞り込み ＋ ✨ ソート処理
+        // ✨ 名前、エリア、ドロップアイテムの「予測変換リスト（datalist）」を作る関数
+        function buildDatalists(monsters) {
+            const nameSet = new Set();
+            const mapSet = new Set();
+            const dropSet = new Set();
+
+            monsters.forEach(mob => {
+                // 名前
+                if(mob.mob_name) nameSet.add(mob.mob_name);
+                
+                // エリア（マップ名）
+                mob.map_names.forEach(m => {
+                    if(m) mapSet.add(m);
+                });
+                
+                // ドロップアイテム
+                mob.drops.forEach(d => {
+                    if(d) {
+                        // 「(N)」などのレア度表記を外して、ベースの名前だけを予測候補にスッキリ入れる工夫
+                        let cleanName = d.replace(/\(N\)|\(U\)|\(Nobl\)|\(H\)/g, '');
+                        dropSet.add(cleanName);
+                    }
+                });
+            });
+
+            // HTMLの <datalist> に選択肢を流し込む
+            const nameDatalist = document.getElementById('name-list');
+            nameDatalist.innerHTML = Array.from(nameSet).sort().map(n => `<option value="${n}">`).join('');
+
+            const mapDatalist = document.getElementById('map-list');
+            mapDatalist.innerHTML = Array.from(mapSet).sort().map(m => `<option value="${m}">`).join('');
+
+            const dropDatalist = document.getElementById('drop-list');
+            dropDatalist.innerHTML = Array.from(dropSet).sort().map(d => `<option value="${d}">`).join('');
+        }
+
+
+        // 絞り込み ＋ ソート処理
         function applyFilters() {
             const nameQuery = document.getElementById('filter-name').value.toLowerCase().trim();
             const mapQuery = document.getElementById('filter-map').value.toLowerCase().trim(); 
@@ -379,10 +422,8 @@
             const elemQuery = document.getElementById('filter-element').value;
             const dropQuery = document.getElementById('filter-drop').value.toLowerCase().trim();
             
-            // ✨ 並び順の取得
             const sortType = document.getElementById('filter-sort').value;
 
-            // 1. まずはフィルターで絞り込み
             let filteredData = finalizedMonstersData.filter(mob => {
                 const matchName = mob.mob_name.toLowerCase().includes(nameQuery);
                 const matchMap = mapQuery === '' || mob.map_names.some(m => m.toLowerCase().includes(mapQuery));
@@ -406,12 +447,9 @@
                 return matchName && matchMap && matchCat && matchRegion && matchType && matchElem && matchDrop;
             });
 
-            // ✨ 2. 絞り込んだ結果をソート
             if (sortType === 'level') {
-                // レベル順（数値で比較）
                 filteredData.sort((a, b) => a.lv - b.lv);
             } else if (sortType === 'name') {
-                // 名前順（日本語のあいうえお順で比較）
                 filteredData.sort((a, b) => a.mob_name.localeCompare(b.mob_name, 'ja'));
             }
 
@@ -427,7 +465,7 @@
             document.getElementById('filter-type').value = '';
             document.getElementById('filter-element').value = '';
             document.getElementById('filter-drop').value = '';
-            document.getElementById('filter-sort').value = 'level'; // ソートもリセット
+            document.getElementById('filter-sort').value = 'level'; 
             applyFilters();
         }
 
