@@ -560,19 +560,22 @@
                     // ドロップの処理（スフィア増殖含む）
                     let drops = [];
                     for (let i = 1; i <= 18; i++) {
-                        const dropName = getSafeValue(mob, `drop${i}`);
-                        if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && String(dropName).trim() !== '') {
-                            const dNameStr = String(dropName);
-                            if (dNameStr.includes('スフィア')) {
-                                drops.push({ name: `${dNameStr}(ノーマル)`, isSphere: true });
-                                drops.push({ name: `${dNameStr}(ユニーク)`, isSphere: true });
-                                drops.push({ name: `${dNameStr}(ノーブル)`, isSphere: true });
-                                drops.push({ name: `${dNameStr}(ヒロイック)`, isSphere: true });
-                            } else {
-                                drops.push({ name: dNameStr, isSphere: false });
-                            }
-                        }
-                    }
+    const dropName = getSafeValue(mob, `drop${i}`);
+    if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && String(dropName).trim() !== '') {
+        const dNameStr = String(dropName);
+        
+        // ▼ ここを修正しました！（スフィアを含み、かつスフィア箱ではない場合）
+        if (dNameStr.includes('スフィア') && !dNameStr.includes('スフィア箱')) {
+            drops.push({ name: `${dNameStr}(ノーマル)`, isSphere: true });
+            drops.push({ name: `${dNameStr}(ユニーク)`, isSphere: true });
+            drops.push({ name: `${dNameStr}(ノーブル)`, isSphere: true });
+            drops.push({ name: `${dNameStr}(ヒロイック)`, isSphere: true });
+        } else {
+            // スフィア箱や普通のアイテムはそのまま1つだけ表示
+            drops.push({ name: dNameStr, isSphere: false });
+        }
+    }
+}
 
                     let dropsHtml = '';
                     if (drops.length > 0) {
