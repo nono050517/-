@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>エリア詳細 - エリシア・アーカイブス</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel=\"stylesheet\" href=\"style.css\">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* ドリルダウン用の左右2分割レイアウト */
@@ -34,697 +34,918 @@
             padding-bottom: 5px;
             margin-bottom: 10px;
             color: #333;
+            text-align: center;
         }
 
-        /* アコーディオンのスタイリング */
-        .area-accordion {
+        .region-details {
             margin-bottom: 8px;
-            border: 1px solid #eee;
             border-radius: 4px;
             overflow: hidden;
         }
 
-        .area-summary {
-            background: #fdf6f6;
-            padding: 8px 10px;
-            font-size: 0.9em;
+        .region-summary {
+            background: #fdf0f3;
+            padding: 6px 10px;
+            font-size: 0.88em;
             font-weight: bold;
-            color: #444;
+            color: #d02090;
             cursor: pointer;
             outline: none;
-            list-style: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .area-summary::-webkit-details-marker {
-            display: none;
-        }
-        .area-summary::after {
-            content: '▼';
-            font-size: 0.8em;
-            color: #aaa;
-            transition: transform 0.2s;
-        }
-        .area-accordion[open] .area-summary::after {
-            content: '▲';
-        }
-
-        .town-ul {
-            list-style: none;
-            padding: 5px 0;
-            margin: 0;
-            background: #fff;
-            border-top: 1px solid #eee;
-        }
-
-        .town-li {
-            margin-bottom: 2px;
-        }
-
-        .town-link {
-            display: block;
-            padding: 6px 15px;
-            color: #555;
-            text-decoration: none;
-            font-size: 0.85em;
+            user-select: none;
             transition: background 0.2s;
         }
 
-        .town-link:hover {
-            background: #f5f5f5;
-            color: #007bff;
+        .region-summary:hover {
+            background: #fbe5e9;
         }
 
-        .town-link.active-town {
+        .sidebar-links-ul {
+            list-style: none;
+            padding: 5px 0 5px 10px;
+            margin: 0;
+            background: #fff;
+            border-left: 2px solid #fbe5e9;
+        }
+
+        .sidebar-links-ul li {
+            margin: 4px 0;
+        }
+
+        .sidebar-map-link {
+            display: block;
+            font-size: 0.82em;
+            color: #555;
+            text-decoration: none;
+            padding: 3px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-map-link:hover {
+            background: #f5f5f5;
+            color: #000;
+        }
+
+        .sidebar-map-link.active-town {
             background: #fff0f5;
             color: #d02090;
             font-weight: bold;
-            border-left: 3px solid #ffb6c1;
         }
 
-        /* 右側：詳細表示エリア */
-        .drilldown-main-content {
-            flex-grow: 1;
+        /* 右側：メインコンテンツエリア */
+        .map-detail-main {
+            flex: 1;
             background: #fff;
             border: 1px solid #ddd;
             border-radius: 6px;
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            min-height: 400px;
         }
 
-        /* ⚔️ 出現モンスター用の追加スタイル */
+        .page-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            border-bottom: 3px solid #ffb6c1;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .section-category {
+            font-size: 1.1em;
+            font-weight: bold;
+            background: #fff0f5;
+            padding: 6px 12px;
+            border-left: 5px solid #ffb6c1;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            color: #d02090;
+        }
+
+        /* 3x3マップ移動グリッド用のスタイル */
+        .map-grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 450px;
+            margin: 15px 0;
+        }
+
+        .map-grid-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 5px;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.82em;
+            font-weight: bold;
+            text-align: center;
+            min-height: 50px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .map-grid-btn:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+
+        .map-grid-btn.center-map {
+            background: #fff0f5;
+            border-color: #ffb6c1;
+            color: #d02090;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .map-grid-btn.empty {
+            background: #eee;
+            color: #aaa;
+            border-color: #ddd;
+            cursor: not-allowed;
+            pointer-events: none;
+            box-shadow: none;
+        }
+
+        .direction-label {
+            font-size: 0.75em;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        /* 交通・オブジェクト移動リスト */
+        .travel-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+
+        .travel-list li {
+            padding: 8px 12px;
+            border-bottom: 1px dashed #eee;
+            font-size: 0.88em;
+            color: #444;
+        }
+
+        .travel-link {
+            color: #0066cc;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .travel-link:hover {
+            text-decoration: underline;
+        }
+
+        .badge-condition {
+            background: #fff3cd;
+            color: #856404;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+
+        /* 配置NPCリスト用テーブルスタイル */
+        .npc-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.88em;
+        }
+
+        .npc-table th, .npc-table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .npc-table th {
+            background: #fdf0f3;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .badge-npc-job {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.78em;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .job-merchant { background: #ffa500; }
+        .job-teleporter { background: #1e90ff; }
+        .job-blacksmith { background: #708090; }
+        .job-citizen { background: #9370db; }
+        .job-default { background: #999999; }
+
+        /* 出現モンスター・採取オブジェクトの検索フィルターとカード */
+        .search-box-container {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .search-input {
+            padding: 6px 10px;
+            font-size: 0.88em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 250px;
+        }
+        .search-btn {
+            padding: 6px 15px;
+            font-size: 0.88em;
+            background: #ffb6c1;
+            border: 1px solid #ff99ab;
+            border-radius: 4px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .search-btn:hover { background: #ff99ab; }
+
+        .monster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
         .monster-card {
             border: 1px solid #eee;
-            border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 10px;
-            background: #fafafa; /* mobのデフォルト色（そのまま） */
+            border-radius: 6px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: transform 0.2s;
+        }
+        .monster-card:hover {
+            transform: translateY(-2px);
         }
 
-        /* ★ カテゴリーごとの色分けCSS（eld追加版） */
-        .monster-card.cat-eld {
-            background-color: #f8f4ff; /* 薄い紫（エルダー・強敵感） */
-            border-color: #d8bfd8;
-        }
-        .monster-card.cat-boss {
-            background-color: #fff0f5; /* うすいピンク */
-            border-color: #ffb6c1;
-        }
-        .monster-card.cat-hboss {
-            background-color: #ffe4e1; /* 少し濃いピンク */
-            border-color: #ff69b4;
-        }
-        .monster-card.cat-ore {
-            background-color: #fdf5e6; /* 薄い茶色 */
-            border-color: #d2b48c;
-        }
-        .monster-card.cat-plant {
-            background-color: #f0fff0; /* 薄い緑 */
-            border-color: #98fb98;
+        .monster-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f5f5f5;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .monster-name {
             font-weight: bold;
-            color: #d02090;
-            font-size: 1.1em;
-            margin-bottom: 5px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 3px;
-        }
-        
-        /* 濃い色の枠の時は下線も目立たせる微調整 */
-        .monster-card.cat-eld .monster-name {
-            border-bottom: 1px solid #d8bfd8;
-        }
-        .monster-card.cat-boss .monster-name {
-            border-bottom: 1px solid #ffb6c1;
-        }
-        .monster-card.cat-hboss .monster-name {
-            border-bottom: 1px solid #ff69b4;
-        }
-
-        .monster-info {
-            font-size: 0.85em;
-            color: #555;
-            margin-bottom: 8px;
-        }
-        .drop-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .drop-item {
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            padding: 2px 6px;
-            font-size: 0.8em;
+            font-size: 0.95em;
             color: #333;
         }
-        .drop-item.sphere {
-            background: #fff0f5;
-            border-color: #ffb6c1;
-            color: #d02090;
+
+        .category-badge {
+            font-size: 0.75em;
             font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
-        @media (max-width: 768px) {
-            .wiki-wrapper { 
-                flex-direction: column !important;
-            }
-            .drilldown-container {
-                flex-direction: column;
-            }
-            .town-list-sidebar,
-            .drilldown-main-content {
-                width: 100% !important;
-                max-width: 100% !important;
-                margin-bottom: 20px;
-            }
-            .town-list-sidebar {
-                max-height: 250px; 
-                overflow-y: auto;
-                border: 1px solid #ccc;
-                padding: 10px;
-            }
+        /* 濃くなっていくグラデーションカラー設計 */
+        .cat-mob { background: #e2f0d9; color: #385723; border: 1px solid #c5e0b4; }          /* 薄い緑 */
+        .cat-boss { background: #fff2cc; color: #7f6000; border: 1px solid #ffe599; }         /* 薄い黄 */
+        .cat-hboss { background: #fce4d6; color: #c65911; border: 1px solid #f8cbad; }        /* オレンジ赤 */
+        .cat-aby { background: #660066; color: #ffffff; border: 1px solid #4a004a; }          /* 禍々しい特濃紫色 */
+        .cat-ore { background: #edd3e9; color: #7030a0; border: 1px solid #d9b1db; }          /* 鉱石 */
+        .cat-plant { background: #e2f0d9; color: #385723; border: 1px solid #c5e0b4; }        /* 植物 */
+
+        .monster-meta {
+            font-size: 0.82em;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .drop-section-title {
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #888;
+            margin-top: 6px;
+            margin-bottom: 4px;
+        }
+
+        .drop-item-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .drop-item-tag {
+            font-size: 0.78em;
+            background: #f5f5f5;
+            color: #444;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #e8e8e8;
+        }
+
+        /* スフィア専用4段階自動バッジ */
+        .sphere-container {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 3px;
+        }
+        .badge-sphere {
+            font-size: 0.9em;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .sph-normal { background: #e1f5fe; color: #0288d1; border: 1px solid #b3e5fc; }
+        .sph-unique { background: #fff3e0; color: #f57c00; border: 1px solid #ffe0b2; }
+        .sph-noble { background: #f3e5f5; color: #7b1fa2; border: 1px solid #e1bee7; }
+        .sph-heroic { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+
+        /* デバッグ用警告表示帯 */
+        #debug-error-zone {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.85em;
+            display: none;
+            white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
-    <div class="wrapper">
-        <div class="container">
-            <nav id="sidebar-nav"></nav>
-            
-            <main>
-                <div class="drilldown-container">
-                    
-                    <aside class="town-list-sidebar">
-                        <div class="town-list-title">🗺️ 地方別エリア一覧</div>
-                        <div id="area-accordion-zone">
-                            <div class="no-data">読み込み中...</div>
-                        </div>
-                    </aside>
+    <div id="debug-error-zone"></div>
 
-                    <section class="drilldown-main-content" id="drilldown-detail-zone">
-                        <div id="debug-error-zone" style="color: white; font-size: 0.9em; font-weight: bold; margin-bottom: 15px; padding: 10px; background: #ff4444; border-radius: 4px; display: none;"></div>
-                        
-                        <h2 class="page-title" id="map-main-title">エリア情報読み込み中...</h2>
-                        
-                        <div id="grid-section">
-                            <h3 class="section-category">🗺️ 隣接マップ（徒歩移動ルート）</h3>
-                            <div class="item-content">
-                                <img id="map-main-image" src="" alt="マップ画像" style="max-width:100%; display:none; margin-bottom: 15px;">
-                                <div class="map-grid-container" id="map-direction-grid"></div>
-                            </div>
-                        </div>
+    <div class="drilldown-container">
+        <aside class="town-list-sidebar">
+            <div class="town-list-title">🗺️ エリア一覧</div>
+            <div id="sidebar-accordion-zone">読み込み中...</div>
+        </aside>
 
-                        <div id="npc-section" style="display: none;">
-                            <h3 class="section-category">👥 配置NPC一覧</h3>
-                            <div class="item-content">
-                                <ul class="travel-list" id="npc-main-list"></ul>
-                            </div>
-                        </div>
+        <main class="map-detail-main">
+            <h1 class="page-title" id="map-main-title">マップ詳細</h1>
 
-                        <div id="monster-section" style="display: none;">
-                            <h3 class="section-category">⚔️ 出現モンスター</h3>
-                            <div class="item-content">
-                                <div id="monster-main-list"></div>
-                            </div>
-                        </div>
+            <div class="section-category">🔗 隣接エリア移動</div>
+            <div class="map-grid-container" id="map-direction-grid"></div>
 
-                        <div id="fast-travel-section" style="display: none;">
-                            <h3 class="section-category">🐴 駅馬車・定期船 (Fast Travel)</h3>
-                            <div class="item-content">
-                                <ul class="travel-list" id="fast-travel-list"></ul>
-                            </div>
-                        </div>
+            <div id="section-fast-travel">
+                <div class="section-category">🏙️ 移動手段（駅馬車・定期船）</div>
+                <div id="fast-travel-select-container"></div>
+            </div>
 
-                        <div id="unique-travel-section" style="display: none;">
-                            <h3 class="section-category">🗿 特殊オブジェクト・調べる移動</h3>
-                            <div class="item-content">
-                                <ul class="travel-list" id="unique-travel-list"></ul>
-                            </div>
-                        </div>
+            <div id="section-unique-travel">
+                <div class="section-category">🗿 特殊移動（調べる・ギミック）</div>
+                <ul class="travel-list" id="unique-travel-list"></ul>
+            </div>
 
-                    </section>
+            <div id="section-npc-list">
+                <div class="section-category">👥 配置NPC一覧</div>
+                <table class="npc-table">
+                    <thead>
+                        <tr>
+                            <th>NPC名</th>
+                            <th>役割・職種</th>
+                        </tr>
+                    </thead>
+                    <tbody id="npc-main-list"></tbody>
+                </table>
+            </div>
 
+            <div id="section-monster-list">
+                <div class="section-category">⚔️ 出現魔物 ＆ 採取資源</div>
+                <div class="search-box-container">
+                    <input type="text" id="monster-search-input" class="search-input" placeholder="魔物名、資源名、ドロップ品で検索...">
+                    <button class="search-btn" id="monster-search-btn">検索・抽出</button>
                 </div>
-            </main>
-        </div>
+                <div class="monster-grid" id="monster-main-list"></div>
+            </div>
+        </main>
     </div>
 
-    <script src="common.js"></script>
-
     <script>
-        // Supabaseクライアントの初期化
-        const SUPABASE_URL = "https://djfklvgrpdehqzhhodyg.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_ywFWyEJawcabWW8nHoETtQ_l-JyNOfC";
-        
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // --- Supabaseの初期設定 ---
+        const SUPABASE_URL = "https://your-supabase-url.supabase.co"; 
+        const SUPABASE_ANON_KEY = "your-anon-key";
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function getMapIdParam() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id') || '1';
+        // 現在表示しているマップIDの取得
+        function getActiveMapId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id') || '41'; // デフォルトは王宮前広場(41)
         }
 
-        function getSafeValue(row, key) {
-            if (!row) return null;
-            return row[key] !== undefined ? row[key] : null;
+        // 安全に値を取り出す補助関数
+        function getSafeValue(obj, key) {
+            if (!obj || obj[key] === undefined || obj[key] === null) return '';
+            const val = String(obj[key]).trim();
+            return (val === 'NULL' || val === '#N/A') ? '' : val;
         }
 
+        // エラーログ画面出力用関数
         function showErrorLog(msg) {
-            const errorZone = document.getElementById('debug-error-zone');
-            if (errorZone) {
-                errorZone.style.display = 'block';
-                errorZone.innerText += "⚠️ " + msg + "\n";
-            }
+            const zone = document.getElementById('debug-error-zone');
+            zone.style.display = 'block';
+            zone.innerHTML += msg + "\n";
+            console.error(msg);
         }
 
-        const DIRECTION_LABELS = {
-            northwest: "北西 ↖", north: "北 ↑", northeast: "北東 ↗",
-            west: "西 ←", center: "中央 ☉", east: "東 →",
-            southwest: "南西 ↙", south: "南 ↓", southeast: "南東 ↘"
-        };
-        const GRID_ORDER = [
-            'northwest', 'north', 'northeast',
-            'west', 'center', 'east',
-            'southwest', 'south', 'southeast'
-        ];
+        // グローバルにデータを保持する変数（検索フィルター用）
+        let loadedHabitatsAndObjects = [];
 
-        // メイン処理の連動
+        // メインロード処理
         async function loadMapDetailData() {
-            const currentId = getMapIdParam();
+            const currentId = getActiveMapId();
             
-            await renderAreaAccordion(currentId);
-            await fetchMapBaseAndGrid(currentId);
-            await fetchNpcList(currentId);
-            await fetchMonsterList(currentId);
-            await fetchFastTravelList(currentId);
-            await fetchUniqueTravelList(currentId);
+            // 1. 左側サイドバー（アコーディオン生成）
+            await buildSidebarAccordion(currentId);
+
+            // 2. マップ基礎情報と3x3隣接移動グリッドの生成
+            await buildNavigationGrid(currentId);
+
+            // 3. 駅馬車・定期船データの取得
+            await buildFastTravelSelect(currentId);
+
+            // 4. 特殊移動オブジェクトデータの取得
+            await buildUniqueTravelList(currentId);
+
+            // 5. 配置NPC一覧データの取得
+            await buildNpcList(currentId);
+
+            // 6. 新リレーションに基づくモンスター＆採取オブジェクトの同時取得
+            await buildMonsterAndObjectList(currentId);
         }
 
-        // 地方ごとにまとめたアコーディオンメニュー
-        async function renderAreaAccordion(currentId) {
-            const accordionZone = document.getElementById('area-accordion-zone');
+        // 左サイドバーのアコーディオン動的生成
+        async function buildSidebarAccordion(currentId) {
+            const accordionZone = document.getElementById('sidebar-accordion-zone');
             try {
-                const { data, error } = await supabaseClient
-                    .from('map_field')
-                    .select('field_id, map_name, map_type, region')
-                    .order('field_id', { ascending: true });
+                const { data: allMaps, error } = await supabase
+                    .from('maps')
+                    .select('id, map_name, map_type, region')
+                    .order('id', { ascending: true });
 
                 if (error) throw error;
 
-                if (data && data.length > 0) {
-                    const groupedMaps = {};
-                    data.forEach(item => {
-                        const areaName = item.region || "その他の地域";
-                        if (!groupedMaps[areaName]) {
-                            groupedMaps[areaName] = [];
-                        }
-                        groupedMaps[areaName].push(item);
+                if (!allMaps || allMaps.length === 0) {
+                    accordionZone.innerHTML = "マップデータがありません。";
+                    return;
+                }
+
+                // 地方名（region）ごとにグループ化
+                const groupedByRegion = {};
+                allMaps.forEach(m => {
+                    const regionName = getSafeValue(m, 'region') || "その他の地方";
+                    if (!groupedByRegion[regionName]) groupedByRegion[regionName] = [];
+                    groupedByRegion[regionName].push(m);
+                });
+
+                accordionZone.innerHTML = '';
+                
+                // 地方ごとにdetails/summaryタグを使って組み立て
+                for (const region in groupedByRegion) {
+                    const detailsEl = document.createElement('details');
+                    detailsEl.className = 'region-details';
+                    
+                    // 現在開いているマップがこの地方に所属している場合は最初から展開しておく
+                    const hasActiveMap = groupedByRegion[region].some(m => String(m.id) === String(currentId));
+                    if (hasActiveMap) detailsEl.open = true;
+
+                    const summaryEl = document.createElement('summary');
+                    summaryEl.className = 'region-summary';
+                    summaryEl.textContent = region;
+                    detailsEl.appendChild(summaryEl);
+
+                    const ulEl = document.createElement('ul');
+                    ulEl.className = 'sidebar-links-ul';
+
+                    groupedByRegion[region].forEach(mapItem => {
+                        const liEl = document.createElement('li');
+                        const icon = mapItem.map_type === 'town' ? '🏙️ ' : (mapItem.map_type === 'dungeon' ? '🏰 ' : '⚔️ ');
+                        const activeClass = String(mapItem.id) === String(currentId) ? 'active-town' : '';
+                        
+                        liEl.innerHTML = `<a href="town_field.html?id=${mapItem.id}" class="sidebar-map-link ${activeClass}">${icon}${mapItem.map_name}</a>`;
+                        ulEl.appendChild(liEl);
                     });
 
-                    accordionZone.innerHTML = '';
-
-                    Object.keys(groupedMaps).forEach(areaName => {
-                        const mapsInArea = groupedMaps[areaName];
-                        const hasActiveMap = mapsInArea.some(m => String(m.field_id) === String(currentId));
-                        const openAttr = hasActiveMap ? 'open' : '';
-
-                        let listItemsHtml = '';
-                        mapsInArea.forEach(map => {
-                            const fid = map.field_id;
-                            const name = map.map_name;
-                            const type = map.map_type || '';
-                            const isTown = ['town', '街', '村'].includes(type.toLowerCase());
-                            const icon = isTown ? '🏙️' : '⚔️';
-                            const isActive = (String(fid) === String(currentId)) ? 'active-town' : '';
-                            
-                            listItemsHtml += `
-                                <li class="town-li">
-                                    <a href="town_field.html?id=${fid}" class="town-link ${isActive}">
-                                        ${icon} ${name}
-                                    </a>
-                                </li>`;
-                        });
-
-                        accordionZone.innerHTML += `
-                            <details class="area-accordion" ${openAttr}>
-                                <summary class="area-summary">📂 ${areaName}</summary>
-                                <ul class="town-ul">
-                                    ${listItemsHtml}
-                                </ul>
-                            </details>
-                        `;
-                    });
-                } else {
-                    accordionZone.innerHTML = '<div class="no-data">エリアデータがありません。</div>';
+                    detailsEl.appendChild(ulEl);
+                    accordionZone.appendChild(detailsEl);
                 }
             } catch (err) {
-                showErrorLog(`エリア一覧取得エラー: ${err.message}`);
-                accordionZone.innerHTML = '<div class="no-data" style="color:red;">⚠️ エリアリスト読み込み失敗</div>';
+                showErrorLog(`サイドエリア生成エラー: ${err.message}`);
+                accordionZone.innerHTML = "⚠️ 読み込みに失敗しました。";
             }
         }
 
-        // 基本情報と3x3隣接ルート
-        async function fetchMapBaseAndGrid(currentId) {
-            const mainTitle = document.getElementById('map-main-title');
+        // 3x3移動ナビゲーションの生成
+        async function buildNavigationGrid(currentId) {
             const gridContainer = document.getElementById('map-direction-grid');
+            const mainTitle = document.getElementById('map-main-title');
+            
+            const DIRECTION_LABELS = {
+                northwest: "北西 ↖", north: "北 ↑", northeast: "北東 ↗",
+                west: "西 ←", center: "現在地 ☉", east: "東 →",
+                southwest: "南西 ↙", south: "南 ↓", southeast: "南東 ↘"
+            };
+
+            const GRID_ORDER = [
+                'northwest', 'north', 'northeast',
+                'west', 'center', 'east',
+                'southwest', 'south', 'southeast'
+            ];
 
             try {
-                const { data: currentMap, error: mapError } = await supabaseClient
-                    .from('map_field')
-                    .select('*')
-                    .eq('field_id', currentId)
-                    .maybeSingle();
+                // マスターデータとなる全マップ名を取得
+                const { data: nameMaster, error: nameErr } = await supabase.from('maps').select('id, map_name');
+                if (nameErr) throw nameErr;
 
-                if (mapError) throw mapError;
+                // 現在のマップ行を取得
+                const { data: currentMap, error: mapErr } = await supabase.from('maps').select('*').eq('id', currentId).maybeSingle();
+                if (mapErr) throw mapErr;
 
-                if (currentMap) {
-                    mainTitle.innerText = currentMap.map_name || "名称未設定マップ";
+                if (!currentMap) {
+                    gridContainer.innerHTML = "指定されたマップが見つかりません。";
+                    return;
+                }
 
-                    const mapImageElement = document.getElementById('map-main-image');
-                    if (mapImageElement) {
-                        mapImageElement.src = `img_map/${currentId}.png`;
-                        mapImageElement.alt = `${currentMap.map_name}のマップ画像`;
-                        mapImageElement.style.display = 'block';
+                mainTitle.textContent = currentMap.map_name;
+                gridContainer.innerHTML = '';
+
+                GRID_ORDER.forEach(dir => {
+                    if (dir === 'center') {
+                        gridContainer.innerHTML += `<div class="map-grid-btn center-map"><span class="direction-label">${DIRECTION_LABELS.center}</span>${currentMap.map_name}</div>`;
+                        return;
                     }
 
-                    const neighborIds = GRID_ORDER
-                        .map(dir => currentMap[dir])
-                        .filter(id => id && id !== 'NULL' && String(id).trim() !== '0' && String(id).trim() !== '');
+                    const nextId = currentMap[dir];
+                    if (nextId) {
+                        const targetMap = nameMaster.find(m => String(m.id) === String(nextId));
+                        const displayName = targetMap ? targetMap.map_name : `エリア (ID:${nextId})`;
+                        gridContainer.innerHTML += `<a href="town_field.html?id=${nextId}" class="map-grid-btn"><span class="direction-label">${DIRECTION_LABELS[dir]}</span>${displayName}</a>`;
+                    } else {
+                        gridContainer.innerHTML += `<div class="map-grid-btn empty"><span class="direction-label">${DIRECTION_LABELS[dir]}</span>-</div>`;
+                    }
+                });
+            } catch (err) {
+                showErrorLog(`移動ナビグリッド生成エラー: ${err.message}`);
+            }
+        }
 
-                    let nameMap = {};
-                    if (neighborIds.length > 0) {
-                        const { data: namesData, error: namesError } = await supabaseClient
-                            .from('map_field')
-                            .select('field_id, map_name')
-                            .in('field_id', neighborIds);
+        // 駅馬車・定期船セレクトボックス生成
+        async function buildFastTravelSelect(currentId) {
+            const section = document.getElementById('section-fast-travel');
+            const container = document.getElementById('fast-travel-select-container');
+            try {
+                const { data: nameMaster } = await supabase.from('maps').select('id, map_name');
+                const { data: routes, error } = await supabase.from('fast_travel').select('*').eq('出発地ID', currentId);
+                
+                if (error) throw error;
+
+                if (!routes || routes.length === 0) {
+                    section.style.display = 'none';
+                    return;
+                }
+
+                // 行き先タイプで分ける
+                const townsGroup = [];
+                const fieldsGroup = [];
+
+                routes.forEach(route => {
+                    const destId = route.目的地ID;
+                    const mapMeta = nameMaster ? nameMaster.find(m => String(m.id) === String(destId)) : null;
+                    route.destName = mapMeta ? mapMeta.map_name : `目的地(ID:${destId})`;
+                    
+                    // コストバッジ作成
+                    const cost = getSafeValue(route, '費用') || getSafeValue(route, 'cost');
+                    route.costBadge = cost && cost !== '0' ? ` [${cost}G]` : '';
+
+                    if (route.目的地種別 === 'town' || route.map_type === 'town') {
+                        townsGroup.push(route);
+                    } else {
+                        fieldsGroup.push(route);
+                    }
+                });
+
+                let selectHtml = `<select class="search-input" onchange="if(this.value) location.href=this.value;" style="width:100%; max-width:450px;">`;
+                selectHtml += `<option value="">-- 移動ルートを選択してください --</option>`;
+
+                if (townsGroup.length > 0) {
+                    selectHtml += `<optgroup label="🏙️ 街へ行く">`;
+                    townsGroup.forEach(r => {
+                        selectHtml += `<option value="town_field.html?id=${r.目的地ID}">【${r.案内NPC || '駅馬車マスター'}】${r.destName}${r.costBadge}</option>`;
+                    });
+                    selectHtml += `</optgroup>`;
+                }
+
+                if (fieldsGroup.length > 0) {
+                    selectHtml += `<optgroup label="⚔️ 戦闘地域へ行く">`;
+                    fieldsGroup.forEach(r => {
+                        selectHtml += `<option value="town_field.html?id=${r.目的地ID}">【${r.案内NPC || '駅馬車マスター'}】${r.destName}${r.costBadge}</option>`;
+                    });
+                    selectHtml += `</optgroup>`;
+                }
+
+                selectHtml += `</select>`;
+                container.innerHTML = selectHtml;
+                section.style.display = 'block';
+            } catch (err) {
+                showErrorLog(`駅馬車データ処理エラー: ${err.message}`);
+                section.style.display = 'none';
+            }
+        }
+
+        // 特殊移動オブジェクトリストの生成
+        async function buildUniqueTravelList(currentId) {
+            const section = document.getElementById('section-unique-travel');
+            const listContainer = document.getElementById('unique-travel-list');
+            try {
+                const { data: routes, error } = await supabase.from('map_field_unique').select('*').eq('field_id', currentId);
+                if (error) throw error;
+
+                if (!routes || routes.length === 0) {
+                    section.style.display = 'none';
+                    return;
+                }
+
+                listContainer.innerHTML = '';
+                routes.forEach(row => {
+                    const target = getSafeValue(row, 'target_name') || "オブジェクト";
+                    const nextField = getSafeValue(row, 'next_field') || "次のエリア";
+                    const nextFieldId = getSafeValue(row, 'next_field_id');
+                    const condition = getSafeValue(row, '条件') || getSafeValue(row, 'conditions');
+                    const memo = getSafeValue(row, '備考') || getSafeValue(row, 'memo');
+
+                    const conditionHtml = condition ? `<span class="badge-condition">条件: ${condition}</span>` : '';
+                    const memoHtml = memo ? ` <span style=\"color:#666; font-size:0.9em;\">(${memo})</span>` : '';
+
+                    listContainer.innerHTML += `
+                        <li>
+                            🗿 エリア内の<strong>【${target}】</strong>を調べる ➡️ 
+                            <a href="town_field.html?id=${nextFieldId}" class="travel-link">${nextField}</a> へ移動
+                            ${conditionHtml}${memoHtml}
+                        </li>`;
+                });
+                section.style.display = 'block';
+            } catch (err) {
+                showErrorLog(`特殊移動オブジェクト処理エラー: ${err.message}`);
+                section.style.display = 'none';
+            }
+        }
+
+        // 配置NPC一覧の生成
+        async function buildNpcList(currentId) {
+            const section = document.getElementById('section-npc-list');
+            const tbody = document.getElementById('npc-main-list');
+            try {
+                const { data: npcs, error } = await supabase.from('npcs').select('*').eq('map_id', currentId);
+                if (error) throw error;
+
+                if (!npcs || npcs.length === 0) {
+                    section.style.display = 'none';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                npcs.forEach(npc => {
+                    const name = getSafeValue(npc, 'npc_name');
+                    const jobText = getSafeValue(npc, 'npc_job') || '一般市民';
+                    
+                    // 肩書きバッジ判定
+                    let jobClass = 'job-default';
+                    if (jobText.includes('商人') || jobText.includes('道具') || jobText.includes('ショップ')) jobClass = 'job-merchant';
+                    else if (jobText.includes('駅馬車') || jobText.includes('船') || jobText.includes('案内')) jobClass = 'job-teleporter';
+                    else if (jobText.includes('鍛冶') || jobText.includes('生産')) jobClass = 'job-blacksmith';
+                    else if (jobText.includes('市民')) jobClass = 'job-citizen';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${name}</strong></td>
+                            <td><span class="badge-npc-job ${jobClass}">${jobText}</span></td>
+                        </tr>`;
+                });
+                section.style.display = 'block';
+            } catch (err) {
+                showErrorLog(`NPC一覧処理エラー: ${err.message}`);
+                section.style.display = 'none';
+            }
+        }
+
+        // 新リレーションに基づくモンスター＆採取オブジェクト一覧の同時生成
+        async function buildMonsterAndObjectList(currentId) {
+            const section = document.getElementById('section-monster-list');
+            const gridContainer = document.getElementById('monster-main-list');
+            
+            try {
+                loadedHabitatsAndObjects = []; // リセット
+
+                // --- 1. モンスターデータ群の取得 (`mob_habitats` ↔ `mob_info`) ---
+                const { data: mobHabitatRows, error: mobHabErr } = await supabase
+                    .from('mob_habitats')
+                    .select('*')
+                    .eq('field_id', currentId);
+                
+                if (mobHabErr) throw mobHabErr;
+
+                if (mobHabitatRows && mobHabitatRows.length > 0) {
+                    // mob1〜mob7 カラムから有効な魔物IDを重複なしで抽出
+                    const targetMobIds = new Set();
+                    mobHabitatRows.forEach(row => {
+                        for (let i = 1; i <= 7; i++) {
+                            const val = getSafeValue(row, `mob${i}`);
+                            if (val) targetMobIds.add(Number(val));
+                        }
+                    });
+
+                    if (targetMobIds.size > 0) {
+                        const { data: mInfos, error: mInfoErr } = await supabase
+                            .from('mob_info')
+                            .select('*')
+                            .in('mob_id', Array.from(targetMobIds));
                         
-                        if (!namesError && namesData) {
-                            namesData.forEach(row => {
-                                nameMap[String(row.field_id)] = row.map_name;
+                        if (mInfoErr) throw mInfoErr;
+
+                        if (mInfos) {
+                            mInfos.forEach(mob => {
+                                // データを共通フォーマットに整形して突っ込む
+                                const record = {
+                                    isMonster: true,
+                                    name: getSafeValue(mob, 'mob_name'),
+                                    lv: Number(getSafeValue(mob, 'lv')) || 0,
+                                    element: getSafeValue(mob, 'element') || '無',
+                                    type: getSafeValue(mob, 'mob_type') || '不明',
+                                    category: getSafeValue(mob, 'category') || 'mob',
+                                    drops: []
+                                };
+                                // drop1〜drop18までを回収
+                                for (let d = 1; i = 18, d <= 18; d++) {
+                                    const dropName = getSafeValue(mob, `drop${d}`);
+                                    if (dropName) record.drops.push(dropName);
+                                }
+                                loadedHabitatsAndObjects.push(record);
                             });
                         }
                     }
+                }
 
-                    gridContainer.innerHTML = '';
-                    GRID_ORDER.forEach(dir => {
-                        const nextId = currentMap[dir];
-                        const hasNextId = nextId && nextId !== 'NULL' && String(nextId).trim() !== '0' && String(nextId).trim() !== '';
-                        const targetName = nameMap[String(nextId)] || "次のエリア";
+                // --- 2. 採取オブジェクトデータ群の取得 (`material_habitats` ↔ `material_info`) ---
+                const { data: matHabitatRows, error: matHabErr } = await supabase
+                    .from('material_habitats')
+                    .select('*')
+                    .eq('field_id', currentId);
+                
+                if (matHabErr) throw matHabErr;
 
-                        if (dir === 'center') {
-                            if (!hasNextId || String(nextId) === String(currentId)) {
-                                gridContainer.innerHTML += `<div class="map-grid-btn empty" style="background:transparent; border:none; box-shadow:none; pointer-events:none;"></div>`;
-                            } else {
-                                gridContainer.innerHTML += `
-                                    <a href="town_field.html?id=${nextId}" class="map-grid-btn center-map" style="cursor:pointer; pointer-events:auto;">
-                                        <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
-                                        <strong>${targetName}</strong>
-                                    </a>`;
-                            }
-                        } else {
-                            if (hasNextId) {
-                                gridContainer.innerHTML += `
-                                    <a href="town_field.html?id=${nextId}" class="map-grid-btn">
-                                        <span class="direction-label">${DIRECTION_LABELS[dir]}</span>
-                                        <strong>${targetName}</strong>
-                                    </a>`;
-                            } else {
-                                gridContainer.innerHTML += `<div class="map-grid-btn empty" style="background:transparent; border:none; box-shadow:none; pointer-events:none;"></div>`;
-                            }
+                if (matHabitatRows && matHabitatRows.length > 0) {
+                    // material1〜material7 から有効な採取資源IDを抽出
+                    const targetMatIds = new Set();
+                    matHabitatRows.forEach(row => {
+                        for (let i = 1; i <= 7; i++) {
+                            const val = getSafeValue(row, `material${i}`);
+                            if (val) targetMatIds.add(Number(val));
                         }
                     });
-                } else {
-                    mainTitle.innerText = "⚠️ 指定されたエリアが見つかりません";
-                    gridContainer.innerHTML = '';
+
+                    if (targetMatIds.size > 0) {
+                        const { data: matInfos, error: matInfoErr } = await supabase
+                            .from('material_info')
+                            .select('*')
+                            .in('material_id', Array.from(targetMatIds));
+                        
+                        if (matInfoErr) throw matInfoErr;
+
+                        if (matInfos) {
+                            matInfos.forEach(mat => {
+                                const catType = getSafeValue(mat, 'category') || '鉱石';
+                                loadedHabitatsAndObjects.push({
+                                    isMonster: false,
+                                    name: getSafeValue(mat, 'material_name'),
+                                    lv: Number(getSafeValue(mat, 'lv')) || 1,
+                                    element: getSafeValue(mat, 'element') || '無',
+                                    type: getSafeValue(mat, 'mob_type') || '-',
+                                    category: catType, // '鉱石' または '植物'
+                                    drops: [] // 採取オブジェクトはドロップ枠なし
+                                });
+                            });
+                        }
+                    }
                 }
+
+                // データが空ならセクションごと非表示
+                if (loadedHabitatsAndObjects.length === 0) {
+                    section.style.display = 'none';
+                    return;
+                }
+
+                // 初期レンダリングを実行
+                renderFilteredList('');
+                section.style.display = 'block';
+
             } catch (err) {
-                showErrorLog(`基本情報・グリッド処理エラー: ${err.message}`);
+                showErrorLog(`魔物・資源データリレーション処理エラー: ${err.message}`);
+                section.style.display = 'none';
             }
         }
 
-        // 👥 NPC一覧
-        async function fetchNpcList(currentId) {
-            const npcSection = document.getElementById('npc-section');
-            const npcMainList = document.getElementById('npc-main-list');
-            try {
-                const { data, error } = await supabaseClient
-                    .from('npc')
-                    .select('*')
-                    .eq('field_id', currentId);
+        // 検索フィルターと画面描画処理（あいうえお・色のグラデーション対応）
+        function renderFilteredList(keyword) {
+            const gridContainer = document.getElementById('monster-main-list');
+            gridContainer.innerHTML = '';
 
-                if (error) throw error;
+            const lowerKeyword = keyword.toLowerCase().trim();
 
-                if (data && data.length > 0) {
-                    npcSection.style.display = 'block';
-                    npcMainList.innerHTML = '';
-                    data.forEach(row => {
-                        const name = getSafeValue(row, 'npc_name') || "名無しのNPC";
-                        const job = getSafeValue(row, 'npc_job') || "一般市民";
-                        npcMainList.innerHTML += `<li>👤 <strong>${name}</strong> 【${job}】</li>`;
-                    });
-                } else {
-                    npcSection.style.display = 'none';
-                }
-            } catch (err) {
-                showErrorLog(`NPC一覧取得エラー: ${err.message}`);
-                npcSection.style.display = 'none';
-            }
-        }
+            // 1. キーワードに合致するデータのみをフィルタリング
+            const filtered = loadedHabitatsAndObjects.filter(item => {
+                if (!lowerKeyword) return true;
+                const matchName = item.name.toLowerCase().includes(lowerKeyword);
+                const matchType = item.type.toLowerCase().includes(lowerKeyword);
+                const matchElement = item.element.toLowerCase().includes(lowerKeyword);
+                const matchDrops = item.drops.some(d => d.toLowerCase().includes(lowerKeyword));
+                return matchName || matchType || matchElement || matchDrops;
+            });
 
-        // ⚔️ 出現モンスター（カテゴリー並べ替え ＆ 色分け機能）
-        async function fetchMonsterList(currentId) {
-            const monsterSection = document.getElementById('monster-section');
-            const monsterMainList = document.getElementById('monster-main-list');
+            // 2. 「mob」→「boss」→「Hboss」→「aby」→「鉱石」→「植物」 の確実なソート指示
+            const CATEGORY_ORDER = { 'mob': 1, 'boss': 2, 'Hboss': 3, 'aby': 4, '鉱石': 5, '植物': 6 };
             
-            try {
-                const { data, error } = await supabaseClient
-                    .from('mob_info')
-                    .select('*')
-                    .eq('field_id', currentId);
+            filtered.sort((a, b) => {
+                const orderA = CATEGORY_ORDER[a.category] || 99;
+                const orderB = CATEGORY_ORDER[b.category] || 99;
+                if (orderA !== orderB) return orderA - orderB;
+                // 同カテゴリ内はレベル順
+                return a.lv - b.lv;
+            });
 
-                if (error) throw error;
+            // 3. カードHTMLの動的組み立て
+            filtered.forEach(item => {
+                let badgeClass = 'cat-mob';
+                let typeLabelHtml = `種別: ${item.category}`;
 
-                if (!data || data.length === 0) {
-                    monsterSection.style.display = 'none';
-                    return;
-                }
-
-                monsterSection.style.display = 'block';
-                monsterMainList.innerHTML = '';
-
-                // ★ カテゴリーごとの並べ替えルール
-                const categoryOrder = {
-                    'mob': 1,
-                    'モンスター': 1,
-                    'eld': 2,      // 追加: エルダー/エリート
-                    'boss': 3,
-                    'hboss': 4,
-                    '鉱石': 5,
-                    '植物': 6
-                };
-
-                // ★ 安全対策：String()で囲むことで、データが数字等でもエラーを出さないように強化
-                data.sort((a, b) => {
-                    const catA = String(getSafeValue(a, 'category') || 'mob').toLowerCase();
-                    const catB = String(getSafeValue(b, 'category') || 'mob').toLowerCase();
-                    const orderA = categoryOrder[catA] || 99;
-                    const orderB = categoryOrder[catB] || 99;
-                    return orderA - orderB;
-                });
-
-                data.forEach(mob => {
-                    const name = getSafeValue(mob, 'mob_name') || "不明なモンスター";
-                    const lv = getSafeValue(mob, 'lv') || "?";
-                    const element = getSafeValue(mob, 'element') || "無";
-                    const mobType = getSafeValue(mob, 'mob_type') || "?";
-                    const category = getSafeValue(mob, 'category') || "mob";
-                    
-                    // ★ カテゴリーに応じた色分け（安全対策済み）
-                    let catClass = '';
-                    const checkCat = String(category).toLowerCase();
-                    
-                    if (checkCat === 'eld') catClass = 'cat-eld';
-                    else if (checkCat === 'boss') catClass = 'cat-boss';
-                    else if (checkCat === 'hboss') catClass = 'cat-hboss';
-                    else if (checkCat === '鉱石') catClass = 'cat-ore';
-                    else if (checkCat === '植物') catClass = 'cat-plant';
-
-                    // ドロップの処理（スフィア増殖含む）
-                    let drops = [];
-                    for (let i = 1; i <= 18; i++) {
-    const dropName = getSafeValue(mob, `drop${i}`);
-    if (dropName && dropName !== 'NULL' && dropName !== '#N/A' && String(dropName).trim() !== '') {
-        const dNameStr = String(dropName);
-        
-        // ▼ ここを修正しました！（スフィアを含み、かつスフィア箱ではない場合）
-        if (dNameStr.includes('スフィア') && !dNameStr.includes('スフィア箱')) {
-            drops.push({ name: `${dNameStr}(ノーマル)`, isSphere: true });
-            drops.push({ name: `${dNameStr}(ユニーク)`, isSphere: true });
-            drops.push({ name: `${dNameStr}(ノーブル)`, isSphere: true });
-            drops.push({ name: `${dNameStr}(ヒロイック)`, isSphere: true });
-        } else {
-            // スフィア箱や普通のアイテムはそのまま1つだけ表示
-            drops.push({ name: dNameStr, isSphere: false });
-        }
-    }
-}
-
-                    let dropsHtml = '';
-                    if (drops.length > 0) {
-                        dropsHtml = `<ul class="drop-list">` + 
-                            drops.map(d => `<li class="drop-item ${d.isSphere ? 'sphere' : ''}">${d.name}</li>`).join('') + 
-                            `</ul>`;
-                    } else {
-                        dropsHtml = `<span style="font-size: 0.8em; color: #999;">ドロップ情報なし</span>`;
-                    }
-
-                    // catClass を付与して色分けする
-                    monsterMainList.innerHTML += `
-                        <div class="monster-card ${catClass}">
-                            <div class="monster-name">🦇 ${name} <span style="font-size: 0.8em; color: #666; font-weight: normal;">(Lv.${lv})</span></div>
-                            <div class="monster-info">属性: ${element} / 種族: ${mobType} / 種別: ${category}</div>
-                            <div class="monster-drops">
-                                <div style="font-size: 0.85em; font-weight: bold; margin-bottom: 3px; color: #444;">🎁 ドロップアイテム</div>
-                                ${dropsHtml}
-                            </div>
-                        </div>
-                    `;
-                });
-            } catch (err) {
-                showErrorLog(`モンスター一覧取得エラー: ${err.message}`);
-                monsterSection.style.display = 'none';
-            }
-        }
-
-        // 🐴 駅馬車・定期船
-        async function fetchFastTravelList(currentId) {
-            const fastTravelSection = document.getElementById('fast-travel-section');
-            const fastTravelList = document.getElementById('fast-travel-list');
-            try {
-                const { data: travelData, error: travelError } = await supabaseClient
-                    .from('fast_travel')
-                    .select('*')
-                    .eq('field_id', currentId);
-
-                if (travelError) throw travelError;
-
-                if (!travelData || travelData.length === 0) {
-                    fastTravelSection.style.display = 'none';
-                    return;
-                }
-
-                fastTravelSection.style.display = 'block';
-                const { data: allMaps, error: mapsError } = await supabaseClient
-                    .from('map_field') 
-                    .select('field_id, map_name, map_type');
-
-                if (mapsError) throw mapsError;
-
-                const townItems = [];
-                const fieldItems = [];
-
-                travelData.forEach(row => {
-                    const destId = getSafeValue(row, 'field_id_1');
-                    const cost = getSafeValue(row, '費用') || getSafeValue(row, 'cost') || "0";
-                    const currency = getSafeValue(row, '特記') || "Guilder";
-                    const selectGroup = getSafeValue(row, 'select');
-
-                    const targetMap = allMaps ? allMaps.find(m => String(m.field_id) === String(destId)) : null;
-                    const mapName = targetMap ? targetMap.map_name : (getSafeValue(row, 'map_name') || `エリア (ID: ${destId})`);
-
-                    let costBadge = '';
-                    if (cost !== '0' && cost !== 0 && String(cost).trim() !== '' && cost !== 'NULL') {
-                        costBadge = `<span class="badge-cost" style="font-size: 0.85em; background: #eee; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">費用: ${cost} ${currency}</span>`;
-                    }
-
-                    const liHtml = `
-                        <li style="margin-bottom: 6px; list-style: none;">
-                            🐎 <a href="town_field.html?id=${destId}" class="travel-link" style="font-weight: bold; text-decoration: none;">${mapName}</a> 行き ${costBadge}
-                        </li>
-                    `;
-
-                    if (selectGroup === '街へ行く' || selectGroup === 'town') {
-                        townItems.push(liHtml);
-                    } else {
-                        fieldItems.push(liHtml);
-                    }
-                });
-
-                let finalHtml = `<div class="travel-list-wrapper" style="padding-left: 0;">`;
-                if (townItems.length > 0) {
-                    finalHtml += `
-                        <div class="travel-group" style="margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 0.95em;">🏙️ 【街へ行く】</h4>
-                            <ul style="padding-left: 10px; margin: 0;">${townItems.join('')}</ul>
-                        </div>
-                    `;
-                }
-                if (fieldItems.length > 0) {
-                    finalHtml += `
-                        <div class="travel-group">
-                            <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 0.95em;">⚔️ 【戦闘地域へ行く】</h4>
-                            <ul style="padding-left: 10px; margin: 0;">${fieldItems.join('')}</ul>
-                        </div>
-                    `;
-                }
-                finalHtml += `</div>`;
-                fastTravelList.innerHTML = finalHtml;
-
-            } catch (err) {
-                showErrorLog(`駅馬車データ取得エラー: ${err.message}`);
-                fastTravelSection.style.display = 'none';
-            }
-        }
-
-        // 🗿 特殊移動
-        async function fetchUniqueTravelList(currentId) {
-            const uniqueTravelSection = document.getElementById('unique-travel-section');
-            const uniqueTravelList = document.getElementById('unique-travel-list');
-            try {
-                const { data, error } = await supabaseClient
-                    .from('map_field_unique')
-                    .select('*')
-                    .eq('field_id', currentId);
-
-                if (error) throw error;
-
-                if (data && data.length > 0) {
-                    uniqueTravelSection.style.display = 'block';
-                    uniqueTravelList.innerHTML = '';
-                    data.forEach(row => {
-                        const target = getSafeValue(row, 'target_name') || "オブジェクト";
-                        const nextField = getSafeValue(row, 'next_field') || "次のエリア";
-                        const nextFieldId = getSafeValue(row, 'next_field_id');
-                        const condition = getSafeValue(row, '条件') || getSafeValue(row, 'conditions');
-                        const memo = getSafeValue(row, '備考') || getSafeValue(row, 'memo');
-
-                        const conditionHtml = condition ? `<span class="badge-condition">条件: ${condition}</span>` : '';
-                        const memoHtml = memo ? ` <span style="color:#666; font-size:0.9em;">(${memo})</span>` : '';
-
-                        uniqueTravelList.innerHTML += `
-                            <li>
-                                🗿 エリア内の<strong>【${target}】</strong>を調べる ➡️ 
-                                <a href="town_field.html?id=${nextFieldId}" class="travel-link">${nextField}</a> へ移動
-                                ${conditionHtml}${memoHtml}
-                            </li>`;
-                    });
+                if (item.isMonster) {
+                    if (item.category === 'boss') badgeClass = 'cat-boss';
+                    else if (item.category === 'Hboss') badgeClass = 'cat-hboss';
+                    else if (item.category === 'aby') badgeClass = 'cat-aby';
                 } else {
-                    uniqueTravelSection.style.display = 'none';
+                    badgeClass = item.category === '鉱石' ? 'cat-ore' : 'cat-plant';
+                    typeLabelHtml = `資源: ${item.category}`;
                 }
-            } catch (err) {
-                showErrorLog(`特殊移動処理エラー: ${err.message}`);
-                uniqueTravelSection.style.display = 'none';
+
+                // ドロップ品（スフィア4段階バッジ置換対応）のタグ生成
+                let dropsHtml = '';
+                if (item.isMonster && item.drops.length > 0) {
+                    dropsHtml += `<div class="drop-section-title">🎁 ドロップ情報</div><div class="drop-item-list">`;
+                    item.drops.forEach(dropName => {
+                        // 「スフィア」判定（ただしスフィア箱は除く特殊ガード）
+                        if (dropName.includes('スフィア') && !dropName.includes('スフィア箱')) {
+                            const baseSphereName = dropName.replace('スフィア', '');
+                            dropsHtml += `
+                                <div class="sphere-container">
+                                    <span class="badge-sphere sph-normal">${baseSphereName}N</span>
+                                    <span class="badge-sphere sph-unique">${baseSphereName}U</span>
+                                    <span class="badge-sphere sph-noble">${baseSphereName}N+</span>
+                                    <span class="badge-sphere sph-heroic">${baseSphereName}H</span>
+                                </div>`;
+                        } else {
+                            dropsHtml += `<span class="drop-item-tag">${dropName}</span>`;
+                        }
+                    });
+                    dropsHtml += `</div>`;
+                }
+
+                gridContainer.innerHTML += `
+                    <div class="monster-card">
+                        <div class="monster-header">
+                            <span class="monster-name">${item.name}</span>
+                            <span class="category-badge ${badgeClass}">${typeLabelHtml}</span>
+                        </div>
+                        <div class="monster-meta">
+                            Lv.${item.lv} | 属性: ${item.element} | 種類: ${item.type}
+                        </div>
+                        ${dropsHtml}
+                    </div>`;
+            });
+
+            if (filtered.length === 0) {
+                gridContainer.innerHTML = `<div style="grid-column: 1/-1; color:#999; font-size:0.9em; text-align:center; padding:20px;">条件に一致する魔物・資源は見つかりませんでした。</div>`;
             }
         }
 
+        // 検索ボタンと入力エンターキーのイベントリスナー設定
+        document.getElementById('monster-search-btn').addEventListener('click', () => {
+            const input = document.getElementById('monster-search-input').value;
+            renderFilteredList(input);
+        });
+
+        document.getElementById('monster-search-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                renderFilteredList(e.target.value);
+            }
+        });
+
+        // ページ読み込み時のトリガー
         window.addEventListener('DOMContentLoaded', loadMapDetailData);
     </script>
 </body>
